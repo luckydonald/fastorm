@@ -34,7 +34,9 @@ class HelpfulDataclassDatabaseMixin(object):
         return dataclasses.asdict(self)
     # end def
 
-    def build_sql_insert(self, *, ignore_automatic_fields: bool, upsert: bool) -> Tuple[str, Any]:
+    def build_sql_insert(
+        self, *, ignore_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
+    ) -> Tuple[str, Any]:
         own_keys = [f.name for f in dataclasses.fields(self)]
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
@@ -77,18 +79,19 @@ class HelpfulDataclassDatabaseMixin(object):
             values.append(value)
             keys.append(f'"{key}"')
 
-            if upsert and not is_automatic_field:
+            if on_conflict_upsert_field_list and not is_automatic_field:
                 upsert_fields[key] = placeholder_index
             # end if
         # end if
 
         sql = f'INSERT INTO "{_table_name}" ({",".join(keys)})\n VALUES ({",".join(placeholder)})'
-        if upsert and upsert_fields:
+        if on_conflict_upsert_field_list and upsert_fields:
             upsert_sql = ', '.join([f'"{key}" = ${placeholder_index}' for key, placeholder_index in upsert_fields.items()])
-            sql += f'\n ON CONFLICT DO UPDATE SET {upsert_sql}'
+            upsert_fields_sql = ', '.join([f'"{field}"' for field in on_conflict_upsert_field_list])
+            sql += f'\n ON CONFLICT ({upsert_fields_sql}) DO UPDATE SET {upsert_sql}'
         # end if
         if _automatic_fields:
-            automatic_fields_sql = ', '.join(['"{key}"' for key in _automatic_fields])
+            automatic_fields_sql = ', '.join([f'"{key}"' for key in _automatic_fields])
             sql += f'\n RETURNING {automatic_fields_sql}'
         # end if
         sql += '\n;'
