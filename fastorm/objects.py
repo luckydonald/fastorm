@@ -34,7 +34,7 @@ class HelpfulDataclassDatabaseMixin(object):
         return dataclasses.asdict(self)
     # end def
 
-    def build_sql_insert(self, *, ignore_automatic_fields: bool) -> Tuple[str, Any]:
+    def build_sql_insert(self, *, ignore_automatic_fields: bool, upsert: bool) -> Tuple[str, Any]:
         own_keys = [f.name for f in dataclasses.fields(self)]
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
@@ -43,23 +43,26 @@ class HelpfulDataclassDatabaseMixin(object):
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
         assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
         _ignored_fields += ['_table_name', '_ignored_fields']
-        automatic_fields_sql = ['"{key}"' for key in _automatic_fields]
 
         placeholder = []
         values: List[JSONType] = []
         keys = []
-        i = 0
+        upsert_fields = {}  # key is field name, values is the matching placeholder_index.
+        placeholder_index = 0
         primary_key_index = 0
         for key in own_keys:
             if key in _ignored_fields:
                 continue
             # end if
-            if ignore_automatic_fields and key in _automatic_fields:
+            is_automatic_field = None
+            if ignore_automatic_fields or upsert:
+                is_automatic_field = key in _automatic_fields
+            if ignore_automatic_fields and is_automatic_field:
                 continue
             # end if
             value = getattr(self, key)
-            i += 1
-            placeholder.append(f'${i}')
+            placeholder_index += 1
+            placeholder.append(f'${placeholder_index}')
             if isinstance(value, dict):
                 pass
                 # value = json.dumps(value)
@@ -70,10 +73,26 @@ class HelpfulDataclassDatabaseMixin(object):
                 value = value.get_primary_keys_values()[primary_key_index]
                 primary_key_index += 1
             # end if
+
             values.append(value)
             keys.append(f'"{key}"')
+
+            if upsert and not is_automatic_field:
+                upsert_fields[key] = placeholder_index
+            # end if
         # end if
-        return (f'INSERT INTO "{_table_name}" ({",".join(keys)}) VALUES ({",".join(placeholder)}) RETURNING {automatic_fields_sql};', *values)
+
+        sql = f'INSERT INTO "{_table_name}" ({",".join(keys)})\n VALUES ({",".join(placeholder)})'
+        if upsert and upsert_fields:
+            upsert_sql = ', '.join([f'"{key}" = ${placeholder_index}' for key, placeholder_index in upsert_fields.items()])
+            sql += f'\n ON CONFLICT DO UPDATE SET {upsert_sql}'
+        # end if
+        if _automatic_fields:
+            automatic_fields_sql = ['"{key}"' for key in _automatic_fields]
+            sql += f'\n RETURNING {automatic_fields_sql}'
+        # end if
+        sql += '\n;'
+        return (sql, *values)
     # end def
 
     def clone(self: CLS_TYPE) -> CLS_TYPE:
