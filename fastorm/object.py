@@ -28,6 +28,7 @@ class HelpfulDataclassDatabaseMixin(object):
     _table_name: str
     _ignored_fields: List[str]
     _automatic_fields: List[str]
+    _primary_keys: List[str]
 
     def as_dict(self) -> Dict[str, JSONType]:
         return dataclasses.asdict(self)
@@ -47,6 +48,7 @@ class HelpfulDataclassDatabaseMixin(object):
         values: List[JSONType] = []
         keys = []
         i = 0
+        primary_key_index = 0
         for key, value in own_values:
             if key in _ignored_fields:
                 continue
@@ -60,6 +62,12 @@ class HelpfulDataclassDatabaseMixin(object):
                 pass
                 # value = json.dumps(value)
             # end if
+            if isinstance(value, HelpfulDataclassDatabaseMixin):
+                # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
+                # if you got more than one of those PKs, simply specify them twice for both fields.
+                value = value.get_primary_keys_values()[primary_key_index]
+                primary_key_index += 1
+            # end if
             values.append(value)
             keys.append(f'"{key}"')
         # end if
@@ -69,4 +77,12 @@ class HelpfulDataclassDatabaseMixin(object):
     def clone(self: CLS_TYPE) -> CLS_TYPE:
         return self.__class__(**self.as_dict())
     # end if
+
+    def get_primary_keys(self) -> Dict[str, Any]:
+        return {k: v for k, v in self.as_dict().items()}
+    # end def
+
+    def get_primary_keys_values(self):
+        return list(self.get_primary_keys().values())
+    # end def
 # end if
