@@ -10,6 +10,7 @@ import dataclasses
 from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
 from luckydonaldUtils.typing import JSONType
+from pytgbot.api_types.receivable.updates import Message
 
 
 __author__ = 'luckydonald'
@@ -34,10 +35,15 @@ class HelpfulDataclassDatabaseMixin(object):
         return dataclasses.asdict(self)
     # end def
 
+    @classmethod
+    def get_fields(cls) -> List[str]:
+        return [f.name for f in dataclasses.fields(cls)]
+    # end if
+
     def build_sql_insert(
         self, *, ignore_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
     ) -> Tuple[str, Any]:
-        own_keys = [f.name for f in dataclasses.fields(self)]
+        own_keys = self.get_fields()
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
         _automatic_fields = getattr(self, '_automatic_fields')
