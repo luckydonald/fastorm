@@ -88,7 +88,7 @@ class HelpfulDataclassDatabaseMixin(object):
             sql += f'\n ON CONFLICT DO UPDATE SET {upsert_sql}'
         # end if
         if _automatic_fields:
-            automatic_fields_sql = ['"{key}"' for key in _automatic_fields]
+            automatic_fields_sql = ', '.join(['"{key}"' for key in _automatic_fields])
             sql += f'\n RETURNING {automatic_fields_sql}'
         # end if
         sql += '\n;'
