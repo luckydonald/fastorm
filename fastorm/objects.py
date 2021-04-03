@@ -35,7 +35,7 @@ class HelpfulDataclassDatabaseMixin(object):
     # end def
 
     def build_sql_insert(self, *, ignore_automatic_fields: bool) -> Tuple[str, Any]:
-        own_values = self.as_dict().items()
+        own_keys = [f.name for f in dataclasses.fields(self)]
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
         _automatic_fields = getattr(self, '_automatic_fields')
@@ -49,13 +49,14 @@ class HelpfulDataclassDatabaseMixin(object):
         keys = []
         i = 0
         primary_key_index = 0
-        for key, value in own_values:
+        for key in own_keys:
             if key in _ignored_fields:
                 continue
             # end if
             if ignore_automatic_fields and key in _automatic_fields:
                 continue
             # end if
+            value = getattr(self, key)
             i += 1
             placeholder.append(f'${i}')
             if isinstance(value, dict):
