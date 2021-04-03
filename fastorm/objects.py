@@ -43,6 +43,7 @@ class HelpfulDataclassDatabaseMixin(object):
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
         assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
         _ignored_fields += ['_table_name', '_ignored_fields']
+        automatic_fields_sql = ['"{key}"' for key in _automatic_fields]
 
         placeholder = []
         values: List[JSONType] = []
@@ -72,7 +73,7 @@ class HelpfulDataclassDatabaseMixin(object):
             values.append(value)
             keys.append(f'"{key}"')
         # end if
-        return (f'INSERT INTO "{_table_name}" ({",".join(keys)}) VALUES ({",".join(placeholder)}) RETURNING "id";', *values)
+        return (f'INSERT INTO "{_table_name}" ({",".join(keys)}) VALUES ({",".join(placeholder)}) RETURNING {automatic_fields_sql};', *values)
     # end def
 
     def clone(self: CLS_TYPE) -> CLS_TYPE:
