@@ -3,7 +3,7 @@
 import json
 from abc import abstractmethod
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Tuple, Any, TypeVar
 from asyncpg import Connection
 
@@ -141,10 +141,11 @@ class HelpfulDataclassDatabaseMixin(object):
     @classmethod
     async def build_sql_select(cls, **kwargs):
         _ignored_fields = getattr(cls, '_ignored_fields')
+        non_ignored_fields = [field for field in cls.get_fields() if field not in _ignored_fields]
         fields = ','.join([
             f'"{field}"'
-            for field in cls.get_fields()
-            if not field.startswith('_') and field not in _ignored_fields
+            for field in non_ignored_fields
+            if not field.startswith('_')
         ])
         where_index = 0
         where_parts = []
@@ -152,6 +153,9 @@ class HelpfulDataclassDatabaseMixin(object):
         # noinspection PyUnusedLocal
         where_wolf = None
         for key, value in kwargs.items():
+            if key not in non_ignored_fields:
+                raise ValueError(f'key {key!r} is not a non-ignored field!')
+            # end if
             assert not isinstance(value, HelpfulDataclassDatabaseMixin)
             # if isinstance(value, HelpfulDataclassDatabaseMixin):
             #     # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
