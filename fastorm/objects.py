@@ -29,10 +29,31 @@ CLS_TYPE = TypeVar("CLS_TYPE")
 
 
 class HelpfulDataclassDatabaseMixin(object):
-    _table_name: str
-    _ignored_fields: List[str]
-    _automatic_fields: List[str]
-    _primary_keys: List[str]
+    _table_name: str  # database table name we run queries against
+    _ignored_fields: List[str]  # fields which never are intended for the database and will be excluded in every operation. (So are all fields starting with an underscore)
+    _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
+    _primary_keys: List[str]  # this is how we identify ourself.
+    _database_cache: Dict[str, JSONType]  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
+
+    def __init__(self):
+        self.__post_init__()
+    # end def
+
+    def __post_init__(self):
+        self._database_cache = {}
+    # end def
+
+    def _database_cache_overwrite_with_current(self):
+        """
+        Resets the database cache from the current existing fields.
+        This is used just after something is loaded from a database row.
+        :return:
+        """
+        self._database_cache = {}
+        for field in self.get_fields():
+            self._database_cache[field] = getattr(self, field)
+        # end if
+    # end def
 
     def as_dict(self) -> Dict[str, JSONType]:
         return dataclasses.asdict(self)
@@ -110,6 +131,7 @@ class HelpfulDataclassDatabaseMixin(object):
     @classmethod
     async def get(cls: CLS_TYPE, conn: Connection, **kwargs) -> Optional[CLS_TYPE]:
         """
+        Retrieves a single Database element. Error if there are more matching ones.
         Like `.select(…)` but returns `None` for no matches, the match itself or an error if it's more than one row.
 
         :param conn:
@@ -173,7 +195,7 @@ class HelpfulDataclassDatabaseMixin(object):
     # end def
 
     async def insert(
-        self, conn: Connection, ignore_setting_automatic_fields: bool,
+        self, conn: Connection, *, ignore_setting_automatic_fields: bool,
         on_conflict_upsert_field_list: Optional[List[str]],
         write_back_automatic_fields: bool,
     ):
@@ -186,13 +208,14 @@ class HelpfulDataclassDatabaseMixin(object):
                                             Ignored if `ignore_setting_automatic_fields` is False.
         :return:
         """
-        artist_sql = self.build_sql_insert(
+        fetch_params = self.build_sql_insert(
             ignore_setting_automatic_fields=ignore_setting_automatic_fields,
             on_conflict_upsert_field_list=on_conflict_upsert_field_list,
         )
+        self._database_cache_overwrite_with_current()
         _automatic_fields = getattr(self, '_automatic_fields')
-        logger.debug(f'Insert query for {self.__class__.__name__}: {artist_sql!r}')
-        updated_automatic_values_rows = await conn.fetch(*artist_sql)
+        logger.debug(f'Insert query for {self.__class__.__name__}: {fetch_params!r}')
+        updated_automatic_values_rows = await conn.fetch(*fetch_params)
         logger.debug(f'Inserted {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
         assert len(updated_automatic_values_rows) == 1
         updated_automatic_values = updated_automatic_values_rows[0]
@@ -200,9 +223,98 @@ class HelpfulDataclassDatabaseMixin(object):
             for field in _automatic_fields:
                 assert field in updated_automatic_values
                 setattr(self, field, updated_automatic_values[field])
+                self._database_cache[field] = updated_automatic_values[field]
             # end for
         # end if
     # end def
+
+    async def build_sql_update(
+        self,
+        *,
+        ignore_setting_automatic_fields: bool,
+    ):
+        own_keys = self.get_fields()
+        _table_name = getattr(self, '_table_name')
+        _ignored_fields = getattr(self, '_ignored_fields')
+        _automatic_fields = getattr(self, '_automatic_fields')
+        _database_cache = getattr(self, '_database_cache')
+        _primary_keys = getattr(self, '_primary_keys')
+        assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
+        assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
+        assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
+        assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
+        assert_type_or_raise(_primary_keys, list, parameter_name='self._primary_keys')
+
+        # SET ...
+        update_values: Dict[str, Any] = {}
+        for key in own_keys:
+            if key.startswith('_') or key in _ignored_fields:
+                continue
+            # end if
+            value = getattr(self, key)
+            if key not in _database_cache:
+                update_values[key] = value
+            # end if
+            if update_values[key] != value:
+                update_values[key] = value
+            # end if
+        # end if
+
+        # UPDATE ... SET ... WHERE ...
+        placeholder_index = 0
+        other_primary_key_index = 0
+        values: List[Any] = []
+        update_keys: List[str] = []  # "foo" = $1
+        for key, value in update_values.items():
+            value = getattr(self, key)
+            placeholder_index += 1
+            if isinstance(value, HelpfulDataclassDatabaseMixin):
+                # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
+                # if you got more than one of those PKs, simply specify them twice for both fields.
+                value = value.get_primary_keys_values()[other_primary_key_index]
+                other_primary_key_index += 1
+            # end if
+
+            values.append(value)
+            update_keys.append(f'"{key}" = ${placeholder_index}')
+        # end if
+
+        # WHERE pk...
+        primary_key_where: List[str] = []  # "foo" = $1
+        for primary_key in _primary_keys:
+            if primary_key in _database_cache:
+                value = _database_cache[primary_key]
+            else:
+                value = getattr(self, primary_key)
+            # end if
+            placeholder_index += 1
+            primary_key_where.append(f'"{primary_key}" = ${placeholder_index}')
+            values.append(value)
+        # end if
+        logger.debug(f'Fields to update for selector {primary_key_where!r}: {update_values!r}')
+
+        assert update_keys
+        sql = f'UPDATE "{_table_name}"\n'
+        sql += f' SET {",".join(update_keys)}'
+        sql += f' WHERE {",".join(primary_key)}'
+        sql += '\n;'
+        return (sql, *values)
+    # end def
+
+    async def update(
+        self,
+        conn: Connection,
+        *,
+        ignore_setting_automatic_fields: bool,
+    ):
+        fetch_params = await self.build_sql_update(
+            ignore_setting_automatic_fields=ignore_setting_automatic_fields,
+        )
+        logger.debug(f'UPDATE query for {self.__class__.__name__}: {fetch_params!r}')
+        update_status = await conn.execute(*fetch_params)
+        logger.debug(f'UPDATEed {self.__class__.__name__}: {update_status} for {self}')
+        self._database_cache_overwrite_with_current()
+    # end if
 
     def clone(self: CLS_TYPE) -> CLS_TYPE:
         return self.__class__(**self.as_dict())
@@ -217,9 +329,11 @@ class HelpfulDataclassDatabaseMixin(object):
     # end def
 
     @classmethod
-    def from_row(cls, row):
+    def from_row(cls, row, is_from_database: bool = False):
         # noinspection PyArgumentList
-        return cls(*row)
+        instance = cls(*row)
+        instance._database_cache_overwrite_with_current()
+        return instance
     # end def
 
     @staticmethod
