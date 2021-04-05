@@ -310,7 +310,7 @@ class HelpfulDataclassDatabaseMixin(object):
     # end if
 
     def get_primary_keys(self) -> Dict[str, Any]:
-        return {k: v for k, v in self.as_dict().items()}
+        return {k: v for k, v in self.as_dict().items() if k in self._primary_keys}
     # end def
 
     def get_primary_keys_values(self):
