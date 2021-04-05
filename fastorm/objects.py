@@ -4,9 +4,7 @@ import json
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Tuple, Any, TypeVar
-from asyncpg import Connection
-
+from typing import Optional, Dict, List, Tuple, Any, TypeVar, Union, Type
 
 import dataclasses
 
@@ -15,6 +13,7 @@ from luckydonaldUtils.logger import logging
 from luckydonaldUtils.typing import JSONType
 from pytgbot.api_types.receivable.updates import Message
 
+from asyncpg import Connection
 
 __author__ = 'luckydonald'
 
@@ -129,7 +128,7 @@ class HelpfulDataclassDatabaseMixin(object):
     # end def
 
     @classmethod
-    async def get(cls: CLS_TYPE, conn: Connection, **kwargs) -> Optional[CLS_TYPE]:
+    async def get(cls: Type[CLS_TYPE], conn: Connection, **kwargs) -> Optional[CLS_TYPE]:
         """
         Retrieves a single Database element. Error if there are more matching ones.
         Like `.select(…)` but returns `None` for no matches, the match itself or an error if it's more than one row.
@@ -147,7 +146,7 @@ class HelpfulDataclassDatabaseMixin(object):
     # end def
 
     @classmethod
-    async def select(cls: CLS_TYPE, conn: Connection, **kwargs) -> List[CLS_TYPE]:
+    async def select(cls: Type[CLS_TYPE], conn: Connection, **kwargs) -> List[CLS_TYPE]:
         """
         Get's multiple ones.
         :param conn:
