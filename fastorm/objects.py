@@ -155,7 +155,7 @@ class HelpfulDataclassDatabaseMixin(object):
         :return:
         """
         fetch_params = await cls.build_sql_select(**kwargs)
-        logger.debug(f'SQL: {fetch_params[0]!r} with values {fetch_params[1:]}')
+        logger.debug(f'SELECT query for{cls.__name__}: {fetch_params[0]!r} with values {fetch_params[1:]}')
         rows = await conn.fetch(*fetch_params)
         return [cls.from_row(row) for row in rows]
     # end def
@@ -214,9 +214,9 @@ class HelpfulDataclassDatabaseMixin(object):
         )
         self._database_cache_overwrite_with_current()
         _automatic_fields = getattr(self, '_automatic_fields')
-        logger.debug(f'Insert query for {self.__class__.__name__}: {fetch_params!r}')
+        logger.debug(f'INSERT query for {self.__class__.__name__}: {fetch_params!r}')
         updated_automatic_values_rows = await conn.fetch(*fetch_params)
-        logger.debug(f'Inserted {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
+        logger.debug(f'INSERTed {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
         assert len(updated_automatic_values_rows) == 1
         updated_automatic_values = updated_automatic_values_rows[0]
         if not ignore_setting_automatic_fields and write_back_automatic_fields:
@@ -287,7 +287,7 @@ class HelpfulDataclassDatabaseMixin(object):
             primary_key_where.append(f'"{primary_key}" = ${placeholder_index}')
             values.append(value)
         # end if
-        logger.debug(f'Fields to update for selector {primary_key_where!r}: {update_values!r}')
+        logger.debug(f'Fields to UPDATE for selector {primary_key_where!r}: {update_values!r}')
 
         assert update_keys
         sql = f'UPDATE "{_table_name}"\n'
