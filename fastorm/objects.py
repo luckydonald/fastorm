@@ -251,7 +251,7 @@ class HelpfulDataclassDatabaseMixin(object):
             if key not in _database_cache:
                 update_values[key] = value
             # end if
-            if update_values[key] != value:
+            if _database_cache[key] != value:
                 update_values[key] = value
             # end if
         # end if
@@ -292,7 +292,7 @@ class HelpfulDataclassDatabaseMixin(object):
         assert update_keys
         sql = f'UPDATE "{_table_name}"\n'
         sql += f' SET {",".join(update_keys)}'
-        sql += f' WHERE {",".join(primary_key)}'
+        sql += f' WHERE {",".join(primary_key_where)}'
         sql += '\n;'
         return (sql, *values)
     # end def
