@@ -228,11 +228,7 @@ class HelpfulDataclassDatabaseMixin(object):
         # end if
     # end def
 
-    async def build_sql_update(
-        self,
-        *,
-        ignore_setting_automatic_fields: bool,
-    ):
+    async def build_sql_update(self):
         own_keys = self.get_fields()
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
@@ -301,15 +297,8 @@ class HelpfulDataclassDatabaseMixin(object):
         return (sql, *values)
     # end def
 
-    async def update(
-        self,
-        conn: Connection,
-        *,
-        ignore_setting_automatic_fields: bool,
-    ):
-        fetch_params = await self.build_sql_update(
-            ignore_setting_automatic_fields=ignore_setting_automatic_fields,
-        )
+    async def update(self, conn: Connection):
+        fetch_params = await self.build_sql_update()
         logger.debug(f'UPDATE query for {self.__class__.__name__}: {fetch_params!r}')
         update_status = await conn.execute(*fetch_params)
         logger.debug(f'UPDATEed {self.__class__.__name__}: {update_status} for {self}')
