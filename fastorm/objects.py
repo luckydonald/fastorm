@@ -27,7 +27,7 @@ if __name__ == '__main__':
 CLS_TYPE = TypeVar("CLS_TYPE")
 
 
-class HelpfulDataclassDatabaseMixin(object):
+class CheapORM(object):
     _table_name: str  # database table name we run queries against
     _ignored_fields: List[str]  # fields which never are intended for the database and will be excluded in every operation. (So are all fields starting with an underscore)
     _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
@@ -98,7 +98,7 @@ class HelpfulDataclassDatabaseMixin(object):
                 pass
                 # value = json.dumps(value)
             # end if
-            if isinstance(value, HelpfulDataclassDatabaseMixin):
+            if isinstance(value, CheapORM):
                 # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
                 # if you got more than one of those PKs, simply specify them twice for both fields.
                 value = value.get_primary_keys_values()[primary_key_index]
@@ -177,7 +177,7 @@ class HelpfulDataclassDatabaseMixin(object):
             if key not in non_ignored_fields:
                 raise ValueError(f'key {key!r} is not a non-ignored field!')
             # end if
-            assert not isinstance(value, HelpfulDataclassDatabaseMixin)
+            assert not isinstance(value, CheapORM)
             # if isinstance(value, HelpfulDataclassDatabaseMixin):
             #     # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
             #     # if you got more than one of those PKs, simply specify them twice for both fields.
@@ -263,7 +263,7 @@ class HelpfulDataclassDatabaseMixin(object):
         for key, value in update_values.items():
             value = getattr(self, key)
             placeholder_index += 1
-            if isinstance(value, HelpfulDataclassDatabaseMixin):
+            if isinstance(value, CheapORM):
                 # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
                 # if you got more than one of those PKs, simply specify them twice for both fields.
                 value = value.get_primary_keys_values()[other_primary_key_index]
