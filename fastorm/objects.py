@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import json
-from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Tuple, Any, TypeVar, Union, Type
