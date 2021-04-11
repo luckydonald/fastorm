@@ -21,7 +21,7 @@ if __name__ == '__main__':
 # end if
 
 
-
+VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
 
 
@@ -187,6 +187,7 @@ class CheapORM(object):
             where_values.append(value)
         # end if
 
+        # noinspection SqlResolve
         sql = f'SELECT {fields} FROM "{cls._table_name}" WHERE {" AND ".join(where_parts)}'
         return (sql, *where_values)
     # end def
@@ -211,7 +212,12 @@ class CheapORM(object):
         )
         self._database_cache_overwrite_with_current()
         _automatic_fields = getattr(self, '_automatic_fields')
-        logger.debug(f'INSERT query for {self.__class__.__name__}: {fetch_params!r}')
+        if VERBOSE_SQL_LOG:
+            fetch_params_debug = "\n".join([f"${i}={param!r}" for i, param in enumerate(fetch_params)][1:])
+            logger.debug(f'INSERT query for {self.__class__.__name__}\nQuery:\n{fetch_params[0]}\nParams:\n{fetch_params_debug!s}')
+        else:
+            logger.debug(f'INSERT query for {self.__class__.__name__}: {fetch_params!r}')
+        # end if
         updated_automatic_values_rows = await conn.fetch(*fetch_params)
         logger.debug(f'INSERTed {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
         assert len(updated_automatic_values_rows) == 1
