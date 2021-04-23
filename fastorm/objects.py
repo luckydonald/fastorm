@@ -326,10 +326,10 @@ class CheapORM(object):
         assert_type_or_raise(_primary_keys, list, parameter_name='self._primary_keys')
         assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
 
-        where_values = []
-        placeholder_index = 1
         # DELETE FROM "name" WHERE pk...
-        primary_key_where: List[str] = []  # "foo" = $1
+        where_values = []
+        placeholder_index = 0
+        primary_key_parts: List[str] = []  # "foo" = $1
         for primary_key in _primary_keys:
             if primary_key in _database_cache:
                 value = _database_cache[primary_key]
@@ -337,14 +337,14 @@ class CheapORM(object):
                 value = getattr(self, primary_key)
             # end if
             placeholder_index += 1
-            primary_key_where.append(f'"{primary_key}" = ${placeholder_index}')
+            primary_key_parts.append(f'"{primary_key}" = ${placeholder_index}')
             where_values.append(value)
         # end if
-        logger.debug(f'Fields to DELETE WITH for selector {primary_key_where!r}: {where_values!r}')
+        logger.debug(f'Fields to DELETE for selector {primary_key_parts!r}: {where_values!r}')
 
         # noinspection SqlWithoutWhere
         sql = f'DELETE FROM "{_table_name}"\n'
-        sql += f' WHERE {",".join(primary_key_where)}'
+        sql += f' WHERE {",".join(primary_key_parts)}'
         sql += '\n;'
         return (sql, *where_values)
     # end def
