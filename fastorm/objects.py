@@ -37,7 +37,7 @@ class CheapORM(object):
     # end def
 
     def __post_init__(self):
-        self._database_cache = {}
+        self._database_cache: Union[None, Dict[str, Any]] = None
     # end def
 
     def _database_cache_overwrite_with_current(self):
@@ -50,6 +50,14 @@ class CheapORM(object):
         for field in self.get_fields():
             self._database_cache[field] = getattr(self, field)
         # end if
+
+    def _database_cache_remove(self):
+        """
+        Removes the database cache completely.
+        This is used after deleting an entry.
+        :return:
+        """
+        self._database_cache = None
     # end def
 
     def as_dict(self) -> Dict[str, JSONType]:
@@ -306,6 +314,47 @@ class CheapORM(object):
         update_status = await conn.execute(*fetch_params)
         logger.debug(f'UPDATEed {self.__class__.__name__}: {update_status} for {self}')
         self._database_cache_overwrite_with_current()
+    # end if
+
+    def build_sql_delete(self):
+        _table_name = getattr(self, '_table_name')
+        _primary_keys = getattr(self, '_primary_keys')
+        _ignored_fields = getattr(self, '_ignored_fields')
+        _database_cache = getattr(self, '_database_cache')
+        assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
+        assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
+        assert_type_or_raise(_primary_keys, list, parameter_name='self._primary_keys')
+        assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
+
+        where_values = []
+        placeholder_index = 1
+        # DELETE FROM "name" WHERE pk...
+        primary_key_where: List[str] = []  # "foo" = $1
+        for primary_key in _primary_keys:
+            if primary_key in _database_cache:
+                value = _database_cache[primary_key]
+            else:
+                value = getattr(self, primary_key)
+            # end if
+            placeholder_index += 1
+            primary_key_where.append(f'"{primary_key}" = ${placeholder_index}')
+            where_values.append(value)
+        # end if
+        logger.debug(f'Fields to DELETE WITH for selector {primary_key_where!r}: {where_values!r}')
+
+        # noinspection SqlWithoutWhere
+        sql = f'DELETE FROM "{_table_name}"\n'
+        sql += f' WHERE {",".join(primary_key_where)}'
+        sql += '\n;'
+        return (sql, *where_values)
+    # end def
+
+    async def delete(self, conn: Connection):
+        fetch_params = self.build_sql_delete()
+        logger.debug(f'DELETE query for {self.__class__.__name__}: {fetch_params!r}')
+        delete_status = await conn.execute(*fetch_params)
+        logger.debug(f'DELETEed {self.__class__.__name__}: {delete_status} for {self}')
+        self._database_cache_remove()
     # end if
 
     def clone(self: CLS_TYPE) -> CLS_TYPE:
