@@ -37,7 +37,7 @@ class CheapORM(object):
     # end def
 
     def __post_init__(self):
-        self._database_cache: Union[None, Dict[str, Any]] = None
+        self._database_cache: Dict[str, Any] = {}
     # end def
 
     def _database_cache_overwrite_with_current(self):
@@ -57,7 +57,7 @@ class CheapORM(object):
         This is used after deleting an entry.
         :return:
         """
-        self._database_cache = None
+        self._database_cache = {}
     # end def
 
     def as_dict(self) -> Dict[str, JSONType]:
