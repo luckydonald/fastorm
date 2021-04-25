@@ -69,6 +69,14 @@ class CheapORM(object):
         return [f.name for f in dataclasses.fields(cls)]
     # end if
 
+    @classmethod
+    def get_select_fields(cls, *, namespace=None) -> str:
+        if namespace:
+            return ', '.join([f'"{namespace}"."{field}" AS "{namespace} {field}"' for field in cls.get_fields() if not field.startswith('_')])
+        # end if
+        return ', '.join([f'"{field}"' for field in cls.get_fields() if not field.startswith('_')])
+    # end def
+
     def build_sql_insert(
         self, *, ignore_setting_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
     ) -> Tuple[str, Any]:
