@@ -31,7 +31,7 @@ class CheapORM(object):
     _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
     _primary_keys: List[str]  # this is how we identify ourself.
     _database_cache: Dict[str, JSONType]  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
-    __selectable_fields: List[str]  # cache for `cls.get_selectable_fields()`
+    __selectable_fields: List[str]  # cache for `cls.get_sql_fields()`
 
     def __init__(self):
         self.__post_init__()
@@ -71,33 +71,26 @@ class CheapORM(object):
     # end if
 
     @classmethod
-    def get_selectable_fields(cls) -> List[str]:
-        if getattr(cls, '__selectable_fields', None) is None:
-            setattr(cls, '__selectable_fields', [field for field in cls.get_fields() if not field.startswith('_')])
+    def get_sql_fields(cls) -> List[str]:
+        key = f'_{cls.__name__!s}__selectable_fields'
+        if getattr(cls, key, None) is None:
+            setattr(cls, key, [field for field in cls.get_fields() if not field.startswith('_')])
         # end if
-        return cls.__selectable_fields
+        return getattr(cls, key)
     # end if
 
     @classmethod
     def get_select_fields(cls, *, namespace=None) -> str:
         if namespace:
-            return ', '.join([f'"{namespace}"."{field}" AS "{namespace} {field}"' for field in cls.get_selectable_fields()])
+            return ', '.join([f'"{namespace}"."{field}" AS "{namespace} {field}"' for field in cls.get_sql_fields()])
         # end if
-        return ', '.join([f'"{field}"' for field in cls.get_selectable_fields()])
+        return ', '.join([f'"{field}"' for field in cls.get_sql_fields()])
     # end def
 
     @classmethod
     def get_select_fields_len(cls) -> int:
-        return len(cls.get_selectable_fields())
+        return len(cls.get_sql_fields())
     # end if
-
-    @classmethod
-    def get_select_fields(cls, *, namespace=None) -> str:
-        if namespace:
-            return ', '.join([f'"{namespace}"."{field}" AS "{namespace} {field}"' for field in cls.get_fields() if not field.startswith('_')])
-        # end if
-        return ', '.join([f'"{field}"' for field in cls.get_fields() if not field.startswith('_')])
-    # end def
 
     def build_sql_insert(
         self, *, ignore_setting_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
