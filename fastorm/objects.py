@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Tuple, Any, TypeVar, Union, Type
+from typing import Optional, Dict, List, Tuple, Any, TypeVar, Union, Type, get_type_hints, get_origin, get_args
 
 import dataclasses
 
@@ -10,6 +10,7 @@ from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
 from luckydonaldUtils.typing import JSONType
 from pytgbot.api_types.receivable.updates import Message
+from typeguard import check_type
 
 from asyncpg import Connection
 
@@ -190,6 +191,7 @@ class CheapORM(object):
     @classmethod
     async def build_sql_select(cls, **kwargs):
         _ignored_fields = getattr(cls, '_ignored_fields')
+        typehints: Dict[str, Any] = get_type_hints(cls)
         non_ignored_fields = [field for field in cls.get_fields() if field not in _ignored_fields]
         fields = ','.join([
             f'"{field}"'
@@ -213,8 +215,29 @@ class CheapORM(object):
             #     primary_key_index += 1
             # # end if
             where_index += 1
-            where_parts.append(f'"{key}" = ${where_index}')
-            where_values.append(value)
+            is_in_list_clause = cls._param_is_list_of_multiple_values(key, value, typehints[key])
+            if is_in_list_clause:
+                assert isinstance(value, (list, tuple))
+                assert len(value) >= 1
+                if len(value) == 1:
+                    # single element list -> normal where is fine -> so we go that route with it.
+                    value = value[0]
+                    is_in_list_clause = False
+                # end if
+            # end if
+            if not is_in_list_clause:  # no else-if as is_in_list_clause could be set False again.
+                where_parts.append(f'"{key}" = ${where_index}')
+                where_values.append(value)
+            else:  # is_in_list_clause is True
+                where_part = ''
+                for actual_value in value:
+                    where_part += f'${where_index},'
+                    where_values.append(actual_value)
+                    where_index += 1
+                # end for
+                where_index -= 1  # we end up with incrementing once too much
+                where_parts.append(f'"{key}" IN ({where_part.rstrip(",")})')
+            # end if
         # end if
 
         # noinspection SqlResolve
@@ -426,6 +449,69 @@ class CheapORM(object):
         function = _create_func('get', txt, globals, locals)
         setattr(other_cls, 'get', function)
         return other_cls
+    # end def
+
+    @classmethod
+    def _param_is_list_of_multiple_values(cls, key: str, value: Any, typehint: Any):
+        """
+        If a value is multiple times of what was defined.
+        :param key:
+        :param value:
+        :param typehint:
+        :return: True if the `value` is a list of tuple of arguments satisfying the `typehint`.
+        """
+        if not isinstance(value, (list, tuple)):
+            # we don't have a list -> can't be multiple values
+            # this is a cheap check preventing most of the values.
+            return False
+        # end if
+
+        original_type_fits = False
+        listable_type_fits = False
+        try:
+            check_type(argname=key, value=value, expected_type=typehint)
+            original_type_fits = True  # the original was already compatible
+        except TypeError as e:
+            pass
+        # end if
+        try:
+            check_type(argname=key, value=value, expected_type=Union[Tuple[typehint], List[typehint]])
+            listable_type_fits = True  # the original was already compatible
+        except TypeError as e:
+            pass
+        # end if
+
+        logger.debug(f'type fitting analysis: original: {original_type_fits}, tuple/list: {listable_type_fits}')
+        if not listable_type_fits:
+            # easy one,
+            # so our list/tuple check doesn't match,
+            # so it isn't compatible.
+            return False
+        # end if
+        if not original_type_fits:
+            # tuple/list one fits
+            # but the original one does not.
+            # pretty confident we have a list/tuple of a normal attribute and can do a `WHERE {key} IN ({",".join(value)})`
+            return True
+        # end if
+
+        # else -> listable_type_fits == True, original_type_fits == True
+        # ooof, so that one would have already be accepted by the original type...
+        # That's a tough one...
+        # we err to the side of caution
+        logger.warn(f'Not quite sure if it fits or not, erring to the side of caution and assuming single parameter.')
+        return False
+
+
+
+
+        origin = get_origin(typehint)
+        if origin is not Union:
+            args = (origin,)
+        else:
+            args = get_args(origin)
+        # end if
+        typeguard
     # end def
 # end if
 
