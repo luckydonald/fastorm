@@ -182,14 +182,14 @@ class CheapORM(object):
         :param kwargs:
         :return:
         """
-        fetch_params = await cls.build_sql_select(**kwargs)
+        fetch_params = cls.build_sql_select(**kwargs)
         logger.debug(f'SELECT query for{cls.__name__}: {fetch_params[0]!r} with values {fetch_params[1:]}')
         rows = await conn.fetch(*fetch_params)
         return [cls.from_row(row) for row in rows]
     # end def
 
     @classmethod
-    async def build_sql_select(cls, **kwargs):
+    def build_sql_select(cls, **kwargs):
         _ignored_fields = getattr(cls, '_ignored_fields')
         typehints: Dict[str, Any] = get_type_hints(cls)
         non_ignored_fields = [field for field in cls.get_fields() if field not in _ignored_fields]
