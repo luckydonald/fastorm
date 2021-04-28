@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Tuple, Any, TypeVar, Union, Type, get_type_hints, get_origin, get_args
+from typing import Optional, Dict, List, Tuple, Any, TypeVar, Union, Type, get_type_hints
 
 import dataclasses
 
@@ -501,17 +501,6 @@ class CheapORM(object):
         # we err to the side of caution
         logger.warn(f'Not quite sure if it fits or not, erring to the side of caution and assuming single parameter.')
         return False
-
-
-
-
-        origin = get_origin(typehint)
-        if origin is not Union:
-            args = (origin,)
-        else:
-            args = get_args(origin)
-        # end if
-        typeguard
     # end def
 # end if
 
