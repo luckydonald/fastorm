@@ -354,6 +354,9 @@ class CheapORM(object):
     # end def
 
     async def update(self, conn: Connection):
+        if not getattr(self, '_database_cache', None):
+            return  # nothing to do.
+        # end if
         fetch_params = self.build_sql_update()
         logger.debug(f'UPDATE query for {self.__class__.__name__}: {fetch_params!r}')
         update_status = await conn.execute(*fetch_params)
