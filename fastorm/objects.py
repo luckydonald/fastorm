@@ -92,6 +92,12 @@ class CheapORM(object):
         return len(cls.get_sql_fields())
     # end if
 
+    @classmethod
+    def get_table(cls) -> str:
+        _table_name = getattr(cls, '_table_name')
+        return f'"{_table_name}"'
+    # end def
+
     def build_sql_insert(
         self, *, ignore_setting_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
     ) -> Tuple[str, Any]:
