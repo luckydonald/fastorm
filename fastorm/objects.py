@@ -189,7 +189,7 @@ class CheapORM(object):
         :return:
         """
         fetch_params = cls.build_sql_select(**kwargs)
-        logger.debug(f'SELECT query for{cls.__name__}: {fetch_params[0]!r} with values {fetch_params[1:]}')
+        logger.debug(f'SELECT query for {cls.__name__}: {fetch_params[0]!r} with values {fetch_params[1:]}')
         rows = await conn.fetch(*fetch_params)
         return [cls.from_row(row) for row in rows]
     # end def
