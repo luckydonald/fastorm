@@ -255,10 +255,14 @@ class CheapORM(object):
     ):
         """
 
-        :param conn:
+        :param conn: Database connection to run at.
         :param ignore_setting_automatic_fields:
+            Skip setting fields marked as automatic, even if you provided.
+            For example if the id field is marked automatic, as it's an autoincrement int.
+            If `True`, setting `id=123` (commonly `id=None`) would be ignored, and instead the database assignes that value.
+            If `False`, the value there will be written to the database.
         :param on_conflict_upsert_field_list:
-        :param write_back_automatic_fields: Apply the automatic fields back to ourself.
+        :param write_back_automatic_fields: Apply the automatic fields back to this object.
                                             Ignored if `ignore_setting_automatic_fields` is False.
         :return:
         """
@@ -288,6 +292,10 @@ class CheapORM(object):
     # end def
 
     def build_sql_update(self):
+        """
+        Builds a prepared statement for update.
+        :return:
+        """
         own_keys = self.get_fields()
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
