@@ -253,8 +253,8 @@ class CheapORM(object):
 
     async def insert(
         self, conn: Connection, *, ignore_setting_automatic_fields: bool,
-        on_conflict_upsert_field_list: Optional[List[str]],
-        write_back_automatic_fields: bool,
+        on_conflict_upsert_field_list: Optional[List[str]] = None,
+        write_back_automatic_fields: bool = True,
     ):
         """
 
