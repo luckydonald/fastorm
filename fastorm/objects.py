@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Tuple, Any, TypeVar, Union, Type, get_type_hints
+__author__ = 'luckydonald'
 
 import dataclasses
-
-from luckydonaldUtils.exceptions import assert_type_or_raise
-from luckydonaldUtils.logger import logging
-from luckydonaldUtils.typing import JSONType
-from pytgbot.api_types.receivable.updates import Message
-from typeguard import check_type
+from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar
 
 from asyncpg import Connection
+from luckydonaldUtils.exceptions import assert_type_or_raise
+from luckydonaldUtils.logger import logging
 
-__author__ = 'luckydonald'
+from luckydonaldUtils.typing import JSONType
+from typeguard import check_type
+
+VERBOSE_SQL_LOG = True
+CLS_TYPE = TypeVar("CLS_TYPE")
+
 
 logger = logging.getLogger(__name__)
 if __name__ == '__main__':
     logging.add_colored_handler(level=logging.DEBUG)
 # end if
-
-VERBOSE_SQL_LOG = True
-CLS_TYPE = TypeVar("CLS_TYPE")
 
 
 class CheapORM(object):
@@ -511,7 +508,7 @@ class CheapORM(object):
         logger.warn(f'Not quite sure if it fits or not, erring to the side of caution and assuming single parameter.')
         return False
     # end def
-# end if
+# end class
 
 
 def _create_func(name, txt, globals, locals):
