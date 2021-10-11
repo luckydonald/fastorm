@@ -3,8 +3,11 @@
 __author__ = 'luckydonald'
 
 import dataclasses
+import json
+from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar
 
+import asyncpg
 from asyncpg import Connection
 from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
@@ -515,6 +518,53 @@ class CheapORM(object):
         # we err to the side of caution
         logger.warn(f'Not quite sure if it fits or not, erring to the side of caution and assuming single parameter.')
         return False
+    # end def
+
+    CLASS_SERIALIZERS = {
+        # # class: callable(data) -> json
+        # # E.g.:
+        # TgBotApiObject: lambda obj: return obj._raw if hasattr(obj, '_raw') and obj._raw else obj.to_array()
+    }
+
+    @classmethod
+    async def get_connection(cls, database_url) -> Connection:
+        # https://magicstack.github.io/asyncpg/current/usage.html#example-automatic-json-conversion
+        conn = await asyncpg.connect(database_url)
+        return await cls._set_up_connection(conn=conn)
+    # end def
+
+    @classmethod
+    async def _set_up_connection(cls, conn: Connection):
+        def decoder_with_empty(text):
+            if text.strip() == '':
+                return None
+            # end if
+            return json.loads(text)
+        # end def
+
+        def json_dumps(obj):
+            logger.debug(f'Encoding to JSON: {obj!r}')
+
+            def myconverter(o):
+                if isinstance(o, datetime):
+                    return o.isoformat()
+                # end def
+                from pytgbot.api_types import TgBotApiObject
+                if isinstance(o, TgBotApiObject):
+                    return o._raw if hasattr(o, '_raw') and o._raw else o.to_array()
+                # end if
+            return json.dumps(obj, default=myconverter)
+        # end def
+
+        for sql_type in ('json', 'jsonb'):
+            await conn.set_type_codec(
+                sql_type,
+                encoder=json_dumps,
+                decoder=decoder_with_empty,
+                schema='pg_catalog'
+            )
+        # end for
+        return conn
     # end def
 # end class
 
