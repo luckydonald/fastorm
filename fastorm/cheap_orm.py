@@ -535,6 +535,20 @@ class CheapORM(object):
 
     @classmethod
     async def _set_up_connection(cls, conn: Connection):
+        """
+        Sets up a connection to properly do datetime and json decoding.
+
+        Prepares writing datetimes (as ISO format) and class instances as json if they have a `.to_dict()`, `.to_array()` or `to_json()` function.
+        An easy way to add your is by having a `.to_json()` function like above or
+        appending your class to `CLASS_SERIALIZERS` like so:
+        ```py
+        # anywhere in your code, to be run once
+        SimpleORM.CLASS_SERIALIZERS[SomeClass] = lambda obj: obj.do_something()
+        ```
+        :param conn:
+        :return:
+        """
+        import json
         def decoder_with_empty(text):
             if text.strip() == '':
                 return None
@@ -549,10 +563,21 @@ class CheapORM(object):
                 if isinstance(o, datetime):
                     return o.isoformat()
                 # end def
-                from pytgbot.api_types import TgBotApiObject
-                if isinstance(o, TgBotApiObject):
-                    return o._raw if hasattr(o, '_raw') and o._raw else o.to_array()
-                # end if
+                if hasattr(o, 'to_array'):
+                    return o.to_array()  # TgBotApiObject from pytgbot
+                # end def
+                if hasattr(o, 'to_dict'):
+                    return o.to_dict()
+                # end def
+
+                # check CLASS_SERIALIZERS,
+                # a easy way to add your own by writing SimpleORM.CLASS_SERIALIZERS[Class] = lambda obj: obj
+                for type_to_check, callable_function in cls.CLASS_SERIALIZERS.items():
+                    if isinstance(o, type_to_check):
+                        return callable_function(o)
+                    # end if
+                # end for
+            # end def
             return json.dumps(obj, default=myconverter)
         # end def
 
