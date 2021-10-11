@@ -538,7 +538,7 @@ class CheapORM(object):
         """
         Sets up a connection to properly do datetime and json decoding.
 
-        Prepares writing datetimes (as ISO format) and class instances as json if they have a `.to_dict()`, `.to_array()` or `to_json()` function.
+        Prepares writing datetimes (as ISO format) and class instances as json if they have a `.to_dict()`, `.to_array()` function.
         An easy way to add your is by having a `.to_json()` function like above or
         appending your class to `CLASS_SERIALIZERS` like so:
         ```py
