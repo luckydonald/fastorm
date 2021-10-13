@@ -645,7 +645,10 @@ class FastORM(object):
         for key in own_keys:
             type_hint = type_hints[key]
             is_automatic_field = key in _automatic_fields
-            is_optional, sql_type = self.match_type()
+            is_optional, sql_type = self.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field)
+            if is_automatic_field:
+                is_optional = False
+            # end if
             type_definition = f'  "{key}" {sql_type}{"" if is_optional else " NOT NULL"}'
             type_definitions.append(type_definition)
         # end for
