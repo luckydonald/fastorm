@@ -609,8 +609,8 @@ class FastORM(object):
     # end def
 
     def build_sql_create(
-        self, *, ignore_setting_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
-    ) -> Tuple[str, Any]:
+        self,
+    ) -> Tuple[str,]:
         _table_name = getattr(self, '_table_name')
         _automatic_fields = getattr(self, '_automatic_fields')
         assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
