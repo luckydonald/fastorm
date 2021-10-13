@@ -22,7 +22,8 @@ class SystemUnderTest(object):
     # Required str
     #
 
-    t1_1: str; __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
+    t1_1: str
+    __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
 
     t1_2: Union[str]
     __result__t1_2 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
@@ -112,7 +113,6 @@ class CreateTableTestCase(unittest.TestCase):
                 self.assertEqual(is_optional, expected_result.is_optional)
             # end which
         # end for
-        self.assertEqual(True, False)  # add assertion here
     # end def
 # end class
 
