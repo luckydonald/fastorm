@@ -460,9 +460,12 @@ class FastORM(object):
         instance._database_cache_overwrite_with_current()
         return instance
     # end def
+
+
     COLUMS_AUTO_TYPES: dict[type, str] = {
         int: "BIGSERIAL",
     }
+
     COLUMN_TYPES: dict[type, str] = {
         bool: "BOOLEAN",
         bytes: "BYTEA",
@@ -569,16 +572,17 @@ class FastORM(object):
         # tid
         # tuple
     }
+
     COLUMN_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
         lambda cls: hasattr(cls, 'to_dict'): COLUMN_TYPES[dict],
         lambda cls: hasattr(cls, 'to_array'): COLUMN_TYPES[dict],  # pytgbot object uses to_array
     }
+
     COLUMN_AUTO_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
     }
 
     @classmethod
     def _match_type(cls, python_type: type, *, automatic: bool) -> str:
-        print('aaa', python_type)
         try:
             issubclass(python_type, object)
         except TypeError:  # issubclass() arg 1 must be a class
@@ -688,10 +692,8 @@ class FastORM(object):
         """
         if hasattr(type_hint, '__origin__') or isinstance(type_hint, types.UnionType):
             origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
-            print('a', origin)
             match origin:
                 case typing.Optional | typing.Union | types.UnionType:  # Optional is an special union, too
-                    print('a.a')
                     union_params = type_hint.__args__  # this was __union_params__ in python3.5, but __args__ in 3.6+
                     match union_params:
                         case (the_type, types.NoneType) | (types.NoneType, the_type):
@@ -708,7 +710,6 @@ class FastORM(object):
                         is_optional = True
                     # end if
                 case typing.List:
-                    print('a.b')
                     assert len(type_hint.__args__) == 1  # list of one type
                     list_params = type_hint.__args__
                     match list_params:
@@ -728,7 +729,6 @@ class FastORM(object):
                 # end case
             # end match
         else:
-            print('b')
             is_optional = False
             sql_type = cls._match_type(type_hint, automatic=is_automatic_field)  # fails anyway if not in the list above
         # end case
