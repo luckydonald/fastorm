@@ -24,14 +24,14 @@ class SystemUnderTest(FastORM):
           "t1_3" TEXT NOT NULL,
           "t1_4" TEXT NOT NULL,
           "t2_1" TEXT,
-          "t2_2" TEXT,
-          "t2_3" TEXT,
+          # "t2_2" TEXT,
+          # "t2_3" TEXT,
           "t2_4" TEXT,
           "t2_5" TEXT,
           "t2_6" TEXT,
           "t2_7" TEXT,
-          "t2_8" TEXT,
-          "t2_9" TEXT,
+          # "t2_8" TEXT,
+          # "t2_9" TEXT,
           "t3_1" TEXT NOT NULL,
           "t3_2" BIGINT NOT NULL,
           "t3_3" DOUBLE PRECISION NOT NULL,
@@ -68,10 +68,10 @@ class SystemUnderTest(FastORM):
     t2_1: Union[str, None]
     __result__t2_1 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
-    t2_2: str | None
+    # t2_2: str | None
     __result__t2_2 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
-    t2_3: None | str
+    # t2_3: None | str
     __result__t2_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_4: Optional[str]
@@ -86,10 +86,10 @@ class SystemUnderTest(FastORM):
     t2_7: Union[str | None, None]
     __result__t2_7 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
-    t2_8: Union[str | None] | None
+    # t2_8: Union[str | None] | None
     __result__t2_8 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
-    t2_9: Union[str | None] | Optional[None] | None
+    # t2_9: Union[str | None] | Optional[None] | None
     __result__t2_9 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     #
