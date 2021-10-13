@@ -28,7 +28,7 @@ class User(FastORM):
     _automatic_fields = ['id']
     _table_name = 'user'
 
-    id: Optional[int]  # Optional because automaticly filled (_automatic_fields)
+    id: Optional[int]  # Optional because automatically filled (_automatic_fields)
     name: str
 # end class
 
@@ -40,7 +40,7 @@ class Auction(FastORM):
     _automatic_fields = ['id']
     _table_name = 'auction'
 
-    id: Optional[int]  # Optional because automaticly filled (_automatic_fields)
+    id: Optional[int]  # Optional because automatically filled (_automatic_fields)
     owner: Union[int, User]  # can be provided by int or the native object
     previous_owner: Optional[User]  # Optional because nullable
     state: State  # Enum support :D
@@ -52,7 +52,7 @@ class Auction(FastORM):
     metadata: JSONType
     deleted: bool
     chat_id: int
-# end def
+# end class
 
 
 async def run():
