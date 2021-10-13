@@ -108,7 +108,7 @@ class CreateTableTestCase(unittest.TestCase):
     def test_type_detection(self):
         type_hints: dict[str, any] = get_type_hints(SystemUnderTest)
         for key, type_hint in type_hints.items():
-            if key.startswith('__result__'):
+            if key.startswith('_'):
                 continue
             # end if
             expected_result: ExpectedResult = getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}')
