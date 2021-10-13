@@ -4,11 +4,15 @@ __author__ = 'luckydonald'
 __version__ = "0.0.1"
 
 import dataclasses
-import json
-from datetime import datetime
-from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar
+import ipaddress
+import datetime
+import decimal
+import uuid
+from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable, _GenericAlias
+from types import GenericAlias, UnionType
 
 import asyncpg
+import typing, types
 from asyncpg import Connection
 from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
@@ -69,7 +73,22 @@ class CheapORM(object):
     @classmethod
     def get_fields(cls) -> List[str]:
         return [f.name for f in dataclasses.fields(cls)]
-    # end if
+    # end def
+
+    @classmethod
+    def get_ignored_fields(cls) -> List[str]:
+        _ignored_fields = getattr(cls, '_ignored_fields')
+        assert_type_or_raise(_ignored_fields, list, parameter_name=f'{cls.__name__}._ignored_fields')
+        _ignored_fields += [
+            '_table_name',
+            '_ignored_fields',
+            '_automatic_fields',
+            '_primary_keys',
+            '_database_cache',
+            '__selectable_fields',
+        ]
+        return _ignored_fields
+    # end def
 
     @classmethod
     def get_sql_fields(cls) -> List[str]:
@@ -439,15 +458,278 @@ class CheapORM(object):
         instance._database_cache_overwrite_with_current()
         return instance
     # end def
+    COLUMS_AUTO_TYPES: dict[type, str] = {
+        int: "BIGSERIAL",
+    }
+    COLUMN_TYPES: dict[type, str] = {
+        bool: "BOOLEAN",
+        bytes: "BYTEA",
+        bytearray: "BYTEA",
+        str: "TEXT",
+        # Python Type
+        # PostgreSQL Type
+        # Source: https://magicstack.github.io/asyncpg/current/usage.html#type-conversion
+
+        # anyarray
+        # list
+
+        # anyenum
+        # str
+
+        # anyrange
+        # asyncpg.Range
+
+        # record
+        # asyncpg.Record, tuple, Mapping
+        # bit, varbit
+        # asyncpg.BitString
+
+        asyncpg.Box: "BOX",
+
+        # cidr
+        # ipaddress.IPv4Network, ipaddress.IPv6Network
+        ipaddress.IPv4Network: "CIDR",
+        ipaddress.IPv6Network: "CIDR",
+
+        # inet
+        # ipaddress.IPv4Interface, ipaddress.IPv6Interface, ipaddress.IPv4Address, ipaddress.IPv6Address
+        ipaddress.IPv4Interface: "INET",
+        ipaddress.IPv6Interface: "INET",
+        ipaddress.IPv4Address: "INET",
+        ipaddress.IPv6Address: "INET",
+
+        # macaddr
+        # str
+
+        asyncpg.Circle: "CIRCLE",
+        datetime.datetime.date: "DATE",
+
+        # time
+        # offset-naïve datetime.time
+
+        # time with time zone
+        # offset-aware datetime.time
+        datetime.time: "TIME",
+
+        # timestamp
+        # offset-naïve datetime.datetime
+        #  +
+        # timestamp with time zone
+        # offset-aware datetime.datetime
+        datetime.datetime: "TIMESTAMP",
+
+        datetime.timedelta: "INTERVAL",
+
+        # float, double precision
+        # float [2]
+        # Inexact single-precision float values may have a different representation when decoded into a Python float. This is inherent to the implementation of limited-precision floating point types. If you need the decimal representation to match, cast the expression to double or numeric in your query.
+        float: "DOUBLE PRECISION",
+
+        # smallint, integer, bigint
+        # int
+        int: "BIGINT",
+
+        # numeric
+        # Decimal
+        decimal.Decimal: "NUMERIC",
+
+        # json, jsonb
+        # str
+        dict: "JSONB",
+
+        # line
+        # asyncpg.Line
+        asyncpg.Line: "LINE",
+
+        # lseg
+        # asyncpg.LineSegment
+        asyncpg.LineSegment: "LSEG",
+
+        # money
+        # str
+
+        # path
+        # asyncpg.Path
+        asyncpg.Path: "PATH",
+
+        # point
+        # asyncpg.Point
+        asyncpg.Point: "POINT",
+
+        # polygon
+        # asyncpg.Polygon
+        asyncpg.Polygon: "POLYGON",
+
+        # uuid
+        # uuid.UUID
+        uuid.UUID: "UUID",
+
+        # tid
+        # tuple
+    }
+    COLUMN_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
+        lambda cls: hasattr(cls, 'to_dict'): COLUMN_TYPES[dict],
+        lambda cls: hasattr(cls, 'to_array'): COLUMN_TYPES[dict],  # pytgbot object uses to_array
+    }
+    COLUMN_AUTO_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
+    }
+
+    @classmethod
+    def _match_type(cls, python_type: type, *, automatic: bool) -> str:
+        print('aaa', python_type)
+        try:
+            issubclass(python_type, object)
+        except TypeError:  # issubclass() arg 1 must be a class
+            raise TypeError(f'Could not process type {python_type} as a python type. Probably a typing annotation?.')
+        if automatic:
+            for sql_py_type, sql_type in cls.COLUMS_AUTO_TYPES.items():
+                if issubclass(python_type, sql_py_type):
+                    return sql_type
+                # end if
+            # end for
+            for check_function, sql_type in cls.COLUMN_AUTO_TYPES_SPECIAL.items():
+                if check_function(python_type):
+                    return sql_type
+                # end if
+            # end for
+        # end if
+        for sql_py_type, sql_type in cls.COLUMN_TYPES.items():
+            if issubclass(python_type, sql_py_type):
+                return sql_type
+            # end if
+        # end for
+        for check_function, sql_type in cls.COLUMN_TYPES_SPECIAL.items():
+            if check_function(python_type):
+                return sql_type
+            # end if
+        # end for
+        raise TypeError(f'Could not process type {python_type} as database type.')
+    # end def
+
+    def build_sql_create(
+        self, *, ignore_setting_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
+    ) -> Tuple[str, Any]:
+        _table_name = getattr(self, '_table_name')
+        _automatic_fields = getattr(self, '_automatic_fields')
+        assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
+        assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
+        _ignored_fields = self.get_ignored_fields()
+
+        from typing import get_type_hints
+        type_hints = get_type_hints(self.__class__)
+        own_keys = self.get_fields()
+
+        sqls = [
+            f"CREATE TABLE {self.get_table()} ("
+        ]
+
+        # ignore _ignored_fields
+        own_keys = [key for key in own_keys if key not in _ignored_fields]
+
+        new_own_keys = {}
+        for key in own_keys:
+            type_hint = type_hints[key]
+            if issubclass(type_hint, CheapORM):
+                for primary_key in type_hint._primary_keys:
+                    pk_type_hints = get_type_hints(type_hint)
+                    pk_type_hint = pk_type_hints[primary_key]
+                    new_key = f'{key}__{primary_key}'
+                    assert new_key not in own_keys
+                    new_own_keys[new_key] = pk_type_hint
+                    # TODO: add references
+                # end for
+            else:
+                new_own_keys[key] = type_hint
+            # end if
+        # end for
+
+        for key in own_keys:
+            type_hint = type_hints[key]
+            is_automatic_field = key in _automatic_fields
+
+            """
+            user = User(id=1234, name="The new auction owner.")
+            class Foo():
+                foo1: List[int]
+                foo2: Dict[str, int]
+                foo3: Tuple[int, int, int]
+                foo4: Tuple[int, int, int, int]
+            # end class
+            self = user
+            key = "id"
+            type_hints = get_type_hints(self.__class__)
+            type_hint = type_hints[key]
+            # """
+            is_optional, sql_type = self.match_type()
+            type_definition = f'  "{key}" {sql_type}{"" if is_optional else " NOT NULL"}'
+            sqls.append(type_definition)
+        # end for
+        sql = "\n".join(sqls)
+        return (sql,)
+    # end def
+
+    @classmethod
+    def match_type(
+        cls,
+       type_hint: GenericAlias | UnionType | type,
+        is_automatic_field: Optional[bool] = None,
+        is_optional: Optional[bool] = None,
+    ):
+        if hasattr(type_hint, '__origin__') or isinstance(type_hint, types.UnionType):
+            origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
+            print('a', origin)
+            match origin:
+                case typing.Optional | typing.Union | types.UnionType:  # Optional is an special union, too
+                    print('a.a')
+                    union_params = type_hint.__args__  # this was __union_params__ in python3.5, but __args__ in 3.6+
+                    match union_params:
+                        case (the_type, types.NoneType) | (types.NoneType, the_type):
+                            is_optional = True
+                        case (the_type,):
+                            is_optional = False
+                        case something_else:
+                            raise TypeError(
+                                'Union with more than one type (Optional None excluded).', something_else
+                            )
+                    # end match
+                    additional_is_optional, sql_type = cls.match_type(the_type, is_automatic_field=is_automatic_field)
+                    if additional_is_optional:
+                        is_optional = True
+                    # end if
+                case typing.List:
+                    print('a.b')
+                    assert len(type_hint.__args__) == 1  # list of one type
+                    list_params = type_hint.__args__
+                    match list_params:
+                        case [the_type]:
+                            additional_is_optional, sql_type = cls.match_type(the_type, is_automatic_field=is_automatic_field)
+                            if additional_is_optional:
+                                is_optional = True
+                            # end if
+                        case something_else:
+                            raise TypeError(
+                                'List with more than one type.', something_else
+                            )
+                        # end case
+                    # end match
+                case _:
+                    raise ValueError()
+                # end case
+            # end match
+        else:
+            print('b')
+            is_optional = False
+            sql_type = cls._match_type(type_hint, automatic=is_automatic_field)  # fails anyway if not in the list above
+        # end case
+        return is_optional, sql_type
+    # end def
 
     @staticmethod
     def dataclass(other_cls):
         """
+        Meant to calculate a `.get(…, …, …, …) function, dataclass style.
         :param other_cls:
         :return:
-        """
-        body = """
-
         """
         _primary_keys = getattr(other_cls, '_primary_keys')
         fields = [
@@ -561,7 +843,7 @@ class CheapORM(object):
             logger.debug(f'Encoding to JSON: {obj!r}')
 
             def myconverter(o):
-                if isinstance(o, datetime):
+                if isinstance(o, datetime.datetime):
                     return o.isoformat()
                 # end def
                 if hasattr(o, 'to_array'):
