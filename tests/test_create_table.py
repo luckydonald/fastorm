@@ -110,8 +110,8 @@ class CreateTableTestCase(unittest.TestCase):
                 print(key, ",", type_hint, ",", expected_result)
                 if expected_result is not None:
                     is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
-                    self.assertEqual(sql_type, expected_result.sql_type)
-                    self.assertEqual(is_optional, expected_result.is_optional)
+                    self.assertEqual(expected_result.sql_type, sql_type)
+                    self.assertEqual(expected_result.is_optional, is_optional)
                 else:
                     with self.assertRaises(TypeError):
                         is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
