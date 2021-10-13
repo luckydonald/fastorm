@@ -613,18 +613,19 @@ class FastORM(object):
         raise TypeError(f'Could not process type {python_type} as database type.')
     # end def
 
+    @classmethod
     def build_sql_create(
-        self,
+        cls,
     ) -> Tuple[str,]:
-        _table_name = getattr(self, '_table_name')
-        _automatic_fields = getattr(self, '_automatic_fields')
-        assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
-        assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
-        _ignored_fields = self.get_ignored_fields()
+        _table_name = getattr(cls, '_table_name')
+        _automatic_fields = getattr(cls, '_automatic_fields')
+        assert_type_or_raise(_table_name, str, parameter_name='cls._table_name')
+        assert_type_or_raise(_automatic_fields, list, parameter_name='cls._automatic_fields')
+        _ignored_fields = cls.get_ignored_fields()
 
         from typing import get_type_hints
-        type_hints = get_type_hints(self.__class__)
-        own_keys = self.get_fields()
+        type_hints = get_type_hints(cls.__class__)
+        own_keys = cls.get_fields()
 
         # ignore _ignored_fields
         own_keys = [key for key in own_keys if key not in _ignored_fields]
@@ -650,7 +651,7 @@ class FastORM(object):
         for key in own_keys:
             type_hint = type_hints[key]
             is_automatic_field = key in _automatic_fields
-            is_optional, sql_type = self.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field)
+            is_optional, sql_type = cls.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field)
             if is_automatic_field:
                 is_optional = False
             # end if
@@ -661,7 +662,7 @@ class FastORM(object):
             type_definitions
         ).join(
             [
-                f"CREATE TABLE {self.get_table()} (",
+                f"CREATE TABLE {cls.get_table()} (",
                 # <joined type_definitions>
                 ")"
             ]
