@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# git clone ../DockerTgBot/.git .got.git
-# ./copy_commit.sh <COMMIT_HASH>
+# $ git clone ../DockerTgBot/.git .got.git
+# $ ./copy_commit.sh <COMMIT_HASH>
+# or
+# $ alias c='./copy_commit.sh'
+# $ c <COMMIT_HASH>
 
 COMMIT=${1}
 
