@@ -621,10 +621,6 @@ class FastORM(object):
         type_hints = get_type_hints(self.__class__)
         own_keys = self.get_fields()
 
-        sqls = [
-            f"CREATE TABLE {self.get_table()} ("
-        ]
-
         # ignore _ignored_fields
         own_keys = [key for key in own_keys if key not in _ignored_fields]
 
@@ -645,14 +641,25 @@ class FastORM(object):
             # end if
         # end for
 
+        type_definitions = []
         for key in own_keys:
             type_hint = type_hints[key]
             is_automatic_field = key in _automatic_fields
             is_optional, sql_type = self.match_type()
             type_definition = f'  "{key}" {sql_type}{"" if is_optional else " NOT NULL"}'
-            sqls.append(type_definition)
+            type_definitions.append(type_definition)
         # end for
-        sql = "\n".join(sqls)
+        sql = ",\n".join(
+            type_definitions
+        ).join(
+            [
+                f"CREATE TABLE {self.get_table()} (",
+                # <joined type_definitions>
+                ")"
+            ]
+        )
+
+        # noinspection PyRedundantParentheses
         return (sql,)
     # end def
 
