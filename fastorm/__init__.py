@@ -626,7 +626,19 @@ class FastORM(object):
         _ignored_fields = cls.get_ignored_fields()
 
         from typing import get_type_hints
-        type_hints = get_type_hints(cls.__class__)
+        type_hints: dict[str, Any] = {}
+
+        # we need to check all parent classes for typesings if we are a subclass.
+        classes_hierarchy = list(reversed(cls.__mro__))
+        orm_class_index = classes_hierarchy.index(FastORM)
+        for parent_cls in classes_hierarchy[orm_class_index + 1:]:
+            # https://stackoverflow.com/a/2010732/3423324#what-does-mro-do
+            # "you also get the assurance that, in __mro__, no class is duplicated, and no class comes after its ancestors,
+            #  save that classes that first enter at the same level of multiple inheritance are in the __mro__ left to right."
+            # reverse so that it is
+            parent_cls_type_hints: dict[str, Any] = get_type_hints(parent_cls)
+            type_hints |= parent_cls_type_hints
+        # end if
         own_keys = cls.get_fields()
 
         # ignore _ignored_fields
