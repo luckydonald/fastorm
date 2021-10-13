@@ -506,9 +506,6 @@ class FastORM(object):
         # macaddr
         # str
 
-        asyncpg.Circle: "CIRCLE",
-        datetime.date: "DATE",
-
         # time
         # offset-naïve datetime.time
 
@@ -522,6 +519,8 @@ class FastORM(object):
         # timestamp with time zone
         # offset-aware datetime.datetime
         datetime.datetime: "TIMESTAMP",
+
+        datetime.date: "DATE",  # must come after datetime.datetime as datetime is a subclass of this
 
         datetime.timedelta: "INTERVAL",
 
@@ -553,9 +552,7 @@ class FastORM(object):
         # money
         # str
 
-        # path
-        # asyncpg.Path
-        asyncpg.Path: "PATH",
+        asyncpg.Circle: "CIRCLE",
 
         # point
         # asyncpg.Point
@@ -564,6 +561,10 @@ class FastORM(object):
         # polygon
         # asyncpg.Polygon
         asyncpg.Polygon: "POLYGON",
+
+        # path
+        # asyncpg.Path
+        asyncpg.Path: "PATH",
 
         # uuid
         # uuid.UUID
