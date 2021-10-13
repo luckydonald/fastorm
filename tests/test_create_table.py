@@ -4,6 +4,7 @@ from typing import get_type_hints
 from typing import Optional, Union, Any, Type
 from fastorm import FastORM
 
+
 @dataclasses.dataclass
 class ExpectedResult(object):
     is_optional: bool
@@ -96,8 +97,8 @@ class SystemUnderTest(object):
 # end class
 
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
+class CreateTableTestCase(unittest.TestCase):
+    def test_type_detection(self):
         type_hints: dict[str, any] = get_type_hints(SystemUnderTest)
         for key, type_hint in type_hints.items():
             expected_result: ExpectedResult = getattr(SystemUnderTest, key)
