@@ -83,12 +83,6 @@ class SystemUnderTest(object):
     __result__t3_4 = ExpectedResult(is_optional=False, sql_type="BOOLEAN", default=None)
 
     #
-    # wrong stuff
-    #
-    t4_1: Union[int, str]
-    __result__t4_1 = None
-
-    #
     # more uncommon types
     #
 
