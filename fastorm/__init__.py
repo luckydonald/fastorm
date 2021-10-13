@@ -464,11 +464,11 @@ class FastORM(object):
     # end def
 
 
-    COLUMS_AUTO_TYPES: dict[type, str] = {
+    _COLUMS_AUTO_TYPES: dict[type, str] = {
         int: "BIGSERIAL",
     }
 
-    COLUMN_TYPES: dict[type, str] = {
+    _COLUMN_TYPES: dict[type, str] = {
         bool: "BOOLEAN",
         bytes: "BYTEA",
         bytearray: "BYTEA",
@@ -576,12 +576,12 @@ class FastORM(object):
         # tuple
     }
 
-    COLUMN_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
-        lambda cls: hasattr(cls, 'to_dict'): COLUMN_TYPES[dict],
-        lambda cls: hasattr(cls, 'to_array'): COLUMN_TYPES[dict],  # pytgbot object uses to_array
+    _COLUMN_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
+        lambda cls: hasattr(cls, 'to_dict'): _COLUMN_TYPES[dict],
+        lambda cls: hasattr(cls, 'to_array'): _COLUMN_TYPES[dict],  # pytgbot object uses to_array
     }
 
-    COLUMN_AUTO_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
+    _COLUMN_AUTO_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
     }
 
     @classmethod
@@ -591,23 +591,23 @@ class FastORM(object):
         except TypeError:  # issubclass() arg 1 must be a class
             raise TypeError(f'Could not process type {python_type} as a python type. Probably a typing annotation?.')
         if automatic:
-            for sql_py_type, sql_type in cls.COLUMS_AUTO_TYPES.items():
+            for sql_py_type, sql_type in cls._COLUMS_AUTO_TYPES.items():
                 if issubclass(python_type, sql_py_type):
                     return sql_type
                 # end if
             # end for
-            for check_function, sql_type in cls.COLUMN_AUTO_TYPES_SPECIAL.items():
+            for check_function, sql_type in cls._COLUMN_AUTO_TYPES_SPECIAL.items():
                 if check_function(python_type):
                     return sql_type
                 # end if
             # end for
         # end if
-        for sql_py_type, sql_type in cls.COLUMN_TYPES.items():
+        for sql_py_type, sql_type in cls._COLUMN_TYPES.items():
             if issubclass(python_type, sql_py_type):
                 return sql_type
             # end if
         # end for
-        for check_function, sql_type in cls.COLUMN_TYPES_SPECIAL.items():
+        for check_function, sql_type in cls._COLUMN_TYPES_SPECIAL.items():
             if check_function(python_type):
                 return sql_type
             # end if
