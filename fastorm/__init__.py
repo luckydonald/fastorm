@@ -666,7 +666,8 @@ class FastORM(object):
     @classmethod
     def match_type(
         cls,
-       type_hint: GenericAlias | UnionType | type,
+        type_hint: GenericAlias | UnionType | type,
+        *,
         is_automatic_field: Optional[bool] = None,
         is_optional: Optional[bool] = None,
     ):
