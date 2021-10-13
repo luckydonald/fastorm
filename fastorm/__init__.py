@@ -620,7 +620,7 @@ class FastORM(BaseModel):
     @classmethod
     def build_sql_create(
         cls,
-    ) -> Tuple[str,]:
+    ) -> Tuple[str, Any]:
         _table_name = getattr(cls, '_table_name')
         _automatic_fields = getattr(cls, '_automatic_fields')
         assert_type_or_raise(_table_name, str, parameter_name='cls._table_name')
@@ -879,7 +879,7 @@ class FastORM(BaseModel):
         appending your class to `_CLASS_SERIALIZERS` like so:
         ```py
         # anywhere in your code, to be run once
-        SimpleORM._CLASS_SERIALIZERS[SomeClass] = lambda obj: obj.do_something()
+        FastORM._CLASS_SERIALIZERS[SomeClass] = lambda obj: obj.do_something()
         ```
         :param conn:
         :return:
@@ -907,7 +907,7 @@ class FastORM(BaseModel):
                 # end def
 
                 # check _CLASS_SERIALIZERS,
-                # a easy way to add your own by writing SimpleORM._CLASS_SERIALIZERS[Class] = lambda obj: obj
+                # a easy way to add your own by writing FastORM._CLASS_SERIALIZERS[Class] = lambda obj: obj
                 for type_to_check, callable_function in cls._CLASS_SERIALIZERS.items():
                     if isinstance(o, type_to_check):
                         return callable_function(o)
