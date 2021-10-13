@@ -647,7 +647,12 @@ class FastORM(object):
         new_own_keys = {}
         for key in own_keys:
             type_hint = type_hints[key]
-            if issubclass(type_hint, FastORM):
+            try:
+                is_subclass = issubclass(type_hint, FastORM)
+            except TypeError:
+                is_subclass = False
+            # end try
+            if is_subclass:
                 for primary_key in type_hint._primary_keys:
                     pk_type_hints = get_type_hints(type_hint)
                     pk_type_hint = pk_type_hints[primary_key]
