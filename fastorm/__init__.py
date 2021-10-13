@@ -672,8 +672,20 @@ class FastORM(object):
         type_hint: GenericAlias | UnionType | type,
         *,
         is_automatic_field: Optional[bool] = None,
-        is_optional: Optional[bool] = None,
-    ):
+    ) -> tuple[bool, str]:
+        """
+        Processes a type hint to produce a CREATE TABLE sql segment of the type of that type hint and if it's optional..
+
+            >>> class Example(object):
+            ...   foo: Optional[int]
+            ...
+
+            >>> type_hints = typing.get_type_hints(Example)
+            >>> is_optional, sql_type = match_type(type_hints['foo'], is_automatic_field=False)
+            >>> is_optional, sql_type
+            (True, 'BIGINT')
+
+        """
         if hasattr(type_hint, '__origin__') or isinstance(type_hint, types.UnionType):
             origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
             print('a', origin)
