@@ -502,7 +502,7 @@ class CheapORM(object):
         # str
 
         asyncpg.Circle: "CIRCLE",
-        datetime.datetime.date: "DATE",
+        datetime.date: "DATE",
 
         # time
         # offset-naïve datetime.time
