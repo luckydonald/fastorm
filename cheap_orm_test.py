@@ -2,7 +2,7 @@ import dataclasses
 import unittest
 from typing import get_type_hints
 from typing import Optional, Union, Any, Type
-from cheap_orm import CheapORM
+from fastorm import FastORM
 
 @dataclasses.dataclass
 class ExpectedResult(object):
@@ -103,7 +103,7 @@ class MyTestCase(unittest.TestCase):
             expected_result: ExpectedResult = getattr(SystemUnderTest, key)
             with self.subTest(msg=key):
                 print(key, ",", type_hint, ",", expected_result)
-                is_optional, sql_type = CheapORM.match_type(type_hint=type_hint)
+                is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
                 self.assertEqual(sql_type, expected_result.sql_type)
                 self.assertEqual(is_optional, expected_result.is_optional)
             # end which

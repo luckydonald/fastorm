@@ -11,7 +11,7 @@ from enum import Enum
 from asyncpg import Connection
 from luckydonaldUtils.typing import JSONType
 
-from cheap_orm import CheapORM
+from fastorm import FastORM
 
 
 class State(str, Enum):
@@ -22,7 +22,7 @@ class State(str, Enum):
 
 
 @dataclasses.dataclass
-class User(CheapORM):
+class User(FastORM):
     _ignored_fields = []
     _primary_keys = ['id']
     _automatic_fields = ['id']
@@ -34,7 +34,7 @@ class User(CheapORM):
 
 
 @dataclasses.dataclass
-class Auction(CheapORM):
+class Auction(FastORM):
     _ignored_fields = []
     _primary_keys = ['id']
     _automatic_fields = ['id']
@@ -56,7 +56,7 @@ class Auction(CheapORM):
 
 
 async def run():
-    conn = await CheapORM.get_connection('postgresql://user:password@postgres_host/database')
+    conn = await FastORM.get_connection('postgresql://user:password@postgres_host/database')
 
     await migrate_database(conn)  # a function (below) which prepares the database for use, creates tables and manages schema changes.
 
@@ -77,7 +77,7 @@ async def run():
         title="I sell my soul", subtitle="Slightly used",
         description="You only get a share though.",
         start_date=datetime.now(), end_date=datetime.now() + timedelta(days=5),  # datetimes just works
-        metadata={"just": ["json", "stuff", 111, datetime.now()]},  # will be native JSONB. You can have datetimes and your own classes in there as well, see `CheapORM._set_up_connection`.
+        metadata={"just": ["json", "stuff", 111, datetime.now()]},  # will be native JSONB. You can have datetimes and your own classes in there as well, see `FastORM._set_up_connection`.
         deleted=False,
         chat_id=9223372036854775807,  # note, this database field must be BIGINT for such large numbers
     )
