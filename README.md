@@ -7,10 +7,10 @@ FastORM is a modern, fast (async), database library for projects with Python 3.1
 The key features are:
  - TBA
 
-See [cheap_orm_example.py](cheap_orm_example.py) for an examples.
 
 
 #### Example
+> See [example.py](example.py) for more examples.
 
 Let's define some tables, to show off the capabilities.
 
@@ -52,10 +52,9 @@ class Auction(FastORM):
     metadata: JSONType
     deleted: bool
     chat_id: int
-
 ```
 
-Now you can quickly make and write classes to the database:
+Now you can quickly write classes to the database:
 
 ```py
 conn = await FastORM.get_connection('postgresql://user:password@postgres_host/database')
@@ -80,4 +79,28 @@ auction = Auction(
     deleted=False,
     chat_id=9223372036854775807,  # note, this database field must be BIGINT for such large numbers
 )
+await auction.insert(conn=conn)
 ```
+
+Basic lookups are easy, too.
+
+```py
+# single lookup, returns one element or None
+user = await User.get(name="hunter24")
+user = await User.get(id=1234)
+
+# list of results (list can have length 0)
+all_running_auctions = Auction.select(state=State.RUNNING)
+```
+
+Of course updating and deleting is possible too.
+
+```py
+auction.state = State.COMPLETED
+await auction.update()
+```
+```py
+await user.delete()
+```
+
+
