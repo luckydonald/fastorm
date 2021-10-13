@@ -162,15 +162,24 @@ class CreateTableTestCase(unittest.TestCase):
         if you would list `A` first, it will never reach `B` in processing as `A` already matches all `B` objects..
         :return:
         """
-        classes = list(FastORM.COLUMN_TYPES.keys())
-        for first_class_index, first_class in enumerate(classes):
-            # for all classes which are after first_class(_index)
-            for second_class_index, second_class in enumerate(classes[first_class_index + 1:], start=first_class_index + 1):
-                # the second may not be a subclass of the first, that would mean the fist would shadow the second.
-                self.assertFalse(
-                    issubclass(second_class, first_class),
-                    msg=f'Class {first_class!r} at index {first_class_index} is shadowed by {second_class!r} at index {second_class_index}.')
-            # end for
+
+        LISTS_TO_CHECK = {
+            "COLUMN_TYPES": FastORM.COLUMN_TYPES,
+            "COLUMS_AUTO_TYPES": FastORM.COLUMS_AUTO_TYPES
+        }
+        for list_name, list_to_check in LISTS_TO_CHECK.items():
+            classes = list(list_to_check.keys())
+            with self.subTest(msg=f'{FastORM.__name__}.{list_name}'):
+                for first_class_index, first_class in enumerate(classes):
+                    # for all classes which are after first_class(_index)
+                    for second_class_index, second_class in enumerate(classes[first_class_index + 1:], start=first_class_index + 1):
+                        # the second may not be a subclass of the first, that would mean the fist would shadow the second.
+                        self.assertFalse(
+                            issubclass(second_class, first_class),
+                            msg=f'The broader class {first_class!r} (at index {first_class_index}) is shadowing the later class {second_class!r} (at index {second_class_index}).')
+                    # end for
+                # end for
+            # end with
         # end for
 # end class
 
