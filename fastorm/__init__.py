@@ -661,18 +661,36 @@ class FastORM(object):
             # end if
         # end for
 
+        placeholder_index = 0
+        placeholder_values = []
         type_definitions = []
         for key in own_keys:
             type_hint = type_hints[key]
+            has_default = hasattr(cls, key)
             is_automatic_field = key in _automatic_fields
-            is_optional, sql_type = cls.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field)
+            is_optional, sql_type = cls.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field, key=key)
             if is_automatic_field:
                 is_optional = False
             # end if
-            type_definition = f'  "{key}" {sql_type}{"" if is_optional else " NOT NULL"}'
-            type_definitions.append(type_definition)
+
+            # Now let's build that column's sql part
+
+            # column_name, data_type:
+            type_definition_parts = [f'\n  "{key}"', sql_type]
+
+            # column_constraints:
+            if not is_optional:
+                type_definition_parts.append("NOT NULL")
+            # end if
+            if has_default:
+                placeholder_index += 1
+                type_definition_parts.append(f'${placeholder_index}')
+                default = getattr(cls, key)
+                placeholder_values.append(default)
+            # end if
+            type_definitions.append(" ".join(type_definition_parts))
         # end for
-        sql = ",\n".join(
+        sql = ",".join(
             type_definitions
         ).join(
             [
@@ -683,7 +701,7 @@ class FastORM(object):
         )
 
         # noinspection PyRedundantParentheses
-        return (sql,)
+        return (sql, *placeholder_values)
     # end def
 
     @classmethod
@@ -692,6 +710,7 @@ class FastORM(object):
         type_hint: GenericAlias | UnionType | type,
         *,
         is_automatic_field: Optional[bool] = None,
+        key: str | None = None
     ) -> tuple[bool, str]:
         """
         Processes a type hint to produce a CREATE TABLE sql segment of the type of that type hint and if it's optional..
@@ -718,7 +737,7 @@ class FastORM(object):
                             is_optional = False
                         case something_else:
                             raise TypeError(
-                                'Union with more than one type (Optional None excluded).', something_else
+                                'Union with more than one type (Optional None excluded).', something_else, f'key {key}'
                             )
                     # end match
                     additional_is_optional, sql_type = cls.match_type(the_type, is_automatic_field=is_automatic_field)
