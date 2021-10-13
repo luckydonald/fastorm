@@ -127,10 +127,10 @@ class CreateTableTestCase(unittest.TestCase):
         # end for
     # end def
 
-    def test_COLUMN_TYPES_subclass_shadowing(self):
+    def test_TYPES_mapping_subclass_shadowing(self):
         """
         if you have `class A(object): pass` and `class B(A): pass`
-        if you would list `A` first, it will never reach `B` in processing.
+        if you would list `A` first, it will never reach `B` in processing as `A` already matches all `B` objects..
         :return:
         """
         classes = list(FastORM.COLUMN_TYPES.keys())
