@@ -11,7 +11,6 @@ class ExpectedResult(object):
     is_optional: bool
     sql_type: str
     default: Any
-    sql: str
 # end class
 
 ExpectedResult: Type[Any]
@@ -24,16 +23,16 @@ class SystemUnderTest(object):
     #
 
     t1_1: str
-    __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
+    __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
 
     t1_2: Union[str]
-    __result__t1_2 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
+    __result__t1_2 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
 
     t1_3: Union[Union[str]]
-    __result__t1_3 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
+    __result__t1_3 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
 
     t1_4: Union[str, str]
-    __result__t1_4 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
+    __result__t1_4 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
 
 
     #
@@ -41,47 +40,47 @@ class SystemUnderTest(object):
     #
 
     t2_1: Union[str, None]
-    __result__t2_1 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_1 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_2: str | None
-    __result__t2_2 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_2 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_3: None | str
-    __result__t2_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_4: Optional[str]
-    __result__t2_4 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_4 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_5: Union[Union[str, None], None]
-    __result__t2_5 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_5 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_6: Union[Optional[str], None]
-    __result__t2_6 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_6 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_7: Union[str | None, None]
-    __result__t2_7 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_7 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_8: Union[str | None] | None
-    __result__t2_8 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_8 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     t2_9: Union[str | None] | Optional[None] | None
-    __result__t2_9 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None, sql="TEXT")
+    __result__t2_9 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     #
     # base types
     #
 
     t3_1: str
-    __result__t3_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None, sql="TEXT NOT NULL")
+    __result__t3_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
 
     t3_2: int
-    __result__t3_2 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=None, sql="BIGINT NOT NULL")
+    __result__t3_2 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=None)
 
     t3_3: float
-    __result__t3_3 = ExpectedResult(is_optional=False, sql_type="DOUBLE PRECISION", default=None, sql="DOUBLE PRECISION NOT NULL")
+    __result__t3_3 = ExpectedResult(is_optional=False, sql_type="DOUBLE PRECISION", default=None)
 
     t3_4: bool
-    __result__t3_4 = ExpectedResult(is_optional=False, sql_type="BOOLEAN", default=None, sql="BOOLEAN NOT NULL")
+    __result__t3_4 = ExpectedResult(is_optional=False, sql_type="BOOLEAN", default=None)
 
     #
     # wrong stuff
@@ -94,14 +93,44 @@ class SystemUnderTest(object):
     #
 
     t5_1: datetime
-    __result__t5_1 = ExpectedResult(is_optional=False, sql_type="TIMESTAMP", default=None, sql="TIMESTAMP NOT NULL")
+    __result__t5_1 = ExpectedResult(is_optional=False, sql_type="TIMESTAMP", default=None)
 
     #
     # defaults
     #
     t6_1: str = "test"
-    __result__t6_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default="test", sql="TEXT NOT NULL DEFAULT '%2'")
+    __result__t6_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default="test")
 # end class
+
+
+class TableUnderTest(SystemUnderTest, FastORM):
+    """
+    CREATE TABLE "cool_table_yo" (
+      "t1_1" TEXT NOT NULL,
+      "t1_2" TEXT NOT NULL,
+      "t1_3" TEXT NOT NULL,
+      "t1_4" TEXT NOT NULL,
+      "t2_1" TEXT,
+      "t2_2" TEXT,
+      "t2_3" TEXT,
+      "t2_4" TEXT,
+      "t2_5" TEXT,
+      "t2_6" TEXT,
+      "t2_7" TEXT,
+      "t2_8" TEXT,
+      "t2_9" TEXT,
+      "t3_1" TEXT NOT NULL,
+      "t3_2" BIGINT NOT NULL,
+      "t3_3" DOUBLE PRECISION NOT NULL,
+      "t3_4" BOOLEAN NOT NULL,
+      "t5_1" TIMESTAMP NOT NULL,
+      "t6_1" TEXT NOT NULL DEFAULT '%1'
+    )
+    """
+    _table_name = 'cool_table_yo'
+    _automatic_fields = []
+    _ignored_fields = []
+# end def
 
 
 class CreateTableTestCase(unittest.TestCase):
