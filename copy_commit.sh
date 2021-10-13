@@ -21,7 +21,7 @@ echo "Commit message: <$COMMIT_MESSAGE>"
 echo "Commit date: <$COMMIT_DATE>"
 echo "Commit hash: <$COMMIT_HASH>"
 
-git format-patch -1 --stdout -- auction_helper/code/auction_helper/database/objects.py > ../dot.patch
+git format-patch -1 --stdout -- auction_helper/code/auction_helper/database/cheap_orm.py > ../dot.patch
 sed -i 's!auction_helper/code/auction_helper/database/!fastorm/!g' ../dot.patch
 cd ..
 git apply dot.patch || ( echo -e '\nClose (ctrl + X) when fixed the merge conflict' > /tmp/alert.txt ; nano /tmp/alert.txt )
