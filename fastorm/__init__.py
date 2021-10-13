@@ -648,20 +648,6 @@ class FastORM(object):
         for key in own_keys:
             type_hint = type_hints[key]
             is_automatic_field = key in _automatic_fields
-
-            """
-            user = User(id=1234, name="The new auction owner.")
-            class Foo():
-                foo1: List[int]
-                foo2: Dict[str, int]
-                foo3: Tuple[int, int, int]
-                foo4: Tuple[int, int, int, int]
-            # end class
-            self = user
-            key = "id"
-            type_hints = get_type_hints(self.__class__)
-            type_hint = type_hints[key]
-            # """
             is_optional, sql_type = self.match_type()
             type_definition = f'  "{key}" {sql_type}{"" if is_optional else " NOT NULL"}'
             sqls.append(type_definition)
