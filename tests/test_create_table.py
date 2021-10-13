@@ -1,9 +1,9 @@
-import dataclasses
 import unittest
 from datetime import datetime
 from typing import get_type_hints
 from typing import Optional, Union, Any, Type
 from fastorm import FastORM
+from pydantic import dataclasses
 
 
 @dataclasses.dataclass
