@@ -1,5 +1,2 @@
-.got.git/
 .idea/
 .python-version
-dot.patch
-copy_commit.sh
