@@ -103,6 +103,15 @@ class SystemUnderTest(object):
 # end class
 
 
+class WrongStuff(object):
+    #
+    # wrong stuff
+    #
+    t4_1: Union[int, str]
+    __result__t4_1 = None
+# end def
+
+
 class TableUnderTest(SystemUnderTest, FastORM):
     """
     CREATE TABLE "cool_table_yo" (
