@@ -156,6 +156,12 @@ class CreateTableTestCase(unittest.TestCase):
         # end for
     # end def
 
+    def test_sql_text(self):
+        expected_sql = "\n".join(line.removeprefix('    ') for line in TableUnderTest.__doc__.splitlines())
+        actual_sql = TableUnderTest.build_sql_create()
+        self.assertEqual(expected_sql, actual_sql)
+    # end def
+
     def test_TYPES_mapping_subclass_shadowing(self):
         """
         if you have `class A(object): pass` and `class B(A): pass`
