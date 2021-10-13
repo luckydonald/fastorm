@@ -20,7 +20,6 @@ if __name__ == '__main__':
     logging.add_colored_handler(level=logging.DEBUG)
 # end if
 
-
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
 
@@ -365,7 +364,7 @@ class CheapORM(object):
         # end if
         logger.debug(f'Fields to DELETE for selector {primary_key_parts!r}: {where_values!r}')
 
-        # noinspection SqlWithoutWhere
+        # noinspection SqlWithoutWhere,SqlResolve
         sql = f'DELETE FROM "{_table_name}"\n'
         sql += f' WHERE {",".join(primary_key_parts)}'
         sql += '\n;'
@@ -429,3 +428,9 @@ class CheapORM(object):
         return other_cls
     # end def
 # end if
+
+
+def _create_func(name, txt, globals, locals):
+    exec(txt, globals, locals)
+    return locals[name]
+# end def
