@@ -20,6 +20,7 @@ from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
 
 from luckydonaldUtils.typing import JSONType
+from pydantic import BaseModel
 from typeguard import check_type
 
 VERBOSE_SQL_LOG = True
@@ -32,7 +33,7 @@ if __name__ == '__main__':
 # end if
 
 
-class FastORM(object):
+class FastORM(BaseModel):
     _table_name: str  # database table name we run queries against
     _ignored_fields: List[str]  # fields which never are intended for the database and will be excluded in every operation. (So are all fields starting with an underscore)
     _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
@@ -40,7 +41,8 @@ class FastORM(object):
     _database_cache: Dict[str, JSONType]  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
     __selectable_fields: List[str]  # cache for `cls.get_sql_fields()`
 
-    def __init__(self):
+    def __init__(self, **data: Any):
+        super().__init__(**data)
         self.__post_init__()
     # end def
 
