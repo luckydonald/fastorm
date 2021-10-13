@@ -856,7 +856,7 @@ class FastORM(BaseModel):
         return False
     # end def
 
-    CLASS_SERIALIZERS = {
+    _CLASS_SERIALIZERS = {
         # # class: callable(data) -> json
         # # E.g.:
         # TgBotApiObject: lambda obj: return obj._raw if hasattr(obj, '_raw') and obj._raw else obj.to_array()
@@ -876,10 +876,10 @@ class FastORM(BaseModel):
 
         Prepares writing datetimes (as ISO format) and class instances as json if they have a `.to_dict()`, `.to_array()` function.
         An easy way to add your is by having a `.to_json()` function like above or
-        appending your class to `CLASS_SERIALIZERS` like so:
+        appending your class to `_CLASS_SERIALIZERS` like so:
         ```py
         # anywhere in your code, to be run once
-        SimpleORM.CLASS_SERIALIZERS[SomeClass] = lambda obj: obj.do_something()
+        SimpleORM._CLASS_SERIALIZERS[SomeClass] = lambda obj: obj.do_something()
         ```
         :param conn:
         :return:
@@ -906,9 +906,9 @@ class FastORM(BaseModel):
                     return o.to_dict()
                 # end def
 
-                # check CLASS_SERIALIZERS,
-                # a easy way to add your own by writing SimpleORM.CLASS_SERIALIZERS[Class] = lambda obj: obj
-                for type_to_check, callable_function in cls.CLASS_SERIALIZERS.items():
+                # check _CLASS_SERIALIZERS,
+                # a easy way to add your own by writing SimpleORM._CLASS_SERIALIZERS[Class] = lambda obj: obj
+                for type_to_check, callable_function in cls._CLASS_SERIALIZERS.items():
                     if isinstance(o, type_to_check):
                         return callable_function(o)
                     # end if
