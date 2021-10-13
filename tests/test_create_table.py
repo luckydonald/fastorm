@@ -1,5 +1,6 @@
 import dataclasses
 import unittest
+from datetime import datetime
 from typing import get_type_hints
 from typing import Optional, Union, Any, Type
 from fastorm import FastORM
@@ -89,12 +90,17 @@ class SystemUnderTest(object):
     __result__t4_1 = None
 
     #
+    # more uncommon types
+    #
+
+    t5_1: datetime
+    __result__t5_1 = ExpectedResult(is_optional=False, sql_type="TIMESTAMP", default=None, sql="TIMESTAMP NOT NULL")
+
+    #
     # defaults
     #
-    t5_1: str = "test"
-    __result__t5_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default="test", sql="TEXT NOT NULL DEFAULT '%2'")
-
-
+    t6_1: str = "test"
+    __result__t6_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default="test", sql="TEXT NOT NULL DEFAULT '%2'")
 # end class
 
 
@@ -122,5 +128,7 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 # end class
 
+
 if __name__ == '__main__':
     unittest.main()
+# end if
