@@ -143,7 +143,7 @@ class CreateTableTestCase(unittest.TestCase):
             if key.startswith('_'):
                 continue
             # end if
-            expected_result: ExpectedResult = getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}')
+            expected_result: ExpectedResult | None = getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}')
             with self.subTest(msg=key):
                 print(key, ",", type_hint, ",", expected_result)
                 if expected_result is not None:
@@ -160,8 +160,8 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_sql_text(self):
-        expected_sql = "\n".join(line.removeprefix('    ') for line in TableUnderTest.__doc__.splitlines())
-        actual_sql = TableUnderTest.build_sql_create()
+        expected_sql = "\n".join(line.removeprefix('    ') for line in TableUnderTest.__doc__.splitlines() if not line.strip().startswith('#'))
+        actual_sql, *params  = TableUnderTest.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
     # end def
 
