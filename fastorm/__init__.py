@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+"""FastORM framework, easy to learn, fast to code"""
 __author__ = 'luckydonald'
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 import dataclasses
 import ipaddress

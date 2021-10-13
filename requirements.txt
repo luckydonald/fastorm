@@ -1,0 +1,4 @@
+flit==3.4.0
+asyncpg==0.24.0
+luckydonald-utils==0.83
+typeguard==2.13.0
