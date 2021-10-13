@@ -28,6 +28,10 @@ class SystemUnderTest(object):
     t1_3: Union[Union[str]]
     __result__t1_3 = ExpectedResult(is_optional=False, sql_type="TEXT", sql="TEXT NOT NULL")
 
+    t1_4: Union[str, str]
+    __result__t1_4 = ExpectedResult(is_optional=False, sql_type="TEXT", sql="TEXT NOT NULL")
+
+
     #
     # Optional str
     #
@@ -71,6 +75,23 @@ class SystemUnderTest(object):
 
     t3_3: float
     __result__t3_3 = ExpectedResult(is_optional=False, sql_type="DOUBLE PRECISION", sql="DOUBLE PRECISION NOT NULL")
+
+    t3_4: bool
+    __result__t3_4 = ExpectedResult(is_optional=False, sql_type="BOOLEAN", sql="BOOLEAN NOT NULL")
+
+    #
+    # wrong stuff
+    #
+    t4_1: Union[int, str]
+    __result__t4_1 = None
+
+    #
+    # defaults
+    #
+    t5_1: str = "test"
+    __result__t5_1 = ExpectedResult(is_optional=False, sql_type="TEXT", sql="TEXT NOT NULL DEFAULT '%2'")
+
+
 # end class
 
 
