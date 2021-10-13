@@ -126,6 +126,23 @@ class CreateTableTestCase(unittest.TestCase):
             # end which
         # end for
     # end def
+
+    def test_COLUMN_TYPES_subclass_shadowing(self):
+        """
+        if you have `class A(object): pass` and `class B(A): pass`
+        if you would list `A` first, it will never reach `B` in processing.
+        :return:
+        """
+        classes = list(FastORM.COLUMN_TYPES.keys())
+        for first_class_index, first_class in enumerate(classes):
+            # for all classes which are after first_class(_index)
+            for second_class_index, second_class in enumerate(classes[first_class_index + 1:], start=first_class_index + 1):
+                # the second may not be a subclass of the first, that would mean the fist would shadow the second.
+                self.assertFalse(
+                    issubclass(second_class, first_class),
+                    msg=f'Class {first_class!r} at index {first_class_index} is shadowed by {second_class!r} at index {second_class_index}.')
+            # end for
+        # end for
 # end class
 
 
