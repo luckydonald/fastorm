@@ -108,9 +108,15 @@ class CreateTableTestCase(unittest.TestCase):
             expected_result: ExpectedResult = getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}')
             with self.subTest(msg=key):
                 print(key, ",", type_hint, ",", expected_result)
-                is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
-                self.assertEqual(sql_type, expected_result.sql_type)
-                self.assertEqual(is_optional, expected_result.is_optional)
+                if expected_result is not None:
+                    is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
+                    self.assertEqual(sql_type, expected_result.sql_type)
+                    self.assertEqual(is_optional, expected_result.is_optional)
+                else:
+                    with self.assertRaises(TypeError):
+                        is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
+                        print("failed assertion!", key, is_optional, sql_type)
+                    # end with
             # end which
         # end for
     # end def
