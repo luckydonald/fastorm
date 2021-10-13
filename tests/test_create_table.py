@@ -16,7 +16,33 @@ class ExpectedResult(object):
 ExpectedResult: Type[Any]
 
 
-class SystemUnderTest(object):
+class SystemUnderTest(FastORM):
+    """
+        CREATE TABLE "cool_table_yo" (
+          "t1_1" TEXT NOT NULL,
+          "t1_2" TEXT NOT NULL,
+          "t1_3" TEXT NOT NULL,
+          "t1_4" TEXT NOT NULL,
+          "t2_1" TEXT,
+          "t2_2" TEXT,
+          "t2_3" TEXT,
+          "t2_4" TEXT,
+          "t2_5" TEXT,
+          "t2_6" TEXT,
+          "t2_7" TEXT,
+          "t2_8" TEXT,
+          "t2_9" TEXT,
+          "t3_1" TEXT NOT NULL,
+          "t3_2" BIGINT NOT NULL,
+          "t3_3" DOUBLE PRECISION NOT NULL,
+          "t3_4" BOOLEAN NOT NULL,
+          "t5_1" TIMESTAMP NOT NULL,
+          "t6_1" TEXT NOT NULL DEFAULT '%1'
+        )
+        """
+    _table_name = 'cool_table_yo'
+    _automatic_fields = []
+    _ignored_fields = []
 
     #
     # Required str
@@ -106,36 +132,6 @@ class WrongStuff(object):
 # end def
 
 
-class TableUnderTest(SystemUnderTest, FastORM):
-    """
-    CREATE TABLE "cool_table_yo" (
-      "t1_1" TEXT NOT NULL,
-      "t1_2" TEXT NOT NULL,
-      "t1_3" TEXT NOT NULL,
-      "t1_4" TEXT NOT NULL,
-      "t2_1" TEXT,
-      "t2_2" TEXT,
-      "t2_3" TEXT,
-      "t2_4" TEXT,
-      "t2_5" TEXT,
-      "t2_6" TEXT,
-      "t2_7" TEXT,
-      "t2_8" TEXT,
-      "t2_9" TEXT,
-      "t3_1" TEXT NOT NULL,
-      "t3_2" BIGINT NOT NULL,
-      "t3_3" DOUBLE PRECISION NOT NULL,
-      "t3_4" BOOLEAN NOT NULL,
-      "t5_1" TIMESTAMP NOT NULL,
-      "t6_1" TEXT NOT NULL DEFAULT '%1'
-    )
-    """
-    _table_name = 'cool_table_yo'
-    _automatic_fields = []
-    _ignored_fields = []
-# end def
-
-
 class CreateTableTestCase(unittest.TestCase):
     def test_type_detection(self):
         type_hints: dict[str, any] = get_type_hints(SystemUnderTest)
@@ -160,8 +156,8 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_sql_text(self):
-        expected_sql = "\n".join(line.removeprefix('    ') for line in TableUnderTest.__doc__.splitlines() if not line.strip().startswith('#'))
-        actual_sql, *params  = TableUnderTest.build_sql_create()
+        expected_sql = "\n".join(line.removeprefix('    ') for line in SystemUnderTest.__doc__.splitlines() if not line.strip().startswith('#'))
+        actual_sql, *params  = SystemUnderTest.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
     # end def
 
