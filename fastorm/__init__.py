@@ -74,7 +74,7 @@ class FastORM(object):
 
     @classmethod
     def get_fields(cls) -> List[str]:
-        return [f.name for f in dataclasses.fields(cls)]
+        return [key for key in get_type_hints(cls).keys() if not key.startswith('_')]
     # end def
 
     @classmethod
@@ -88,6 +88,8 @@ class FastORM(object):
             '_primary_keys',
             '_database_cache',
             '__selectable_fields',
+            f'_{cls.__name__!s}__selectable_fields',
+            '__slots__'
         ]
         return _ignored_fields
     # end def
