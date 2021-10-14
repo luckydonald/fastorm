@@ -131,11 +131,8 @@ class SystemUnderTest(FastORM):
     t6_1: str = "test"
     __result__t6_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default="test")
 
-    t6_2: str = None
-    __result__t6_2 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
-
-    t6_3: Optional[str] = None
-    __result__t6_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    t6_2: Optional[str] = None
+    __result__t6_2 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 
     #
     # references
@@ -160,9 +157,6 @@ class SystemUnderTest(FastORM):
     t8_4: list[list[Union[str, int]]]
     __result__t8_4 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
 
-    t8_5: tuple[int, int, int]
-    __result__t8_5 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
-
     #
     # special cases for tuples
     #
@@ -181,8 +175,20 @@ class WrongStuff(BaseModel):
     # wrong stuff
     #
     t4_1: Union[int, str]
+    __result__t4_1 = TypeError
 
     t4_2: Optional[Union[int, str]]
+    __result__t4_2 = TypeError
+
+    t4_3: Union[int, str]
+    __result__t4_3 = TypeError
+
+    t4_4: Union[int, str, None]
+    __result__t4_4 = TypeError
+
+    # t4_5: str = None
+    __result__t4_5 = ValueError
+
 # end def
 
 
