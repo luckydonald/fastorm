@@ -115,6 +115,7 @@ class FastORM(BaseModel):
 
         """
         _ignored_fields = cls.get_ignored_fields()
+        # copy the type hints as we might add more type hints for the primary key fields of referenced models, and we wanna filter.
         type_hints = {
             key: value for key, value in cls.__fields__.items()
             if not key.startswith('_')
@@ -140,7 +141,7 @@ class FastORM(BaseModel):
 
             # now it's another FastORM table definition.
             other_class: Type[FastORM] = type_hint.type_
-            other_class_type_hints: dict[str, ModelField] = other_class.__fields__
+            other_class_type_hints: dict[str, ModelField] = other_class.get_fields_typehints(flatten_table_references=True)
             for other_class_primary_key in other_class.get_primary_keys_keys():
                 new_key = f'{key}__{other_class_primary_key}'
                 if new_key in type_hints:
