@@ -210,7 +210,7 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_sql_text(self):
-        expected_sql = "\n".join(line.removeprefix('    ') for line in SystemUnderTest.__doc__.splitlines() if not line.strip().startswith('#'))
+        expected_sql = "\n".join(line.removeprefix('        ') for line in SystemUnderTest.__doc__.strip().splitlines() if not line.strip().startswith('#'))
         actual_sql, *params  = SystemUnderTest.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
     # end def
