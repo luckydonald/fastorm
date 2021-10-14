@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import get_type_hints
 from typing import Optional, Union, Any, Type
 from pydantic import dataclasses, BaseModel
-from pydantic.fields import ModelField
+from pydantic.fields import ModelField, Undefined
 
 from fastorm import FastORM
 
@@ -69,16 +69,16 @@ class SystemUnderTest(FastORM):
     #
 
     t1_1: str
-    __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+    __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
 
     t1_2: Union[str]
-    __result__t1_2 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+    __result__t1_2 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
 
     t1_3: Union[Union[str]]
-    __result__t1_3 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+    __result__t1_3 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
 
     t1_4: Union[str, str]
-    __result__t1_4 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+    __result__t1_4 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
 
 
     #
@@ -86,54 +86,54 @@ class SystemUnderTest(FastORM):
     #
 
     t2_1: Union[str, None]
-    __result__t2_1 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_1 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     # t2_2: str | None
-    __result__t2_2 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_2 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     # t2_3: None | str
-    __result__t2_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     t2_4: Optional[str]
-    __result__t2_4 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_4 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     t2_5: Union[Union[str, None], None]
-    __result__t2_5 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_5 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     t2_6: Union[Optional[str], None]
-    __result__t2_6 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_6 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     t2_7: Union[str | None, None]
-    __result__t2_7 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_7 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     # t2_8: Union[str | None] | None
-    __result__t2_8 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_8 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     # t2_9: Union[str | None] | Optional[None] | None
-    __result__t2_9 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+    __result__t2_9 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     #
     # base types
     #
 
     t3_1: str
-    __result__t3_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+    __result__t3_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
 
     t3_2: int
-    __result__t3_2 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=None)
+    __result__t3_2 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=Undefined)
 
     t3_3: float
-    __result__t3_3 = ExpectedResult(is_optional=False, sql_type="DOUBLE PRECISION", default=None)
+    __result__t3_3 = ExpectedResult(is_optional=False, sql_type="DOUBLE PRECISION", default=Undefined)
 
     t3_4: bool
-    __result__t3_4 = ExpectedResult(is_optional=False, sql_type="BOOLEAN", default=None)
+    __result__t3_4 = ExpectedResult(is_optional=False, sql_type="BOOLEAN", default=Undefined)
 
     #
     # more uncommon types
     #
 
     t5_1: datetime
-    __result__t5_1 = ExpectedResult(is_optional=False, sql_type="TIMESTAMP", default=None)
+    __result__t5_1 = ExpectedResult(is_optional=False, sql_type="TIMESTAMP", default=Undefined)
 
     #
     # defaults
@@ -150,33 +150,33 @@ class SystemUnderTest(FastORM):
     #
 
     # t7_1: OtherTable
-    __result__t7_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+    __result__t7_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
 
     #
     # special cases for lists
     #
 
     t8_1: list
-    __result__t8_1 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
+    __result__t8_1 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
 
     t8_2: list[int]
-    __result__t8_2 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
+    __result__t8_2 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=Undefined)
 
     t8_3: list[list[int]]
-    __result__t8_3 = ExpectedResult(is_optional=False, sql_type="BIGINT[][]", default=None)
+    __result__t8_3 = ExpectedResult(is_optional=False, sql_type="BIGINT[][]", default=Undefined)
 
     t8_4: list[list[Union[str, int]]]
-    __result__t8_4 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
+    __result__t8_4 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
 
     #
     # special cases for tuples
     #
 
     t9_1: tuple[int, int, int]
-    __result__t9_1 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
+    __result__t9_1 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=Undefined)
 
     t9_2: tuple[int, str, float]
-    __result__t9_2 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
+    __result__t9_2 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
 
 # end class
 
@@ -249,8 +249,12 @@ class CreateTableTestCase(unittest.TestCase):
 
     def test_sql_text(self):
         expected_sql = "\n".join(line.removeprefix('        ') for line in SystemUnderTest.__doc__.strip().splitlines() if not line.strip().startswith('#'))
-        actual_sql, *params  = SystemUnderTest.build_sql_create()
+        actual_sql, *actual_params = SystemUnderTest.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
+        expected_defaults = [getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}').default for key in get_type_hints(SystemUnderTest).keys() if not key.startswith('_')]
+        expected_params = [default for default in expected_defaults if default != Undefined]
+        print(expected_params, actual_params)
+        self.assertListEqual(expected_params, actual_params)
     # end def
 
     def test_TYPES_mapping_subclass_shadowing(self):
