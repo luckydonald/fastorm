@@ -2,8 +2,10 @@ import unittest
 from datetime import datetime
 from typing import get_type_hints
 from typing import Optional, Union, Any, Type
-from fastorm import FastORM
 from pydantic import dataclasses, BaseModel
+from pydantic.fields import ModelField
+
+from fastorm import FastORM
 
 
 @dataclasses.dataclass
@@ -207,6 +209,26 @@ class CreateTableTestCase(unittest.TestCase):
                     is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
                     self.assertEqual(expected_result.sql_type, sql_type)
                     self.assertEqual(expected_result.is_optional, is_optional)
+                else:
+                    with self.assertRaises(expected_result):
+                        is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
+                        print("failed assertion!", key, is_optional, sql_type)
+                    # end with
+            # end which
+        # end for
+    # end def
+
+    def test_type_detection_pydantic(self):
+        type_hints: dict[str, ModelField] = SystemUnderTest.get_fields_typehints()
+        for key, type_hint in type_hints.items():
+            expected_result: ExpectedResult | Type[Exception]
+            expected_result = getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}')
+            with self.subTest(msg=key):
+                print(key, ",", type_hint, ",", expected_result)
+                if isinstance(expected_result, ExpectedResult):
+                    is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
+                    self.assertEqual(expected_result.sql_type, sql_type, msg='sql_type')
+                    self.assertEqual(expected_result.is_optional, is_optional, msg='is_optional')
                 else:
                     with self.assertRaises(expected_result):
                         is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
