@@ -171,7 +171,7 @@ class SystemUnderTest(FastORM):
     __result__t9_1 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
 
     t9_2: tuple[int, str, float]
-    __result__t9_1 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
+    __result__t9_2 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
 
 # end class
 
