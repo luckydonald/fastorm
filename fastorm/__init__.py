@@ -10,22 +10,21 @@ import ipaddress
 import datetime
 import decimal
 import uuid
-from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable, _GenericAlias
-from types import GenericAlias, UnionType
-
+from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable
+from types import GenericAlias
 import asyncpg
 import typing, types
 from asyncpg import Connection
 from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
-
 from luckydonaldUtils.typing import JSONType
+
 from pydantic import BaseModel
 from pydantic.fields import ModelField, UndefinedType, Undefined, Field
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
-from .compat import check_is_union_type
+from .compat import check_is_union_type, TYPEHINT_TYPE
 
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
@@ -809,7 +808,7 @@ class FastORM(BaseModel):
     @classmethod
     def match_type(
         cls,
-        type_hint: GenericAlias | UnionType | type | ModelField,
+        type_hint: TYPEHINT_TYPE,
         *,
         is_automatic_field: Optional[bool] = None,
         key: str | None = None,

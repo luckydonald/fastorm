@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'luckydonald'
 
-from typing import Any
+from types import GenericAlias
+from typing import Any, Union
+from pydantic.fields import ModelField
 
 
+TYPEHINT_TYPE = Union[GenericAlias, type, ModelField]
 
 
 # noinspection PyUnusedLocal
@@ -20,6 +23,7 @@ try:
         return isinstance(variable, UnionType)
     # end def
 
+    TYPEHINT_TYPE = Union[TYPEHINT_TYPE, UnionType]
 except ImportError:
     pass
 # end try
