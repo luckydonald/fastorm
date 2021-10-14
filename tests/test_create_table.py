@@ -176,12 +176,13 @@ class SystemUnderTest(FastORM):
 # end class
 
 
-class WrongStuff(object):
+class WrongStuff(BaseModel):
     #
     # wrong stuff
     #
     t4_1: Union[int, str]
-    __result__t4_1 = None
+
+    t4_2: Optional[Union[int, str]]
 # end def
 
 
