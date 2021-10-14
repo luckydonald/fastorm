@@ -54,7 +54,7 @@ class SystemUnderTest(FastORM):
           # "t7_1__id_part_2" TEXT NOT NULL,
           "t8_1" JSONB NOT NULL,
           "t8_2" BIGINT[] NOT NULL,
-          "t8_3" JSONB NOT NULL,
+          "t8_3" BIGINT[][] NOT NULL,
           "t8_4" JSONB NOT NULL,
           "t9_1" BIGINT[] NOT NULL,
           "t9_2" JSONB NOT NULL
