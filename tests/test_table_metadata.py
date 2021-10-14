@@ -4,7 +4,7 @@ from test_create_table import SystemUnderTest, OtherTable, TheReferenceHasBeenDo
 
 
 class TableMetadataTestCase(unittest.TestCase):
-    def test_table_name(self):
+    def test_table_quoted_name(self):
         tables = {
             SystemUnderTest: '"cool_table_yo"',
             OtherTable: '"other_table"',
@@ -13,6 +13,19 @@ class TableMetadataTestCase(unittest.TestCase):
         for table, expected_name in tables.items():
             with self.subTest(msg=table.__name__):
                 self.assertEqual(expected_name, table.get_table())
+            # end with
+        # end for
+    # end def
+
+    def test_table_name(self):
+        tables = {
+            SystemUnderTest: 'cool_table_yo',
+            OtherTable: 'other_table',
+            TheReferenceHasBeenDoubled: 'double_reference',
+        }
+        for table, expected_name in tables.items():
+            with self.subTest(msg=table.__name__):
+                self.assertEqual(expected_name, table.get_name())
             # end with
         # end for
     # end def

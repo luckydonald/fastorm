@@ -216,8 +216,36 @@ class FastORM(BaseModel):
 
     @classmethod
     def get_table(cls) -> str:
-        _table_name = getattr(cls, '_table_name')
+        """
+        Provides the name of the table in a already quoted way, ready to use in SQL queries.
+        Note, that is naive quoting, and can be easily broken out of (possible SQL INJECTION), however the table name
+        should never be user input anyway.
+
+            >>> class Test(FastORM):
+            ...   _table_name = 'sample'
+            >>> Test.get_name()
+            'sample'
+            >>> Test.get_table()
+            '"sample"'
+            >>> print(Test.get_name())
+            sample
+            >>> print(Test.get_table())
+            "sample"
+
+        :return: The quoted table name
+        """
+        _table_name = cls.get_name()
         return f'"{_table_name}"'
+    # end def
+
+    @classmethod
+    def get_name(cls) -> str:
+        """
+        The name of the table, as used with the database.
+        :return:
+        """
+        _table_name = getattr(cls, '_table_name')
+        return _table_name
     # end def
 
     def build_sql_insert(
