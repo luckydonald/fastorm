@@ -298,7 +298,7 @@ class CreateTableTestCase(unittest.TestCase):
 
         LISTS_TO_CHECK = {
             "COLUMN_TYPES": FastORM._COLUMN_TYPES,
-            "COLUMS_AUTO_TYPES": FastORM._COLUMS_AUTO_TYPES
+            "COLUMS_AUTO_TYPES": FastORM._COLUMN_AUTO_TYPES
         }
         for list_name, list_to_check in LISTS_TO_CHECK.items():
             classes = list(list_to_check.keys())

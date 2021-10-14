@@ -310,7 +310,7 @@ class FastORM(BaseModel):
             sql += f'\n RETURNING {automatic_fields_sql}'
         # end if
         sql += '\n;'
-        return (sql, *values)
+        return sql, *values
     # end def
 
     @classmethod
@@ -397,9 +397,9 @@ class FastORM(BaseModel):
             # end if
         # end if
 
-        # noinspection SqlResolve
+        # noinspection SqlResolve,SqlNoDataSourceInspection
         sql = f'SELECT {fields} FROM "{cls._table_name}" WHERE {" AND ".join(where_parts)}'
-        return (sql, *where_values)
+        return sql, *where_values
     # end def
 
     async def insert(
@@ -515,7 +515,7 @@ class FastORM(BaseModel):
         sql += f' SET {",".join(update_keys)}'
         sql += f' WHERE {",".join(primary_key_where)}'
         sql += '\n;'
-        return (sql, *values)
+        return sql, *values
     # end def
 
     async def update(self, conn: Connection):
@@ -555,11 +555,11 @@ class FastORM(BaseModel):
         # end if
         logger.debug(f'Fields to DELETE for selector {primary_key_parts!r}: {where_values!r}')
 
-        # noinspection SqlWithoutWhere,SqlResolve
+        # noinspection SqlWithoutWhere,SqlResolve,SqlNoDataSourceInspection
         sql = f'DELETE FROM "{_table_name}"\n'
         sql += f' WHERE {",".join(primary_key_parts)}'
         sql += '\n;'
-        return (sql, *where_values)
+        return sql, *where_values
     # end def
 
     async def delete(self, conn: Connection):
@@ -589,15 +589,14 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def from_row(cls, row, is_from_database: bool = False):
+    def from_row(cls, row):
         # noinspection PyArgumentList
         instance = cls(*row)
         instance._database_cache_overwrite_with_current()
         return instance
     # end def
 
-
-    _COLUMS_AUTO_TYPES: dict[type, str] = {
+    _COLUMN_AUTO_TYPES: dict[type, str] = {
         int: "BIGSERIAL",
     }
 
@@ -610,9 +609,6 @@ class FastORM(BaseModel):
         # PostgreSQL Type
         # Source: https://magicstack.github.io/asyncpg/current/usage.html#type-conversion
 
-        # anyarray
-        # list
-
         # anyenum
         # str
 
@@ -621,6 +617,7 @@ class FastORM(BaseModel):
 
         # record
         # asyncpg.Record, tuple, Mapping
+
         # bit, varbit
         # asyncpg.BitString
 
@@ -724,7 +721,7 @@ class FastORM(BaseModel):
         except TypeError:  # issubclass() arg 1 must be a class
             raise TypeError(f'Could not process type {python_type} as a python type. Probably a typing annotation?.')
         if automatic:
-            for sql_py_type, sql_type in cls._COLUMS_AUTO_TYPES.items():
+            for sql_py_type, sql_type in cls._COLUMN_AUTO_TYPES.items():
                 if issubclass(python_type, sql_py_type):
                     return sql_type
                 # end if
@@ -966,13 +963,15 @@ class FastORM(BaseModel):
              f for f in dataclasses.fields(other_cls)
              if f.init and f.name in _primary_keys
         ]
+        # noinspection PyProtectedMember
         func_args = ','.join([dataclasses._init_param(f) for f in fields])
         call_args = ','.join([f'{f.name}={f.name}' for f in fields])
+        # noinspection PyShadowingBuiltins
         locals = {f'_type_{f.name}': f.type for f in fields}
         locals[other_cls.__name__] = other_cls
         import builtins
-        globals = {}
-        globals['__builtins__'] = builtins
+        # noinspection PyShadowingBuiltins
+        globals = {'__builtins__': builtins}
         # Compute the text of the entire function.
         txt = f'async def get(self, {func_args}) -> {other_cls.__name__}:\n await self.get({call_args})'
         logger.debug(f'setting up `get`: {txt!r}')
@@ -1001,13 +1000,13 @@ class FastORM(BaseModel):
         try:
             check_type(argname=key, value=value, expected_type=typehint)
             original_type_fits = True  # the original was already compatible
-        except TypeError as e:
+        except TypeError:
             pass
         # end if
         try:
             check_type(argname=key, value=value, expected_type=Union[Tuple[typehint], List[typehint]])
             listable_type_fits = True  # the original was already compatible
-        except TypeError as e:
+        except TypeError:
             pass
         # end if
 
@@ -1062,6 +1061,7 @@ class FastORM(BaseModel):
         :return:
         """
         import json
+
         def decoder_with_empty(text):
             if text.strip() == '':
                 return None
@@ -1105,6 +1105,13 @@ class FastORM(BaseModel):
         return conn
     # end def
 # end class
+
+
+# noinspection PyShadowingBuiltins
+def _create_func(name, txt, globals, locals):
+    exec(txt, globals, locals)
+    return locals[name]
+# end def
 
 
 class _AutoincrementClass(object):
@@ -1170,11 +1177,3 @@ class _AutoincrementClass(object):
 
 Autoincrement = _AutoincrementClass()
 
-
-
-
-
-def _create_func(name, txt, globals, locals):
-    exec(txt, globals, locals)
-    return locals[name]
-# end def
