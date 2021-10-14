@@ -22,7 +22,7 @@ from luckydonaldUtils.logger import logging
 
 from luckydonaldUtils.typing import JSONType
 from pydantic import BaseModel
-from pydantic.fields import ModelField
+from pydantic.fields import ModelField, UndefinedType
 from typeguard import check_type
 
 VERBOSE_SQL_LOG = True
@@ -772,7 +772,7 @@ class FastORM(BaseModel):
     @classmethod
     def match_type(
         cls,
-        type_hint: GenericAlias | UnionType | type,
+        type_hint: GenericAlias | UnionType | type | ModelField,
         *,
         is_automatic_field: Optional[bool] = None,
         key: str | None = None,
@@ -867,19 +867,40 @@ class FastORM(BaseModel):
                 # end case
             # end match
         elif isinstance(type_hint, ModelField):
-            is_optional = not type_hint.required
-            subtype_is_optional, sql_type = cls.match_type(
-                type_hint=type_hint.type_, is_automatic_field=is_automatic_field, key=key, is_outer_call=False
-            )
-            is_optional = is_optional or subtype_is_optional
+            is_optional = type_hint.allow_none
+            # is_optional = type_hint.allow_none and (type_hint.shape != SHAPE_SINGLETON or not type_hint.sub_fields)
+            try:
+                subtype_is_optional, sql_type = cls.match_type(
+                    type_hint=type_hint.type_, is_automatic_field=is_automatic_field, key=key, is_outer_call=False,
+                )
+            except TypeError as e:
+                if not is_outer_call:
+                    # make sure we don't end up with JSONB[] for list[list[Union[str, int]]],
+                    # only the outer one should migrate to json.
+                    raise e
+                # end if
+                logger.debug(
+                    'Could not parse as a single type list (e.g. INT[][]), now will be a json field.', exc_info=True
+                )
+                return False, cls._COLUMN_TYPES[dict]
+            # end try
+
+            # pydantic makes t6_2: str = None  to be  t6_2: Optional[str] = None, couldn't find a way to detect only the first variant.
+            # if is_optional and type_hint.field_info.default is None:
+            #     # e.g. t6_2: str = None
+            #     assert type_hint.field_info.default is None
+            #     assert not isinstance(type_hint.field_info.default, UndefinedType)
+            #     raise ValueError("You can't have an non-optional type default to None")
+            # # end if
 
             if type_hint.outer_type_ == type_hint.type_:
-                #      for str,  typehint.outer_type_ is str
-                # e.g. for str,  typehint.type_       is str
+                # e.g. for str,  typehint.outer_type_ is str
+                #      for str,  typehint.type_       is str
+                # but also for Optional[str] it is  both  str!
                 return is_optional, sql_type
             if isinstance(type_hint.outer_type_, GenericAlias) and hasattr(type_hint.outer_type_, '__origin__'):
-                #      for list[int],  typehint.outer_type_ is List[int], thus having a .__origin__ == list
-                # e.g. for list[int],  typehint.type_       is int
+                # e.g. for list[int],  typehint.outer_type_ is List[int], thus having a .__origin__ == list
+                #      for list[int],  typehint.type_       is int
                 # isinstance(list[int], GenericAlias) == True
 
                 wrapper_class = type_hint.outer_type_.__origin__  # e.g. list if we had List[int].
