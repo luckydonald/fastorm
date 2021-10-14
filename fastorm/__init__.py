@@ -671,8 +671,7 @@ class FastORM(BaseModel):
         # uuid.UUID
         uuid.UUID: "UUID",
 
-        # tid
-        # tuple
+        BaseModel: "JSONB",
     }
 
     _COLUMN_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
