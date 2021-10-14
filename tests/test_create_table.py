@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import get_type_hints
 from typing import Optional, Union, Any, Type
 from pydantic import dataclasses, BaseModel
-from pydantic.fields import ModelField, Undefined
+from pydantic.fields import ModelField, Undefined, Field
 
-from fastorm import FastORM
+from fastorm import FastORM, Autoincrement
 
 
 @dataclasses.dataclass
@@ -94,7 +94,7 @@ class SystemUnderTest(FastORM):
     # Required str
     #
 
-    t0_id: int
+    t0_id: int = Field(default_factory=Autoincrement)
     __result__t0_id = ExpectedResult(is_optional=False, sql_type="BIGINT", default=Undefined)
 
     t1_1: str

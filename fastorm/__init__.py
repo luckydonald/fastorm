@@ -22,7 +22,8 @@ from luckydonaldUtils.logger import logging
 
 from luckydonaldUtils.typing import JSONType
 from pydantic import BaseModel
-from pydantic.fields import ModelField, UndefinedType
+from pydantic.fields import ModelField, UndefinedType, Undefined, Field
+from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
 VERBOSE_SQL_LOG = True
@@ -1070,6 +1071,73 @@ class FastORM(BaseModel):
         return conn
     # end def
 # end class
+
+
+class _AutoincrementClass(object):
+    """
+    Below there will be a singleton called Autoincrement.
+    It can be used in the following two ways, they are the same:
+
+        >>> class Foo(FastORM):
+        ...   id_a: int = Field(default_factory=Autoincrement, other_field_parameters=...)
+        ...   id_b: int = Autoincrement(other_field_parameters=...)
+
+    In other words,
+
+        >>> Autoincrement() == Field(default_factory=Autoincrement)
+        True
+
+    """
+    def __init__(self):
+        self.__name__ = "fastorm.Autoincrement"  # some internals of Field want to know that.
+    # end def
+
+    @typing.overload
+    def __call__(
+        self,
+        default: Any = Undefined,
+        *,
+        default_factory: Optional[NoArgAnyCallable] = None,
+        alias: str = None,
+        title: str = None,
+        description: str = None,
+        const: bool = None,
+        gt: float = None,
+        ge: float = None,
+        lt: float = None,
+        le: float = None,
+        multiple_of: float = None,
+        min_items: int = None,
+        max_items: int = None,
+        min_length: int = None,
+        max_length: int = None,
+        allow_mutation: bool = True,
+        regex: str = None,
+        **extra: Any,
+    ) -> Any:
+        pass
+    # end def
+
+    def __call__(self, *args, **kwargs) -> None:
+        if not args and not kwargs:
+            # For the use in `Field(default_factory=Autoincrement)`, we will be called without parameters.
+            # so we return the default value this object should then have, that is `None`.
+            # It would be cooler, but we can't return Autoincrement as that would be incompatible with the field's type.
+            return None
+        # end if
+
+        # so it's not the `Field(default_factory=Autoincrement)` calling us with zero parameters
+        assert 'default_factory' not in kwargs
+        kwargs['default_factory'] = Autoincrement
+        return Field(*args, **kwargs)
+    # end def
+# end class
+
+
+Autoincrement = _AutoincrementClass()
+
+
+
 
 
 def _create_func(name, txt, globals, locals):
