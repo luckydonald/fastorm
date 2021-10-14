@@ -54,6 +54,7 @@ class TheReferenceHasBeenDoubled(FastORM):
 class SystemUnderTest(FastORM):
     """
         CREATE TABLE "cool_table_yo" (
+          "t0_id" BIGSERIAL NOT NULL,
           "t1_1" TEXT NOT NULL,
           "t1_2" TEXT NOT NULL,
           "t1_3" TEXT NOT NULL,
@@ -85,12 +86,16 @@ class SystemUnderTest(FastORM):
         )
         """
     _table_name = 'cool_table_yo'
-    _automatic_fields = []
+    _primary_keys = ['t0_id']
+    _automatic_fields = ['t0_id']
     _ignored_fields = []
 
     #
     # Required str
     #
+
+    t0_id: int
+    __result__t0_id = ExpectedResult(is_optional=False, sql_type="BIGINT", default=Undefined)
 
     t1_1: str
     __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
