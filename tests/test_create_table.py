@@ -143,6 +143,36 @@ class SystemUnderTest(FastORM):
 
     # t7_1: OtherTable
     __result__t7_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+
+    #
+    # special cases for lists
+    #
+
+    t8_1: list
+    __result__t8_1 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
+
+    t8_2: list[int]
+    __result__t8_2 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
+
+    t8_3: list[list[int]]
+    __result__t8_3 = ExpectedResult(is_optional=False, sql_type="BIGINT[][]", default=None)
+
+    t8_4: list[list[Union[str, int]]]
+    __result__t8_4 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
+
+    t8_3: tuple[int, int, int]
+    __result__t8_3 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
+
+    #
+    # special cases for tuples
+    #
+
+    t9_1: tuple[int, int, int]
+    __result__t9_1 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
+
+    t9_2: tuple[int, str, float]
+    __result__t9_1 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
+
 # end class
 
 
