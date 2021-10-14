@@ -170,6 +170,12 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
+    def get_automatic_fields(cls) -> List[str]:
+        _automatic_fields = getattr(cls, '_automatic_fields')[:]
+        return _automatic_fields
+    # end def
+
+    @classmethod
     def get_ignored_fields(cls) -> List[str]:
         _ignored_fields = getattr(cls, '_ignored_fields')[:]
         assert_type_or_raise(_ignored_fields, list, parameter_name=f'{cls.__name__}._ignored_fields')
@@ -220,7 +226,7 @@ class FastORM(BaseModel):
         own_keys = self.get_fields()
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
-        _automatic_fields = getattr(self, '_automatic_fields')
+        _automatic_fields = self.get_automatic_fields()
         assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
         assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
@@ -391,7 +397,7 @@ class FastORM(BaseModel):
             on_conflict_upsert_field_list=on_conflict_upsert_field_list,
         )
         self._database_cache_overwrite_with_current()
-        _automatic_fields = getattr(self, '_automatic_fields')
+        _automatic_fields = self.get_automatic_fields()
         if VERBOSE_SQL_LOG:
             fetch_params_debug = "\n".join([f"${i}={param!r}" for i, param in enumerate(fetch_params)][1:])
             logger.debug(f'INSERT query for {self.__class__.__name__}\nQuery:\n{fetch_params[0]}\nParams:\n{fetch_params_debug!s}')
@@ -419,7 +425,7 @@ class FastORM(BaseModel):
         own_keys = self.get_fields()
         _table_name = getattr(self, '_table_name')
         _ignored_fields = getattr(self, '_ignored_fields')
-        _automatic_fields = getattr(self, '_automatic_fields')
+        _automatic_fields = self.get_automatic_fields()
         _database_cache = getattr(self, '_database_cache')
         _primary_keys = getattr(self, '_primary_keys')
         assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
@@ -720,7 +726,7 @@ class FastORM(BaseModel):
     ) -> Tuple[str, Any]:
         assert issubclass(cls, BaseModel)  # because we no longer use typing.get_type_hints, but pydantic's `cls.__fields__`
         _table_name = getattr(cls, '_table_name')
-        _automatic_fields = getattr(cls, '_automatic_fields')
+        _automatic_fields = cls.get_automatic_fields()
         assert_type_or_raise(_table_name, str, parameter_name='cls._table_name')
         assert_type_or_raise(_automatic_fields, list, parameter_name='cls._automatic_fields')
         _ignored_fields = cls.get_ignored_fields()

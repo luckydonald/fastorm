@@ -355,6 +355,19 @@ class TableMetadataTestCase(unittest.TestCase):
             # end with
         # end for
     # end def
+
+    def test_automatic_fields(self):
+        tables = {
+            SystemUnderTest: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{SystemUnderTest.__name__!s}__selectable_fields', '__slots__'],
+            OtherTable: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{OtherTable.__name__!s}__selectable_fields', '__slots__'],
+            TheReferenceHasBeenDoubled: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{TheReferenceHasBeenDoubled.__name__!s}__selectable_fields', '__slots__'],
+        }
+        for table, expected_name in tables.items():
+            with self.subTest(msg=table.__name__):
+                self.assertEqual(expected_name, table.get_ignored_fields())
+            # end with
+        # end for
+    # end def
 # end class
 
 
