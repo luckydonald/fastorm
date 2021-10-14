@@ -754,7 +754,7 @@ class FastORM(BaseModel):
             # has it a default value?
             if not isinstance(type_hint.field_info.default, UndefinedType):
                 placeholder_index += 1
-                type_definition_parts.append(f'${placeholder_index}')
+                type_definition_parts.append(f'DEFAULT ${placeholder_index}')
                 placeholder_values.append(type_hint.field_info.default)
             # end if
             type_definitions.append(" ".join(type_definition_parts))
@@ -765,7 +765,7 @@ class FastORM(BaseModel):
             [
                 f"CREATE TABLE {cls.get_table()} (",
                 # <joined type_definitions>
-                ")"
+                "\n)"
             ]
         )
 
