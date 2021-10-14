@@ -118,8 +118,15 @@ class SystemUnderTest(FastORM):
     #
     # defaults
     #
+
     t6_1: str = "test"
     __result__t6_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default="test")
+
+    t6_2: str = None
+    __result__t6_2 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
+
+    t6_3: Optional[str] = None
+    __result__t6_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
 # end class
 
 
