@@ -263,6 +263,7 @@ class FastORM(BaseModel):
             # end if
         # end if
 
+        # noinspection SqlNoDataSourceInspection,SqlResolve
         sql = f'INSERT INTO "{_table_name}" ({",".join(keys)})\n VALUES ({",".join(placeholder)})'
         if on_conflict_upsert_field_list and upsert_fields:
             upsert_sql = ', '.join([f'"{key}" = ${placeholder_index}' for key, placeholder_index in upsert_fields.items()])
@@ -807,7 +808,7 @@ class FastORM(BaseModel):
                             is_optional = False
                         case something_else:
                             raise TypeError(
-                                'Union with more than one type (Optional None excluded).', something_else, f'key {key}'
+                                'Union with more than one type.', something_else, f'key {key}'
                             )
                     # end match
                     additional_is_optional, sql_type = cls.match_type(
