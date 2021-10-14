@@ -76,7 +76,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def get_fields_typehints(cls, flatten_table_references: bool = False) -> Dict[str, ModelField]:
+    def get_fields_typehints(cls, *, flatten_table_references: bool = False) -> Dict[str, ModelField]:
         """
         Get's all fields which have type hints and thus we consider as fields for the database.
         Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
