@@ -21,6 +21,7 @@ from luckydonaldUtils.logger import logging
 
 from luckydonaldUtils.typing import JSONType
 from pydantic import BaseModel
+from pydantic.fields import ModelField
 from typeguard import check_type
 
 VERBOSE_SQL_LOG = True
@@ -75,8 +76,94 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def get_fields(cls) -> List[str]:
-        return [key for key in get_type_hints(cls).keys() if not key.startswith('_')]
+    def get_fields_typehints(cls, flatten_table_references: bool = False) -> Dict[str, ModelField]:
+        """
+        Get's all fields which have type hints and thus we consider as fields for the database.
+        Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
+
+        :param flatten_table_references:
+                True if we should flatten the references to other table's primary key in the format of `f"{original_key}__{other_table_key}`.
+                False to not resolve those fields, and instead return the type hint for the other FastORM class.
+        :return: the dictionary with pydantic's ModelField descriptions.
+
+        Example:
+
+            >>> class OtherTable(FastORM):
+            ...     _table_name = 'other_table'
+            ...     _primary_keys = ['id_part_1', 'id_part_2']
+            ...
+            ...     id_part_1: int
+            ...     id_part_2: str
+            ... # end class
+            ...
+
+            >>> class ActualTable(FastORM):
+            ...     _table_name = 'actual_table'
+            ...     cool_reference: OtherTable
+            ...
+
+            >>> ActualTable.get_fields_typehints(flatten_table_references=False)
+            {
+                'cool_reference': ModelField(name='cool_reference', type=OtherTable, required=True)
+            }
+
+            >>> ActualTable.get_fields_typehints(flatten_table_references=True)
+            {
+                'cool_reference__id_part_1': ModelField(name='id_part_1', type=int, required=True),
+                'cool_reference__id_part_2': ModelField(name='id_part_2', type=str, required=True)
+            }
+
+        """
+        _ignored_fields = cls.get_ignored_fields()
+        type_hints = {
+            key: value for key, value in cls.__fields__.items()
+            if not key.startswith('_')
+               and not key.isupper()
+               and not key in _ignored_fields
+        }
+        if flatten_table_references is False:
+            return type_hints
+        # end if
+        flattened_type_hints = {}
+        for key, value in type_hints.items():
+            type_hint = type_hints[key]
+            try:
+                is_subclass = issubclass(type_hint.type_, FastORM)
+            except TypeError:
+                is_subclass = False
+            # end try
+            if not is_subclass:
+                # is a regular key, just keep it as is
+                flattened_type_hints[key] = type_hint  # TODO: make a copy?
+                continue
+            # end if
+
+            # now it's another FastORM table definition.
+            other_class: Type[FastORM] = type_hint.type_
+            other_class_type_hints: dict[str, ModelField] = other_class.__fields__
+            for other_class_primary_key in other_class.get_primary_keys_keys():
+                new_key = f'{key}__{other_class_primary_key}'
+                if new_key in type_hints:
+                    raise ValueError(
+                        f'The constructed reference key {new_key!r}, for field {cls.__name__}.{key} pointing to '
+                        f'table {other_class.__name__}.{other_class_primary_key}, would overwrite an already existing key.'
+                    )
+                # end if
+                other_class_type_hint = other_class_type_hints[other_class_primary_key]
+                flattened_type_hints[new_key] = other_class_type_hint  # TODO: make a copy?
+            # end for
+        # end for
+        return flattened_type_hints
+    # end def
+
+    @classmethod
+    def get_fields(cls, flatten_table_references: bool = False) -> List[str]:
+        """
+        Get's all fields which have type hints and thus we consider as fields for the database.
+        Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
+        :return: a list with the keys.
+        """
+        return list(cls.get_fields_typehints(flatten_table_references=flatten_table_references).keys())
     # end def
 
     @classmethod
