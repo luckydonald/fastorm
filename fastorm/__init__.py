@@ -105,15 +105,10 @@ class FastORM(BaseModel):
             ...
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=False)
-            {
-                'cool_reference': ModelField(name='cool_reference', type=OtherTable, required=True)
-            }
+            {'cool_reference': ModelField(name='cool_reference', type=OtherTable, required=True)}
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=True)
-            {
-                'cool_reference__id_part_1': ModelField(name='id_part_1', type=int, required=True),
-                'cool_reference__id_part_2': ModelField(name='id_part_2', type=str, required=True)
-            }
+            {'cool_reference__id_part_1': ModelField(name='id_part_1', type=int, required=True), 'cool_reference__id_part_2': ModelField(name='id_part_2', type=str, required=True)}
 
         """
         _ignored_fields = cls.get_ignored_fields()
