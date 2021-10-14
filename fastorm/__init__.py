@@ -720,46 +720,8 @@ class FastORM(BaseModel):
         assert_type_or_raise(_automatic_fields, list, parameter_name='cls._automatic_fields')
         _ignored_fields = cls.get_ignored_fields()
 
-        from typing import get_type_hints
-        type_hints: dict[str, Any] = {}
-
-        # we need to check all parent classes for typesings if we are a subclass.
-        classes_hierarchy = list(reversed(cls.__mro__))
-        orm_class_index = classes_hierarchy.index(FastORM)
-        for parent_cls in classes_hierarchy[orm_class_index + 1:]:
-            # https://stackoverflow.com/a/2010732/3423324#what-does-mro-do
-            # "you also get the assurance that, in __mro__, no class is duplicated, and no class comes after its ancestors,
-            #  save that classes that first enter at the same level of multiple inheritance are in the __mro__ left to right."
-            # reverse so that it is
-            parent_cls_type_hints: dict[str, Any] = get_type_hints(parent_cls)
-            type_hints |= parent_cls_type_hints
-        # end if
-        own_keys = cls.get_fields()
-
-        # ignore _ignored_fields
-        own_keys = [key for key in own_keys if key not in _ignored_fields]
-
-        new_own_keys = {}
-        for key in own_keys:
-            type_hint = type_hints[key]
-            try:
-                is_subclass = issubclass(type_hint, FastORM)
-            except TypeError:
-                is_subclass = False
-            # end try
-            if is_subclass:
-                for primary_key in type_hint._primary_keys:
-                    pk_type_hints = get_type_hints(type_hint)
-                    pk_type_hint = pk_type_hints[primary_key]
-                    new_key = f'{key}__{primary_key}'
-                    assert new_key not in own_keys
-                    new_own_keys[new_key] = pk_type_hint
-                    # TODO: add references
-                # end for
-            else:
-                new_own_keys[key] = type_hint
-            # end if
-        # end for
+        # copy the type hints as we might add more type hints for the primary key fields of referenced models
+        type_hints: dict[str, ModelField] = cls.get_fields_typehints(flatten_table_references=True)
 
         placeholder_index = 0
         placeholder_values = []
