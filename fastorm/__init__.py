@@ -170,7 +170,7 @@ class FastORM(BaseModel):
 
     @classmethod
     def get_ignored_fields(cls) -> List[str]:
-        _ignored_fields = getattr(cls, '_ignored_fields')
+        _ignored_fields = getattr(cls, '_ignored_fields')[:]
         assert_type_or_raise(_ignored_fields, list, parameter_name=f'{cls.__name__}._ignored_fields')
         _ignored_fields += [
             '_table_name',
