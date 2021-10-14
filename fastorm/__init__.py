@@ -826,91 +826,89 @@ class FastORM(BaseModel):
         if hasattr(type_hint, '__origin__') or is_union_type:
             origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
             is_union_type = check_is_union_type(origin)
-            if True:
-                if is_union_type or origin in (typing.Optional, typing.Union):  # Optional is an special union, too
-                    union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
-                    if not isinstance(union_params, (list, tuple)):
-                        raise TypeError(
-                            f'Union type for key {key} has unparsable params.', union_params,
-                        )
-                    # end if
-                    if types.NoneType in union_params:
-                        is_optional = True
-                        union_params = [param for param in union_params if not issubclass(param, types.NoneType)]
-                    else:
-                        is_optional = False
-                    # end if
-                    if len(union_params) == 0:
-                        raise TypeError(
-                            f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
-                        )
-                    # end if
-                    first_union_type = union_params[0]
-                    if not all(first_union_type == x for x in union_params[1:]):
-                        raise TypeError(
-                            f'Union with more than one type at key {key}.', union_params,
-                        )
-                    # end if
-                    additional_is_optional, sql_type = cls.match_type(
-                        first_union_type, is_automatic_field=is_automatic_field, is_outer_call=False
+            if is_union_type or origin in (typing.Optional, typing.Union):  # Optional is an special union, too
+                union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
+                if not isinstance(union_params, (list, tuple)):
+                    raise TypeError(
+                        f'Union type for key {key} has unparsable params.', union_params,
                     )
-                    if additional_is_optional:
-                        is_optional = True
-                    # end if
-                elif isinstance(origin, typing.List) or issubclass(origin, list):
-                    list_params = type_hint.__args__
-                    if len(list_params) != 1:  # list has one type
-                        raise TypeError(
-                            'List with more than one type parameter.', type_hint, list_params
-                        )
-                    # end if
-                    the_type = list_params[0]
-                    try:
-                        # we will now recursively go into that list.
-                        # if it is like `list[list[list[int]]] it will succeed as INT,
-                        # and for those 3 lists the [] will be added 3 times, resulting in INT[][][]
-                        # If any of those inner lists aren't a compatible type (TypeError),
-                        # e.g. list[list[Union[str, int]]], we have to use a json dict instead.
-                        _, sql_type = cls.match_type(
-                            the_type, is_automatic_field=is_automatic_field, is_outer_call=False
-                        )
-                        sql_type = "".join((sql_type, "[]"))  # append '[]' to the sql_type
-                        return False, sql_type  # the list itself can't be optional, that has to be done by an outer Optional[].
-                    except TypeError as e:
-                        if not is_outer_call:
-                            # make sure we don't end up with JSONB[] for list[list[Union[str, int]]],
-                            # only the outer one should migrate to json.
-                            raise e
-                        # end if
-                        logger.debug('Could not parse as a single type list (e.g. INT[][]), now will be a json field.', exc_info=True)
-                        return False, cls._COLUMN_TYPES[dict]
-                    # end try
-                elif isinstance(origin, (typing.Tuple)) or issubclass(origin, builtins.tuple):
-                    tuple_params = type_hint.__args__
-                    if len(tuple_params) == 0:  # list has one type
-                        raise TypeError(
-                            'Tuple has no parameters.', type_hint, tuple_params
-                        )
-                    # end if
-
-                    # check if all types of the tuple are the same, so we can use a list
-                    first_type = tuple_params[0]
-                    if all(first_type == x for x in tuple_params[1:]):
-                        # we hope this will give us something like  INT, TEXT, FLOAT, etc.
-                        _, sql_type = cls.match_type(
-                            first_type, is_automatic_field=is_automatic_field, is_outer_call=False
-                        )
-                        sql_type = "".join((sql_type, "[]"))  # append '[]' to the sql_type
-                        return False, sql_type  # the tuple itself can't be optional, that has to be done by an outer Optional[].
-                    # end if
-
-                    # so the types are all over the place, so we will have to fallback to json.
-                    sql_type = cls._COLUMN_TYPES[dict]
-                    return False, sql_type  # the list itself can't be optional, that has to be done by an outer Optional[].
+                # end if
+                if types.NoneType in union_params:
+                    is_optional = True
+                    union_params = [param for param in union_params if not issubclass(param, types.NoneType)]
                 else:
-                    raise ValueError('Enclosed by an unknown type', origin, f'key={key!r}')
-                # end case
-            # end match
+                    is_optional = False
+                # end if
+                if len(union_params) == 0:
+                    raise TypeError(
+                        f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
+                    )
+                # end if
+                first_union_type = union_params[0]
+                if not all(first_union_type == x for x in union_params[1:]):
+                    raise TypeError(
+                        f'Union with more than one type at key {key}.', union_params,
+                    )
+                # end if
+                additional_is_optional, sql_type = cls.match_type(
+                    first_union_type, is_automatic_field=is_automatic_field, is_outer_call=False
+                )
+                if additional_is_optional:
+                    is_optional = True
+                # end if
+            elif isinstance(origin, typing.List) or issubclass(origin, list):
+                list_params = type_hint.__args__
+                if len(list_params) != 1:  # list has one type
+                    raise TypeError(
+                        'List with more than one type parameter.', type_hint, list_params
+                    )
+                # end if
+                the_type = list_params[0]
+                try:
+                    # we will now recursively go into that list.
+                    # if it is like `list[list[list[int]]] it will succeed as INT,
+                    # and for those 3 lists the [] will be added 3 times, resulting in INT[][][]
+                    # If any of those inner lists aren't a compatible type (TypeError),
+                    # e.g. list[list[Union[str, int]]], we have to use a json dict instead.
+                    _, sql_type = cls.match_type(
+                        the_type, is_automatic_field=is_automatic_field, is_outer_call=False
+                    )
+                    sql_type = "".join((sql_type, "[]"))  # append '[]' to the sql_type
+                    return False, sql_type  # the list itself can't be optional, that has to be done by an outer Optional[].
+                except TypeError as e:
+                    if not is_outer_call:
+                        # make sure we don't end up with JSONB[] for list[list[Union[str, int]]],
+                        # only the outer one should migrate to json.
+                        raise e
+                    # end if
+                    logger.debug('Could not parse as a single type list (e.g. INT[][]), now will be a json field.', exc_info=True)
+                    return False, cls._COLUMN_TYPES[dict]
+                # end try
+            elif isinstance(origin, (typing.Tuple)) or issubclass(origin, builtins.tuple):
+                tuple_params = type_hint.__args__
+                if len(tuple_params) == 0:  # list has one type
+                    raise TypeError(
+                        'Tuple has no parameters.', type_hint, tuple_params
+                    )
+                # end if
+
+                # check if all types of the tuple are the same, so we can use a list
+                first_type = tuple_params[0]
+                if all(first_type == x for x in tuple_params[1:]):
+                    # we hope this will give us something like  INT, TEXT, FLOAT, etc.
+                    _, sql_type = cls.match_type(
+                        first_type, is_automatic_field=is_automatic_field, is_outer_call=False
+                    )
+                    sql_type = "".join((sql_type, "[]"))  # append '[]' to the sql_type
+                    return False, sql_type  # the tuple itself can't be optional, that has to be done by an outer Optional[].
+                # end if
+
+                # so the types are all over the place, so we will have to fallback to json.
+                sql_type = cls._COLUMN_TYPES[dict]
+                return False, sql_type  # the list itself can't be optional, that has to be done by an outer Optional[].
+            else:
+                raise ValueError('Enclosed by an unknown type', origin, f'key={key!r}')
+            # end case
         elif isinstance(type_hint, ModelField):
             is_optional = type_hint.allow_none
             # is_optional = type_hint.allow_none and (type_hint.shape != SHAPE_SINGLETON or not type_hint.sub_fields)
