@@ -160,8 +160,8 @@ class SystemUnderTest(FastORM):
     t8_4: list[list[Union[str, int]]]
     __result__t8_4 = ExpectedResult(is_optional=False, sql_type="JSONB", default=None)
 
-    t8_3: tuple[int, int, int]
-    __result__t8_3 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
+    t8_5: tuple[int, int, int]
+    __result__t8_5 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=None)
 
     #
     # special cases for tuples
