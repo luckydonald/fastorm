@@ -812,12 +812,12 @@ class FastORM(BaseModel):
         """
         Processes a type hint to produce a CREATE TABLE sql segment of the type of that type hint and if it's optional..
 
-            >>> class Example(object):
+            >>> class Example(FastORM):
             ...   foo: Optional[int]
             ...
 
             >>> type_hints = typing.get_type_hints(Example)
-            >>> is_optional, sql_type = match_type(type_hints['foo'], is_automatic_field=False)
+            >>> is_optional, sql_type = Example.match_type(type_hints['foo'], is_automatic_field=False)
             >>> is_optional, sql_type
             (True, 'BIGINT')
 
