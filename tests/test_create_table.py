@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import get_type_hints
 from typing import Optional, Union, Any, Type
 from fastorm import FastORM
-from pydantic import dataclasses
+from pydantic import dataclasses, BaseModel
 
 
 @dataclasses.dataclass
@@ -14,6 +14,15 @@ class ExpectedResult(object):
 # end class
 
 ExpectedResult: Type[Any]
+
+
+class OtherTable(FastORM):
+    _table_name = 'other_table'
+    _primary_keys = ['id_part_1', 'id_part_2']
+
+    id_part_1: int
+    id_part_2: str
+# end class
 
 
 class SystemUnderTest(FastORM):
@@ -127,6 +136,13 @@ class SystemUnderTest(FastORM):
 
     t6_3: Optional[str] = None
     __result__t6_3 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+
+    #
+    # references
+    #
+
+    # t7_1: OtherTable
+    __result__t7_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=None)
 # end class
 
 
