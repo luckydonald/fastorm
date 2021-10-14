@@ -19,12 +19,35 @@ ExpectedResult: Type[Any]
 
 
 class OtherTable(FastORM):
+    """
+        CREATE TABLE "other_table" (
+          "id_part_1" TEXT NOT NULL,
+          "id_part_2" BIGINT NOT NULL,
+          PRIMARY KEY ("id_part_1", "id_part_2")
+        )
+    """
     _table_name = 'other_table'
     _primary_keys = ['id_part_1', 'id_part_2']
     _ignored_fields = []
 
     id_part_1: int
     id_part_2: str
+# end class
+
+
+class TheReferenceHasBeenDoubled(FastORM):
+    """
+        CREATE TABLE "double_reference" (
+          "another_reference__id_part_1" TEXT NOT NULL,
+          "another_reference__id_part_2" BIGINT NOT NULL,
+          PRIMARY KEY ("another_reference__id_part_1", "another_reference__id_part_2")
+        )
+    """
+    _table_name = 'double_reference'
+    _primary_keys = ['another_reference']
+    _ignored_fields = []
+
+    another_reference: OtherTable
 # end class
 
 
