@@ -449,8 +449,14 @@ class FastORM(BaseModel):
         return self.__class__(**self.as_dict())
     # end if
 
+    @classmethod
+    def get_primary_keys_keys(cls) -> List[str]:
+        return cls._primary_keys
+    # end def
+
     def get_primary_keys(self) -> Dict[str, Any]:
-        return {k: v for k, v in self.as_dict().items() if k in self._primary_keys}
+        _primary_keys = self.get_primary_keys_keys()
+        return {k: v for k, v in self.as_dict().items() if k in _primary_keys}
     # end def
 
     def get_primary_keys_values(self):
