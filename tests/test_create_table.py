@@ -251,7 +251,8 @@ class CreateTableTestCase(unittest.TestCase):
         expected_sql = "\n".join(line.removeprefix('        ') for line in SystemUnderTest.__doc__.strip().splitlines() if not line.strip().startswith('#'))
         actual_sql, *actual_params = SystemUnderTest.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
-        expected_defaults = [getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}').default for key in get_type_hints(SystemUnderTest).keys() if not key.startswith('_')]
+        expected_defaults = [getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}') for key in get_type_hints(SystemUnderTest).keys() if not key.startswith('_')]
+        expected_defaults = [expected.default for expected in expected_defaults if isinstance(expected, ExpectedResult)]
         expected_params = [default for default in expected_defaults if default != Undefined]
         print(expected_params, actual_params)
         self.assertListEqual(expected_params, actual_params)
