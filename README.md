@@ -22,7 +22,6 @@ class State(str, Enum):
 # end class
 
 
-@dataclasses.dataclass
 class User(FastORM):
     _ignored_fields = []
     _primary_keys = ['id']
@@ -33,7 +32,6 @@ class User(FastORM):
     name: str
 
 
-@dataclasses.dataclass
 class Auction(FastORM):
     _ignored_fields = []
     _primary_keys = ['id']

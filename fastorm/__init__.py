@@ -6,7 +6,6 @@ __author__ = 'luckydonald'
 __version__ = "0.0.2"
 
 import builtins
-import dataclasses
 import ipaddress
 import datetime
 import decimal
@@ -74,7 +73,7 @@ class FastORM(BaseModel):
     # end def
 
     def as_dict(self) -> Dict[str, JSONType]:
-        return dataclasses.asdict(self)
+        return self.dict()
     # end def
 
     @classmethod
@@ -951,35 +950,6 @@ class FastORM(BaseModel):
         return is_optional, sql_type
     # end def
 
-    @staticmethod
-    def dataclass(other_cls):
-        """
-        Meant to calculate a `.get(…, …, …, …) function, dataclass style.
-        :param other_cls:
-        :return:
-        """
-        _primary_keys = getattr(other_cls, '_primary_keys')
-        fields = [
-             f for f in dataclasses.fields(other_cls)
-             if f.init and f.name in _primary_keys
-        ]
-        # noinspection PyProtectedMember
-        func_args = ','.join([dataclasses._init_param(f) for f in fields])
-        call_args = ','.join([f'{f.name}={f.name}' for f in fields])
-        # noinspection PyShadowingBuiltins
-        locals = {f'_type_{f.name}': f.type for f in fields}
-        locals[other_cls.__name__] = other_cls
-        import builtins
-        # noinspection PyShadowingBuiltins
-        globals = {'__builtins__': builtins}
-        # Compute the text of the entire function.
-        txt = f'async def get(self, {func_args}) -> {other_cls.__name__}:\n await self.get({call_args})'
-        logger.debug(f'setting up `get`: {txt!r}')
-        function = _create_func('get', txt, globals, locals)
-        setattr(other_cls, 'get', function)
-        return other_cls
-    # end def
-
     @classmethod
     def _param_is_list_of_multiple_values(cls, key: str, value: Any, typehint: Any):
         """
@@ -1105,13 +1075,6 @@ class FastORM(BaseModel):
         return conn
     # end def
 # end class
-
-
-# noinspection PyShadowingBuiltins
-def _create_func(name, txt, globals, locals):
-    exec(txt, globals, locals)
-    return locals[name]
-# end def
 
 
 class _AutoincrementClass(object):

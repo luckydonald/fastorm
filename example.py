@@ -3,7 +3,6 @@
 __author__ = 'luckydonald'
 
 import asyncio
-import dataclasses
 from datetime import datetime, timedelta
 from typing import Optional, Union
 from enum import Enum
@@ -21,7 +20,6 @@ class State(str, Enum):
 # end class
 
 
-@dataclasses.dataclass
 class User(FastORM):
     _ignored_fields = []
     _primary_keys = ['id']
@@ -33,7 +31,6 @@ class User(FastORM):
 # end class
 
 
-@dataclasses.dataclass
 class Auction(FastORM):
     _ignored_fields = []
     _primary_keys = ['id']
