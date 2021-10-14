@@ -48,7 +48,16 @@ class SystemUnderTest(FastORM):
           "t3_3" DOUBLE PRECISION NOT NULL,
           "t3_4" BOOLEAN NOT NULL,
           "t5_1" TIMESTAMP NOT NULL,
-          "t6_1" TEXT NOT NULL DEFAULT '%1'
+          "t6_1" TEXT NOT NULL DEFAULT $1,
+          "t6_2" TEXT DEFAULT $2,
+          # "t7_1__id_part_1" BIGINT NOT NULL,
+          # "t7_1__id_part_2" TEXT NOT NULL,
+          "t8_1" JSONB NOT NULL,
+          "t8_2" BIGINT[] NOT NULL,
+          "t8_3" JSONB NOT NULL,
+          "t8_4" JSONB NOT NULL,
+          "t9_1" BIGINT[] NOT NULL,
+          "t9_2" JSONB NOT NULL
         )
         """
     _table_name = 'cool_table_yo'
