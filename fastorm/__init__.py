@@ -25,6 +25,8 @@ from pydantic.fields import ModelField, UndefinedType, Undefined, Field
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
+from .compat import check_is_union_type
+
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
 
@@ -826,28 +828,42 @@ class FastORM(BaseModel):
             (True, 'BIGINT')
 
         """
-        if hasattr(type_hint, '__origin__') or isinstance(type_hint, types.UnionType):
+        is_union_type = check_is_union_type(type_hint)
+        if hasattr(type_hint, '__origin__') or is_union_type:
             origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
-            match origin:
-                case typing.Optional | typing.Union | types.UnionType:  # Optional is an special union, too
-                    union_params = type_hint.__args__  # this was __union_params__ in python3.5, but __args__ in 3.6+
-                    match union_params:
-                        case (the_type, types.NoneType) | (types.NoneType, the_type):
-                            is_optional = True
-                        case (the_type,):
-                            is_optional = False
-                        case something_else:
-                            raise TypeError(
-                                'Union with more than one type.', something_else, f'key {key}'
-                            )
-                    # end match
+            is_union_type = check_is_union_type(origin)
+            if True:
+                if is_union_type or origin in (typing.Optional, typing.Union):  # Optional is an special union, too
+                    union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
+                    if not isinstance(union_params, (list, tuple)):
+                        raise TypeError(
+                            f'Union type for key {key} has unparsable params.', union_params,
+                        )
+                    # end if
+                    if types.NoneType in union_params:
+                        is_optional = True
+                        union_params = [param for param in union_params if not issubclass(param, types.NoneType)]
+                    else:
+                        is_optional = False
+                    # end if
+                    if len(union_params) == 0:
+                        raise TypeError(
+                            f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
+                        )
+                    # end if
+                    first_union_type = union_params[0]
+                    if not all(first_union_type == x for x in union_params[1:]):
+                        raise TypeError(
+                            f'Union with more than one type at key {key}.', union_params,
+                        )
+                    # end if
                     additional_is_optional, sql_type = cls.match_type(
-                        the_type, is_automatic_field=is_automatic_field, is_outer_call=False
+                        first_union_type, is_automatic_field=is_automatic_field, is_outer_call=False
                     )
                     if additional_is_optional:
                         is_optional = True
                     # end if
-                case typing.List | builtins.list:
+                elif isinstance(origin, typing.List) or issubclass(origin, list):
                     list_params = type_hint.__args__
                     if len(list_params) != 1:  # list has one type
                         raise TypeError(
@@ -875,7 +891,7 @@ class FastORM(BaseModel):
                         logger.debug('Could not parse as a single type list (e.g. INT[][]), now will be a json field.', exc_info=True)
                         return False, cls._COLUMN_TYPES[dict]
                     # end try
-                case typing.Tuple | builtins.tuple:
+                elif isinstance(origin, (typing.Tuple)) or issubclass(origin, builtins.tuple):
                     tuple_params = type_hint.__args__
                     if len(tuple_params) == 0:  # list has one type
                         raise TypeError(
@@ -897,8 +913,8 @@ class FastORM(BaseModel):
                     # so the types are all over the place, so we will have to fallback to json.
                     sql_type = cls._COLUMN_TYPES[dict]
                     return False, sql_type  # the list itself can't be optional, that has to be done by an outer Optional[].
-                case _:
-                    raise ValueError('Enclosed by an unknown type', origin, )
+                else:
+                    raise ValueError('Enclosed by an unknown type', origin, f'key={key!r}')
                 # end case
             # end match
         elif isinstance(type_hint, ModelField):
