@@ -21,6 +21,7 @@ ExpectedResult: Type[Any]
 class OtherTable(FastORM):
     _table_name = 'other_table'
     _primary_keys = ['id_part_1', 'id_part_2']
+    _ignored_fields = []
 
     id_part_1: int
     id_part_2: str
@@ -50,8 +51,8 @@ class SystemUnderTest(FastORM):
           "t5_1" TIMESTAMP NOT NULL,
           "t6_1" TEXT NOT NULL DEFAULT $1,
           "t6_2" TEXT DEFAULT $2,
-          # "t7_1__id_part_1" BIGINT NOT NULL,
-          # "t7_1__id_part_2" TEXT NOT NULL,
+          "t7_1__id_part_1" BIGINT NOT NULL,
+          "t7_1__id_part_2" TEXT NOT NULL,
           "t8_1" JSONB NOT NULL,
           "t8_2" BIGINT[] NOT NULL,
           "t8_3" BIGINT[][] NOT NULL,
@@ -149,8 +150,10 @@ class SystemUnderTest(FastORM):
     # references
     #
 
-    # t7_1: OtherTable
-    __result__t7_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
+    t7_1: OtherTable
+    # For the single field FastORM.match_type(…) this results as JSONB (because BaseModel)
+    # For the table view FastORM.build_sql_create() this results as two keys with the respective types.
+    __result__t7_1 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
 
     #
     # special cases for lists
