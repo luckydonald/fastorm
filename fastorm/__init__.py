@@ -717,26 +717,29 @@ class FastORM(BaseModel):
     def build_sql_create(
         cls,
     ) -> Tuple[str, Any]:
+        assert issubclass(cls, BaseModel)  # because we no longer use typing.get_type_hints, but pydantic's `cls.__fields__`
         _table_name = getattr(cls, '_table_name')
         _automatic_fields = getattr(cls, '_automatic_fields')
         assert_type_or_raise(_table_name, str, parameter_name='cls._table_name')
         assert_type_or_raise(_automatic_fields, list, parameter_name='cls._automatic_fields')
         _ignored_fields = cls.get_ignored_fields()
 
-        # copy the type hints as we might add more type hints for the primary key fields of referenced models
         type_hints: dict[str, ModelField] = cls.get_fields_typehints(flatten_table_references=True)
+
+        # .required tells us if we have a default value set or not.
+        # .allow_none tells us if None is supported
+        # .default tells us what default (or None)
 
         placeholder_index = 0
         placeholder_values = []
         type_definitions = []
-        for key in own_keys:
-            type_hint = type_hints[key]
-            has_default = hasattr(cls, key)
+        for key, type_hint in type_hints.items():
             is_automatic_field = key in _automatic_fields
+
             is_optional, sql_type = cls.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field, key=key)
-            if is_automatic_field:
-                is_optional = False
-            # end if
+            # if is_automatic_field:
+            #     is_optional = False
+            # # end if
 
             # Now let's build that column's sql part
 
@@ -747,11 +750,12 @@ class FastORM(BaseModel):
             if not is_optional:
                 type_definition_parts.append("NOT NULL")
             # end if
-            if has_default:
+
+            # has it a default value?
+            if not isinstance(type_hint.field_info.default, UndefinedType):
                 placeholder_index += 1
                 type_definition_parts.append(f'${placeholder_index}')
-                default = getattr(cls, key)
-                placeholder_values.append(default)
+                placeholder_values.append(type_hint.field_info.default)
             # end if
             type_definitions.append(" ".join(type_definition_parts))
         # end for
