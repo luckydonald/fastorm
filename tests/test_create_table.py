@@ -234,6 +234,18 @@ class WrongStuff(BaseModel):
 # end def
 
 
+def remove_prefix(line, prefix):
+    try:
+        return line.removeprefix(prefix)
+    except AttributeError:
+        if line.startswith(prefix):
+            return line[len(prefix):]
+        # end if
+        return line
+    # end try
+# end def
+
+
 class CreateTableTestCase(unittest.TestCase):
     def test_type_detection_typing(self):
         type_hints: Dict[str, any] = get_type_hints(SystemUnderTest, include_extras=True)
@@ -279,7 +291,7 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_sql_text(self):
-        expected_sql = "\n".join(line.removeprefix('        ') for line in SystemUnderTest.__doc__.strip().splitlines() if not line.strip().startswith('#'))
+        expected_sql = "\n".join(remove_prefix(line, '        ') for line in SystemUnderTest.__doc__.strip().splitlines() if not line.strip().startswith('#'))
         actual_sql, *actual_params = SystemUnderTest.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
         expected_defaults = [getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}') for key in get_type_hints(SystemUnderTest).keys() if not key.startswith('_')]
