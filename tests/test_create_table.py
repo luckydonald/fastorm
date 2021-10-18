@@ -6,6 +6,7 @@ from pydantic import dataclasses, BaseModel
 from pydantic.fields import ModelField, Undefined, Field
 
 from fastorm import FastORM, Autoincrement
+from fastorm.compat import get_type_hints_with_annotations
 
 
 @dataclasses.dataclass
@@ -248,7 +249,7 @@ def remove_prefix(line, prefix):
 
 class CreateTableTestCase(unittest.TestCase):
     def test_type_detection_typing(self):
-        type_hints: Dict[str, any] = get_type_hints(SystemUnderTest, include_extras=True)
+        type_hints: Dict[str, any] = get_type_hints_with_annotations(SystemUnderTest)
         for key, type_hint in type_hints.items():
             if key.startswith('_'):
                 continue
