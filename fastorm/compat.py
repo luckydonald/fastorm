@@ -57,9 +57,14 @@ except ImportError:
     pass
 # end try
 
+Annotated = None
 
 try:
-    from typing import Annotated
+    try:
+        from typing import Annotated  # 3.10
+    except ImportError:
+        from typing_extensions import Annotated  # 3.7
+    # end try
 
     AnnotatedType = type(Annotated)
 
@@ -70,6 +75,12 @@ try:
     # end def
 except ImportError:
     pass
+# end try
+
+try:
+    from types import NoneType
+except:
+    NoneType = type(None)
 # end try
 
 if IS_PYTHON_3_10:

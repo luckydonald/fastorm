@@ -22,9 +22,11 @@ from luckydonaldUtils.typing import JSONType
 from pydantic import BaseModel
 from pydantic.fields import ModelField, UndefinedType, Undefined, Field
 from pydantic.typing import NoArgAnyCallable
+
 from typeguard import check_type
 
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
+from .compat import Annotated, NoneType
 
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
@@ -853,9 +855,9 @@ class FastORM(BaseModel):
                         f'Union type for key {key} has unparsable params.', union_params,
                     )
                 # end if
-                if types.NoneType in union_params:
+                if NoneType in union_params:
                     is_optional = True
-                    union_params = [param for param in union_params if not issubclass(param, types.NoneType)]
+                    union_params = [param for param in union_params if not issubclass(param, NoneType)]
                 else:
                     is_optional = False
                 # end if
@@ -970,7 +972,7 @@ class FastORM(BaseModel):
                 if issubclass(wrapper_class, list):
                     sql_type = "".join([sql_type, "[]"])
                 # end if
-            elif check_is_annotated_type(type_hint.outer_type_)
+            elif check_is_annotated_type(type_hint.outer_type_):
                 return cls.match_type(
                     type_hint.outer_type_, is_automatic_field=is_automatic_field, is_outer_call=False
                 )
