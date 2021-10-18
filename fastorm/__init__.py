@@ -24,7 +24,7 @@ from pydantic.fields import ModelField, UndefinedType, Undefined, Field
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
-from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias
+from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
@@ -970,6 +970,10 @@ class FastORM(BaseModel):
                 if issubclass(wrapper_class, list):
                     sql_type = "".join([sql_type, "[]"])
                 # end if
+            elif check_is_annotated_type(type_hint.outer_type_)
+                return cls.match_type(
+                    type_hint.outer_type_, is_automatic_field=is_automatic_field, is_outer_call=False
+                )
             # end if
         else:
             is_optional = False
