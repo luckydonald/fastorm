@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'luckydonald'
 
-from types import GenericAlias
-from typing import Any, Union, Type
+from typing import Any, Union
 from pydantic.fields import ModelField
 
 
-TYPEHINT_TYPE = Union[GenericAlias, type, ModelField]
+TYPEHINT_TYPE = Union[type, ModelField]
 
 
 # noinspection PyUnusedLocal
@@ -15,27 +14,12 @@ def check_is_union_type(variable: Any) -> bool:
     # as there's no UnionType, we can't have an instance of it.
     return False
 # end def
-try:
-    from typing import Annotated
 
-    class AnnotatedType:
-        __origin__: type
-        __metadata__: tuple
-    # end class
-except ImportError:
-    class AnnotatedType(object):
-        def __getitem__(self, item):
-            if isinstance(item, tuple):
-                return item[0]
-            # end if
-            return item
-        # end def
-    # end class
-    Annotated = AnnotatedType()
+
+def check_is_generic_alias(variable: Any) -> bool:
+    # as there's no GenericAlias, we can't have an instance of it.
+    return False
 # end def
-
-AnnotatedType: Type[AnnotatedType] = type(Annotated[str, str])
-
 
 
 try:
@@ -46,6 +30,19 @@ try:
     # end def
 
     TYPEHINT_TYPE = Union[TYPEHINT_TYPE, UnionType]
+except ImportError:
+    pass
+# end try
+
+
+try:
+    from types import GenericAlias
+
+    def check_is_generic_alias(variable: Any) -> bool:
+        return isinstance(variable, GenericAlias)
+    # end def
+
+    TYPEHINT_TYPE = Union[TYPEHINT_TYPE, GenericAlias]
 except ImportError:
     pass
 # end try

@@ -4,6 +4,7 @@
 """FastORM framework, easy to learn, fast to code"""
 __author__ = 'luckydonald'
 __version__ = "0.0.2"
+__all__ = ['__author__', '__version__', 'FastORM', 'Annotated', 'AnnotatedType', 'Autoincrement']
 
 import builtins
 import ipaddress
@@ -11,7 +12,6 @@ import datetime
 import decimal
 import uuid
 from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable
-from types import GenericAlias
 import asyncpg
 import typing, types
 from asyncpg import Connection
@@ -24,7 +24,7 @@ from pydantic.fields import ModelField, UndefinedType, Undefined, Field
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
-from .compat import check_is_union_type, TYPEHINT_TYPE
+from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias
 
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
@@ -138,7 +138,7 @@ class FastORM(BaseModel):
 
             # now it's another FastORM table definition.
             other_class: Type[FastORM] = type_hint.type_
-            other_class_type_hints: dict[str, ModelField] = other_class.get_fields_typehints(flatten_table_references=True)
+            other_class_type_hints: Dict[str, ModelField] = other_class.get_fields_typehints(flatten_table_references=True)
             for other_class_primary_key in other_class.get_primary_keys_keys():
                 new_key = f'{key}__{other_class_primary_key}'
                 if new_key in type_hints:
@@ -305,7 +305,8 @@ class FastORM(BaseModel):
             sql += f'\n RETURNING {automatic_fields_sql}'
         # end if
         sql += '\n;'
-        return sql, *values
+        # noinspection PyRedundantParentheses
+        return (sql, *values)
     # end def
 
     @classmethod
@@ -394,7 +395,8 @@ class FastORM(BaseModel):
 
         # noinspection SqlResolve,SqlNoDataSourceInspection
         sql = f'SELECT {fields} FROM "{cls._table_name}" WHERE {" AND ".join(where_parts)}'
-        return sql, *where_values
+        # noinspection PyRedundantParentheses
+        return (sql, *where_values)
     # end def
 
     async def insert(
@@ -510,7 +512,8 @@ class FastORM(BaseModel):
         sql += f' SET {",".join(update_keys)}'
         sql += f' WHERE {",".join(primary_key_where)}'
         sql += '\n;'
-        return sql, *values
+        # noinspection PyRedundantParentheses
+        return (sql, *values)
     # end def
 
     async def update(self, conn: Connection):
@@ -554,7 +557,8 @@ class FastORM(BaseModel):
         sql = f'DELETE FROM "{_table_name}"\n'
         sql += f' WHERE {",".join(primary_key_parts)}'
         sql += '\n;'
-        return sql, *where_values
+        # noinspection PyRedundantParentheses
+        return (sql, *where_values)
     # end def
 
     async def delete(self, conn: Connection):
@@ -591,11 +595,11 @@ class FastORM(BaseModel):
         return instance
     # end def
 
-    _COLUMN_AUTO_TYPES: dict[type, str] = {
+    _COLUMN_AUTO_TYPES: Dict[type, str] = {
         int: "BIGSERIAL",
     }
 
-    _COLUMN_TYPES: dict[type, str] = {
+    _COLUMN_TYPES: Dict[type, str] = {
         bool: "BOOLEAN",
         bytes: "BYTEA",
         bytearray: "BYTEA",
@@ -701,12 +705,12 @@ class FastORM(BaseModel):
         BaseModel: "JSONB",
     }
 
-    _COLUMN_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
+    _COLUMN_TYPES_SPECIAL: Dict[Callable[[type], bool], str] = {
         lambda cls: hasattr(cls, 'to_dict'): _COLUMN_TYPES[dict],
         lambda cls: hasattr(cls, 'to_array'): _COLUMN_TYPES[dict],  # pytgbot object uses to_array
     }
 
-    _COLUMN_AUTO_TYPES_SPECIAL: dict[Callable[[type], bool], str] = {
+    _COLUMN_AUTO_TYPES_SPECIAL: Dict[Callable[[type], bool], str] = {
     }
 
     @classmethod
@@ -751,7 +755,7 @@ class FastORM(BaseModel):
         assert_type_or_raise(_automatic_fields, list, parameter_name='cls._automatic_fields')
         _ignored_fields = cls.get_ignored_fields()
 
-        type_hints: dict[str, ModelField] = cls.get_fields_typehints(flatten_table_references=True)
+        type_hints: Dict[str, ModelField] = cls.get_fields_typehints(flatten_table_references=True)
 
         # .required tells us if we have a default value set or not.
         # .allow_none tells us if None is supported
@@ -806,9 +810,9 @@ class FastORM(BaseModel):
         type_hint: TYPEHINT_TYPE,
         *,
         is_automatic_field: Optional[bool] = None,
-        key: str | None = None,
+        key: Optional[str] = None,
         is_outer_call: bool = True
-    ) -> tuple[bool, str]:
+    ) -> Tuple[bool, str]:
         """
         Processes a type hint to produce a CREATE TABLE sql segment of the type of that type hint and if it's optional..
 
@@ -884,7 +888,7 @@ class FastORM(BaseModel):
                     logger.debug('Could not parse as a single type list (e.g. INT[][]), now will be a json field.', exc_info=True)
                     return False, cls._COLUMN_TYPES[dict]
                 # end try
-            elif isinstance(origin, (typing.Tuple)) or issubclass(origin, builtins.tuple):
+            elif isinstance(origin, typing.Tuple) or issubclass(origin, builtins.tuple):
                 tuple_params = type_hint.__args__
                 if len(tuple_params) == 0:  # list has one type
                     raise TypeError(
@@ -941,7 +945,7 @@ class FastORM(BaseModel):
                 #      for str,  typehint.type_       is str
                 # but also for Optional[str] it is  both  str!
                 return is_optional, sql_type
-            if isinstance(type_hint.outer_type_, GenericAlias) and hasattr(type_hint.outer_type_, '__origin__'):
+            if check_is_generic_alias(type_hint.outer_type_) and hasattr(type_hint.outer_type_, '__origin__'):
                 # e.g. for list[int],  typehint.outer_type_ is List[int], thus having a .__origin__ == list
                 #      for list[int],  typehint.type_       is int
                 # isinstance(list[int], GenericAlias) == True

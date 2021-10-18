@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 from typing import get_type_hints
-from typing import Optional, Union, Any, Type
+from typing import Optional, Union, Any, Type, List, Tuple, Dict
 from pydantic import dataclasses, BaseModel
 from pydantic.fields import ModelField, Undefined, Field
 
@@ -190,23 +190,23 @@ class SystemUnderTest(FastORM):
     t8_1: list
     __result__t8_1 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
 
-    t8_2: list[int]
+    t8_2: List[int]
     __result__t8_2 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=Undefined)
 
-    t8_3: list[list[int]]
+    t8_3: List[List[int]]
     __result__t8_3 = ExpectedResult(is_optional=False, sql_type="BIGINT[][]", default=Undefined)
 
-    t8_4: list[list[Union[str, int]]]
+    t8_4: List[List[Union[str, int]]]
     __result__t8_4 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
 
     #
     # special cases for tuples
     #
 
-    t9_1: tuple[int, int, int]
+    t9_1: Tuple[int, int, int]
     __result__t9_1 = ExpectedResult(is_optional=False, sql_type="BIGINT[]", default=Undefined)
 
-    t9_2: tuple[int, str, float]
+    t9_2: Tuple[int, str, float]
     __result__t9_2 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
 
 # end class
@@ -236,7 +236,7 @@ class WrongStuff(BaseModel):
 
 class CreateTableTestCase(unittest.TestCase):
     def test_type_detection_typing(self):
-        type_hints: dict[str, any] = get_type_hints(SystemUnderTest)
+        type_hints: Dict[str, any] = get_type_hints(SystemUnderTest, include_extras=True)
         for key, type_hint in type_hints.items():
             if key.startswith('_'):
                 continue
@@ -259,7 +259,7 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_type_detection_pydantic(self):
-        type_hints: dict[str, ModelField] = SystemUnderTest.get_fields_typehints()
+        type_hints: Dict[str, ModelField] = SystemUnderTest.get_fields_typehints()
         for key, type_hint in type_hints.items():
             expected_result: ExpectedResult | Type[Exception]
             expected_result = getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}')
