@@ -828,6 +828,22 @@ class FastORM(BaseModel):
         """
         is_union_type = check_is_union_type(type_hint)
         if hasattr(type_hint, '__origin__') or is_union_type:
+            if check_is_annotated_type(type_hint):
+                # https://stackoverflow.com/q/68275615/3423324#what-is-the-right-way-to-check-if-a-type-hint-is-annotated
+                actual_type = type_hint.__origin__  # str or wherever was the first parameter.
+                metadata = type_hint.__metadata__
+                if not isinstance(metadata, (tuple, list)):
+                    metadata = (metadata,)
+                # end if
+                if _AutoincrementClass in metadata:
+                    is_automatic_field = True
+                # end if
+                is_optional, sql_type = cls.match_type(
+                    actual_type, is_automatic_field=is_automatic_field, is_outer_call=False
+                )
+                return is_optional, sql_type
+            # end if
+
             origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
             is_union_type = check_is_union_type(origin)
             if is_union_type or origin in (typing.Optional, typing.Union):  # Optional is an special union, too
