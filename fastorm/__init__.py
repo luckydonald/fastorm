@@ -823,8 +823,7 @@ class FastORM(BaseModel):
             ...
 
             >>> type_hints = typing.get_type_hints(Example)
-            >>> is_optional, sql_type = Example.match_type(type_hints['foo'], is_automatic_field=False)
-            >>> is_optional, sql_type
+            >>> Example.match_type(type_hints['foo'], is_automatic_field=False)
             (True, 'BIGINT')
 
         """
