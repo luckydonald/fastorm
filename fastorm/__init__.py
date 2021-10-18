@@ -4,7 +4,7 @@
 """FastORM framework, easy to learn, fast to code"""
 __author__ = 'luckydonald'
 __version__ = "0.0.2"
-__all__ = ['__author__', '__version__', 'FastORM', 'Annotated', 'AnnotatedType', 'Autoincrement']
+__all__ = ['__author__', '__version__', 'FastORM', 'Autoincrement']
 
 import builtins
 import ipaddress
@@ -1098,9 +1098,18 @@ class _AutoincrementClass(object):
         ...   id_a: int = Field(default_factory=Autoincrement, other_field_parameters=...)
         ...   id_b: int = Autoincrement(other_field_parameters=...)
 
-    In other words,
+    In other words, the following two are doing the same:
 
-        >>> Autoincrement() == Field(default_factory=Autoincrement)
+        >>> example_1 = Autoincrement()
+        >>> example_2 = Field(default_factory=Autoincrement)
+
+        >>> from pydantic.fields import FieldInfo
+        >>> isinstance(example_1, FieldInfo)
+        True
+        >>> isinstance(example_2, FieldInfo)
+        True
+
+        >>> Autoincrement().__dir__() == Field(default_factory=Autoincrement).__dir__()
         True
 
     """
