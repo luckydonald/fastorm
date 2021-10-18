@@ -837,7 +837,7 @@ class FastORM(BaseModel):
                 if not isinstance(metadata, (tuple, list)):
                     metadata = (metadata,)
                 # end if
-                if _AutoincrementClass in metadata:
+                if AutoincrementType in metadata:
                     is_automatic_field = True
                 # end if
                 is_optional, sql_type = cls.match_type(
@@ -1111,7 +1111,7 @@ class FastORM(BaseModel):
 # end class
 
 
-class _AutoincrementClass(object):
+class AutoincrementType(object):
     """
     Below there will be a singleton called Autoincrement.
     It can be used in the following two ways, they are the same:
@@ -1181,5 +1181,5 @@ class _AutoincrementClass(object):
 # end class
 
 
-Autoincrement = _AutoincrementClass()
+Autoincrement = AutoincrementType()
 
