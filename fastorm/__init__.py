@@ -46,12 +46,15 @@ class FastORM(BaseModel):
     _database_cache: Dict[str, JSONType]  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
     __selectable_fields: List[str]  # cache for `cls.get_sql_fields()`
 
+    __slots__ = ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields']
+
     def __init__(self, **data: Any):
         super().__init__(**data)
         self.__post_init__()
     # end def
 
     def __post_init__(self):
+        setattr(self, '_database_cache', {})
         self._database_cache: Dict[str, Any] = {}
     # end def
 
@@ -303,7 +306,9 @@ class FastORM(BaseModel):
     # end def
 
     def build_sql_insert(
-        self, *, ignore_setting_automatic_fields: bool, on_conflict_upsert_field_list: Optional[List[str]]
+        self, *,
+        ignore_setting_automatic_fields: Optional[bool] = None,
+        on_conflict_upsert_field_list: Optional[List[str]] = None,
     ) -> Tuple[str, Any]:
         own_keys = self.get_fields()
         _table_name = getattr(self, '_table_name')
@@ -325,12 +330,16 @@ class FastORM(BaseModel):
                 continue
             # end if
             is_automatic_field = None
+
             if ignore_setting_automatic_fields or on_conflict_upsert_field_list:
                 is_automatic_field = key in _automatic_fields
             if ignore_setting_automatic_fields and is_automatic_field:
                 continue
             # end if
             value = getattr(self, key)
+            if ignore_setting_automatic_fields is None and value is None:
+                continue
+            # end if
             placeholder_index += 1
             placeholder.append(f'${placeholder_index}')
             if isinstance(value, dict):
@@ -459,19 +468,21 @@ class FastORM(BaseModel):
     # end def
 
     async def insert(
-        self, conn: Connection, *, ignore_setting_automatic_fields: bool,
+        self, conn: Connection, *,
+        ignore_setting_automatic_fields: Optional[bool] = None,
         on_conflict_upsert_field_list: Optional[List[str]] = None,
         write_back_automatic_fields: bool = True,
     ):
         """
-
         :param conn: Database connection to run at.
         :param ignore_setting_automatic_fields:
             Skip setting fields marked as automatic, even if you provided.
             For example if the id field is marked automatic, as it's an autoincrement int.
             If `True`, setting `id=123` (commonly `id=None`) would be ignored, and instead the database assignes that value.
             If `False`, the value there will be written to the database.
-        :param on_conflict_upsert_field_list:
+            If `None`, it will be ignored as long as the value actually is None, but set if it is non-None.
+            The default setting is `None`.
+        :param on_conflict_upsert_field_list: List of fields which are expected to cause an duplicate conflict, and thus will instead be overwritten.
         :param write_back_automatic_fields: Apply the automatic fields back to this object.
                                             Ignored if `ignore_setting_automatic_fields` is False.
         :return:
