@@ -74,6 +74,7 @@ def extract_sql_from_docstring(cls):
     return "\n".join(remove_prefix(line, '        ') for line in cls.__doc__.strip().splitlines() if not line.strip().startswith('#'))
 # end def
 
+
 class DoublePrimaryKeyTable(FastORM):
     """
         CREATE TABLE "table1_having_table2" (
@@ -152,6 +153,7 @@ class CreateTableTestCase(unittest.TestCase):
         self.assertEqual(expected_sql, actual_sql)
     # end def
 # end class
+
 
 if __name__ == '__main__':
     unittest.main()
