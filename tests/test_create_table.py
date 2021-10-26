@@ -83,7 +83,9 @@ class SystemUnderTest(FastORM):
           "t8_3" BIGINT[][] NOT NULL,
           "t8_4" JSONB NOT NULL,
           "t9_1" BIGINT[] NOT NULL,
-          "t9_2" JSONB NOT NULL
+          "t9_2" JSONB NOT NULL,
+          "t10_1" BIGSERIAL NOT NULL,
+          "t10_2" BIGSERIAL NOT NULL DEFAULT $3
         )
         """
     _table_name = 'cool_table_yo'
@@ -209,6 +211,28 @@ class SystemUnderTest(FastORM):
 
     t9_2: Tuple[int, str, float]
     __result__t9_2 = ExpectedResult(is_optional=False, sql_type="JSONB", default=Undefined)
+
+    #
+    # special functionality
+    #
+
+    t10_1: Autoincrement[int]
+    __result__t10_1 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=Undefined)  # the little test won't do automatics.
+
+    t10_2: int = Autoincrement()
+    __result__t10_2 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=Undefined)  # the little test won't do automatics.
+
+    t10_3: int = Field(default_factory=Autoincrement)
+    __result__t10_3 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=Undefined)  # the little test won't do automatics.
+
+    t10_4: Autoincrement[int] = 15
+    __result__t10_4 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=15)  # the little test won't do automatics.
+
+    t10_5: Autoincrement(15)
+    __result__t10_5 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=15)  # the little test won't do automatics.
+
+    t10_6: Autoincrement(15)
+    __result__t10_6 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=15)  # the little test won't do automatics.
 
 # end class
 

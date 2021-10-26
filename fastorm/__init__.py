@@ -30,6 +30,7 @@ from .compat import Annotated, NoneType
 
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
+T = TypeVar('T')
 
 
 logger = logging.getLogger(__name__)
@@ -1165,17 +1166,56 @@ class AutoincrementType(object):
     # end def
 
     def __call__(self, *args, **kwargs) -> None:
-        if not args and not kwargs:
-            # For the use in `Field(default_factory=Autoincrement)`, we will be called without parameters.
-            # so we return the default value this object should then have, that is `None`.
-            # It would be cooler, but we can't return Autoincrement as that would be incompatible with the field's type.
-            return None
+        # so it's not the `Field(default_factory=Autoincrement.factory)` calling us with zero parameters
+        if len(args) == 1:
+            kwargs['default'] = args[0]
+            args = tuple()
         # end if
 
-        # so it's not the `Field(default_factory=Autoincrement)` calling us with zero parameters
+        # if len(args) == 0 and list(kwargs.keys()) == ['default']:
+        #    # actually the call to get some default value in
+        # # end if
         assert 'default_factory' not in kwargs
-        kwargs['default_factory'] = Autoincrement
-        return Field(*args, **kwargs)
+        default = Undefined
+        factory = self.DefaultFactory(default=kwargs.pop('default', Undefined))
+        kwargs['default_factory'] = factory
+        field = Field(*args, **kwargs)
+        factory.field = field
+        return field
+    # end def
+
+    class DefaultFactory(object):
+        def __init__(self, default=Undefined):
+            self.field = None
+            self.default = default
+        # end def
+
+        def __call__(self):
+            """
+            For the use in `Field(default_factory=Autoincrement)`, we will be called without parameters.
+            so we return the default value this object should then have, that is `None`.
+            It would be cooler, but we can't return Autoincrement as that would be incompatible with the field's type.
+            :return: None, always
+            """
+            return None
+        # end def
+    # end class
+
+
+
+    @property
+    def factory(self):
+        # For the use in `Field(default_factory=Autoincrement.factory)`, we will be called without parameters.
+        # so we return the default value this object should then have, that is `None`.
+        # It would be cooler, but we can't return Autoincrement as that would be incompatible with the field's type.
+        return None
+    # end def
+
+    def __getitem__(self, item: Type[T]) -> Union[Type[T]]:
+        if Annotated:
+            return Annotated[item, self.__class__]
+        else:
+            return item
     # end def
 # end class
 
