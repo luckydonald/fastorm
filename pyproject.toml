@@ -37,6 +37,7 @@ requires = [
     "asyncpg",
     "luckydonald-utils>=0.83",
     "typeguard",
+    "pydantic",
 ]
 description-file = "README.md"
 requires-python = ">=3.10.0"
