@@ -5,9 +5,7 @@
 FastORM is a modern, fast (async), database library for projects with Python 3.10+ based on standard Python type hints.
 
 The key features are:
- - TBA
-
-
+ - Async postgres
 
 #### Example
 > See [example.py](example.py) for more examples.
@@ -102,3 +100,8 @@ await user.delete()
 ```
 
 
+
+# My internal deploy procedure
+```bash
+make upload
+```
