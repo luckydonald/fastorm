@@ -1,4 +1,8 @@
 
+# v0.0.4
+Added `has_changes()` and `get_changes()`. 
+
+
 # v0.0.3
 - Added `FastORM.build_sql_create()` with works quite well for simple database types.
     - This is a beta version of creating tables, and will be changed, modified and improved in the future.

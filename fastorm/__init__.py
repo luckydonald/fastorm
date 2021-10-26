@@ -446,35 +446,23 @@ class FastORM(BaseModel):
 
     def build_sql_update(self):
         """
-        Builds a prepared statement for update.
-        :return:
+        Builds a prepared SQL statement for update.
+        Only fields with changed values will be updated in the database.
+        However this one doesn't resets the cache for those, see `FastORM.update(…)` for that.
+
+        :return: The SQL string followed by positional parameters for the `conn.execute(…)` method.
         """
-        own_keys = self.get_fields()
         _table_name = getattr(self, '_table_name')
-        _ignored_fields = getattr(self, '_ignored_fields')
-        _automatic_fields = self.get_automatic_fields()
-        _database_cache = getattr(self, '_database_cache')
         _primary_keys = getattr(self, '_primary_keys')
+        _database_cache = getattr(self, '_database_cache')
+        _automatic_fields = self.get_automatic_fields()
         assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
-        assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
-        assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
-        assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
         assert_type_or_raise(_primary_keys, list, parameter_name='self._primary_keys')
+        assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
+        assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
 
         # SET ...
-        update_values: Dict[str, Any] = {}
-        for key in own_keys:
-            if key.startswith('_') or key in _ignored_fields:
-                continue
-            # end if
-            value = getattr(self, key)
-            if key not in _database_cache:
-                update_values[key] = value
-            # end if
-            if _database_cache[key] != value:
-                update_values[key] = value
-            # end if
-        # end if
+        update_values = self.get_changes()
 
         # UPDATE ... SET ... WHERE ...
         placeholder_index = 0
@@ -518,7 +506,47 @@ class FastORM(BaseModel):
         return (sql, *values)
     # end def
 
-    async def update(self, conn: Connection):
+    def get_changes(self) -> Dict:
+        """
+        Returns all values which got changed and are now different to the last downloaded database version.
+        """
+        own_keys = self.get_fields()
+        _database_cache = getattr(self, '_database_cache')
+        _ignored_fields = getattr(self, '_ignored_fields')
+        assert_type_or_raise(own_keys, list, parameter_name='own_keys')
+        assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
+        assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
+
+        update_values: Dict[str, Any] = {}
+        for key in own_keys:
+            if key.startswith('_') or key in _ignored_fields:
+                continue
+            # end if
+            value = getattr(self, key)
+            if key not in _database_cache:
+                update_values[key] = value
+            # end if
+            if _database_cache[key] != value:
+                update_values[key] = value
+            # end if
+        # end if
+        return update_values
+    # end def
+
+    def has_changes(self) -> bool:
+        """
+        :returns: if we have unsaved changes.
+        """
+        return bool(self.get_changes())
+    # end if
+
+    async def update(self, conn: Connection) -> None:
+        """
+        Update the made changes to the database.
+        Only fields with changed values will be updated in the database.
+
+        :uses: FastORM.build_sql_update()
+        """
         if not getattr(self, '_database_cache', None):
             return  # nothing to do.
         # end if
