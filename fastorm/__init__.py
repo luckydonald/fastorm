@@ -1122,7 +1122,7 @@ class AutoincrementType(object):
 
     In other words, the following two are doing the same:
 
-        >>> example_1 = Autoincrement()
+        >>> example_1 = Autoincrement(default=None)
         >>> example_2 = Field(default_factory=Autoincrement)
 
         >>> from pydantic.fields import FieldInfo
@@ -1135,6 +1135,7 @@ class AutoincrementType(object):
         True
 
     """
+
     def __init__(self):
         self.__name__ = "fastorm.Autoincrement"  # some internals of Field want to know that.
     # end def
