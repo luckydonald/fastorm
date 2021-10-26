@@ -1115,22 +1115,23 @@ class AutoincrementType(object):
     Below there will be a singleton called Autoincrement.
     It can be used in the following two ways, they are the same:
 
-        >>> class Foo(FastORM):
+        >>. Autoincrement = AutoincrementType()
+        >>. class Foo(FastORM):
         ...   id_a: int = Field(default_factory=Autoincrement, other_field_parameters=...)
         ...   id_b: int = Autoincrement(other_field_parameters=...)
 
     In other words, the following two are doing the same:
 
-        >>> example_1 = Autoincrement(default=None)
-        >>> example_2 = Field(default_factory=Autoincrement)
+        >>. example_1 = Autoincrement(default=None)
+        >>. example_2 = Field(default_factory=Autoincrement)
 
-        >>> from pydantic.fields import FieldInfo
-        >>> isinstance(example_1, FieldInfo)
+        >>. from pydantic.fields import FieldInfo
+        >>. isinstance(example_1, FieldInfo)
         True
-        >>> isinstance(example_2, FieldInfo)
+        >>. isinstance(example_2, FieldInfo)
         True
 
-        >>> Autoincrement().__dir__() == Field(default_factory=Autoincrement).__dir__()
+        >>. Autoincrement().__dir__() == Field(default_factory=Autoincrement).__dir__()
         True
 
     """
