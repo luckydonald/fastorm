@@ -84,6 +84,7 @@ except:
 # end try
 
 if IS_PYTHON_3_10:
+    from typing import get_type_hints
 
     def get_type_hints_with_annotations(cls) -> Dict[str, any]:
         return get_type_hints(cls, include_extras=True)
