@@ -47,12 +47,18 @@ except ImportError:
 
 try:
     from types import GenericAlias
+    from typing import List
+
+    GenericAliasOld = type(List[int])
 
     def check_is_generic_alias(variable: Any) -> bool:
-        return isinstance(variable, GenericAlias)
+        return (
+            isinstance(variable, GenericAlias) or  # type(list[int])
+            isinstance(variable, GenericAliasOld)  # type(List[int])
+        )
     # end def
 
-    TYPEHINT_TYPE = Union[TYPEHINT_TYPE, GenericAlias]
+    TYPEHINT_TYPE = Union[TYPEHINT_TYPE, GenericAlias, GenericAliasOld]
 except ImportError:
     pass
 # end try
