@@ -3,7 +3,7 @@
 
 """FastORM framework, easy to learn, fast to code"""
 __author__ = 'luckydonald'
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __all__ = ['__author__', '__version__', 'FastORM', 'Autoincrement']
 
 import builtins
