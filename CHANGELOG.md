@@ -1,6 +1,10 @@
+# v0.0.5
+- Added `create_table(cls, conn: Connection, if_not_exists: bool = False)`.
+- Added boolean `if_not_exists: bool = False` to the  `build_sql_create(…)`
+
 
 # v0.0.4
-Added `has_changes()` and `get_changes()`. 
+- Added `has_changes()` and `get_changes()`. 
 
 
 # v0.0.3

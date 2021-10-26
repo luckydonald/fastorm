@@ -775,8 +775,17 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
+    async def create_table(cls, conn: Connection, if_not_exists: bool = False):
+        create_params = cls.build_sql_create(if_not_exists=if_not_exists)
+        logger.debug(f'CREATE query for {cls.__name__}: {create_params!r}')
+        crate_status = await conn.execute(*create_params)
+        logger.debug(f'CREATEed {cls.__name__}: {crate_status}')
+    # end if
+
+    @classmethod
     def build_sql_create(
         cls,
+        if_not_exists: bool = False
     ) -> Tuple[str, Any]:
         assert issubclass(cls, BaseModel)  # because we no longer use typing.get_type_hints, but pydantic's `cls.__fields__`
         _table_name = getattr(cls, '_table_name')
@@ -824,7 +833,7 @@ class FastORM(BaseModel):
             type_definitions
         ).join(
             [
-                f"CREATE TABLE {cls.get_table()} (",
+                f"CREATE TABLE {'IF NOT EXISTS ' if if_not_exists else ''}{cls.get_table()} (",
                 # <joined type_definitions>
                 "\n)"
             ]
