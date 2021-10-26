@@ -1,3 +1,7 @@
+# v0.0.6
+- Handle `Optional[Table, <Table Primary Key Type>]` for references.
+    - Works for referencing other tables with a multi-field primary key, too. 
+
 # v0.0.5
 - Added `create_table(cls, conn: Connection, if_not_exists: bool = False)`.
 - Added boolean `if_not_exists: bool = False` to the  `build_sql_create(…)`
