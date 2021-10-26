@@ -279,7 +279,7 @@ class CreateTableTestCase(unittest.TestCase):
             with self.subTest(msg=key):
                 print(key, ",", type_hint, ",", expected_result)
                 if isinstance(expected_result, ExpectedResult):
-                    is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
+                    is_optional, sql_type = FastORM.match_type(type_hint=type_hint, key=key)
                     self.assertEqual(expected_result.sql_type, sql_type, msg='sql_type')
                     self.assertEqual(expected_result.is_optional, is_optional, msg='is_optional')
                 else:
