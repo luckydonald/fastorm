@@ -25,23 +25,24 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.6",
+#    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+#    "Programming Language :: Python :: 3.8",
+#    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 #    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
 #    "Topic :: Internet :: WWW/HTTP",
 ]
 requires = [
     "asyncpg",
-    "luckydonaldUtils>=0.83",
+    "luckydonald-utils>=0.83",
     "typeguard",
 ]
 description-file = "README.md"
 requires-python = ">=3.10.0"
 
 [tool.flit.metadata.urls]
-Documentation = "https://github.com/luckydonald/fastorm/"
+Documentation = "https://github.com/luckydonald/fastorm"
 
 [tool.flit.metadata.requires-extra]
 test = [
