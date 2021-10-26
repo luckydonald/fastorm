@@ -129,7 +129,11 @@ class FastORM(BaseModel):
             type_hint = type_hints[key]
             inner_type = type_hint.type_
             other_class: Union[Type[FastORM], None]
-            if check_is_generic_alias(value.outer_type_) and type_hint.type_.__origin__ == typing.Union:  # Union
+            if (
+                check_is_generic_alias(inner_type) and
+                hasattr(inner_type, '__origin__') and
+                type_hint.type_.__origin__ == typing.Union
+            ):  # Union
                 # it's a Union
                 union_params = type_hint.type_.__args__[:]
                 first_union_type = union_params[0]
@@ -146,14 +150,20 @@ class FastORM(BaseModel):
                             f'Union with other table type must have it\'s primary key(s) as second argument: Union{union_params!r}'
                         )
                     # end if
-                    if len(key_types) > 1:
-                        raise TypeError(
-                            f'The type hint union must be the Table class followed by the single id type, or a tuple[…] if it\'s a composite key: Union[{first_union_type.__name__!s}, {key_types!r}'
-                        )
+                    implied_other_class_pk_types = union_params[1]
+                    if (
+                        check_is_generic_alias(implied_other_class_pk_types) and
+                        hasattr(implied_other_class_pk_types, '__origin__') and
+                        implied_other_class_pk_types.__origin__ == tuple and
+                        hasattr(implied_other_class_pk_types, '__args__') and
+                        implied_other_class_pk_types.__args__
+                    ):
+                        implied_other_class_pk_types = list(implied_other_class_pk_types.__args__)
+                    else:
+                        implied_other_class_pk_types = [implied_other_class_pk_types]
                     # end if
-                    # TODO: handle tuple[int,int] type hints.
                     typehint_union_types = [key_type.type_ for key_type in key_types]
-                    if list(union_params)[1:] == typehint_union_types:
+                    if implied_other_class_pk_types == typehint_union_types:
                         # so basically the we know Table has _id = ['id'],
                         # and Table.id is of type int,
                         # and now our given type is Union[Table, int], matching that.
