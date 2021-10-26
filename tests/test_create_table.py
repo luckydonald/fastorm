@@ -232,7 +232,7 @@ class WrongStuff(BaseModel):
     # t4_5: str = None
     __result__t4_5 = ValueError
 
-# end def
+# end class
 
 
 def remove_prefix(line, prefix):
