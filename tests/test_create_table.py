@@ -66,7 +66,7 @@ class SystemUnderTest(FastORM):
           "t2_4" TEXT,
           "t2_5" TEXT,
           "t2_6" TEXT,
-          "t2_7" TEXT,
+          # "t2_7" TEXT,
           # "t2_8" TEXT,
           # "t2_9" TEXT,
           "t3_1" TEXT NOT NULL,
@@ -135,7 +135,7 @@ class SystemUnderTest(FastORM):
     t2_6: Union[Optional[str], None]
     __result__t2_6 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
-    t2_7: Union[str | None, None]
+    # t2_7: Union[str | None, None]
     __result__t2_7 = ExpectedResult(is_optional=True, sql_type="TEXT", default=Undefined)
 
     # t2_8: Union[str | None] | None
