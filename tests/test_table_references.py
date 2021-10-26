@@ -38,7 +38,7 @@ class Table2(FastORM):
 # end class
 
 
-class Table1HavingTable2VersionOptionalSingleReferences(FastORM):
+class Table1HavingTable2VersionSingleReferencesOptional(FastORM):
     """
         CREATE TABLE "table1_having_table2" (
           "table1__id" BIGINT,
@@ -54,7 +54,7 @@ class Table1HavingTable2VersionOptionalSingleReferences(FastORM):
 # end class
 
 
-class Table1HavingTable2VersionFixedSingleReferences(FastORM):
+class Table1HavingTable2VersionSingleReferencesMandatory(FastORM):
     """
         CREATE TABLE "table1_having_table2" (
           "table1__id" BIGINT,
@@ -70,23 +70,30 @@ class Table1HavingTable2VersionFixedSingleReferences(FastORM):
 # end class
 
 
+def extract_sql_from_docstring(cls):
+    return "\n".join(remove_prefix(line, '        ') for line in cls.__doc__.strip().splitlines() if not line.strip().startswith('#'))
+# end def
+
+
+
+# ----------------------------------------------------
+
+
 class CreateTableTestCase(unittest.TestCase):
-    def test_working_table_optional_single_references(self):
-        cls = Table1HavingTable2VersionOptionalSingleReferences
-        expected_sql = "\n".join(remove_prefix(line, '        ') for line in cls.__doc__.strip().splitlines() if not line.strip().startswith('#'))
+    def test_working_table_single_references_mandatory(self):
+        cls = Table1HavingTable2VersionSingleReferencesMandatory
+        expected_sql = extract_sql_from_docstring(cls)
         actual_sql, *actual_params = cls.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
     # end def
 
-    def test_working_table_fixed_single_references(self):
-        cls = Table1HavingTable2VersionFixedSingleReferences
-        expected_sql = "\n".join(remove_prefix(line, '        ') for line in cls.__doc__.strip().splitlines() if
-                                 not line.strip().startswith('#'))
+    def test_working_table_single_references_optional(self):
+        cls = Table1HavingTable2VersionSingleReferencesOptional
+        expected_sql = extract_sql_from_docstring(cls)
         actual_sql, *actual_params = cls.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
     # end def
 # end class
-
 
 if __name__ == '__main__':
     unittest.main()
