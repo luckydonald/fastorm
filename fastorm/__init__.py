@@ -127,19 +127,66 @@ class FastORM(BaseModel):
         flattened_type_hints = {}
         for key, value in type_hints.items():
             type_hint = type_hints[key]
-            try:
-                is_subclass = issubclass(type_hint.type_, FastORM)
-            except TypeError:
-                is_subclass = False
-            # end try
-            if not is_subclass:
+            inner_type = type_hint.type_
+            other_class: Union[Type[FastORM], None]
+            if check_is_generic_alias(value.outer_type_) and type_hint.type_.__origin__ == typing.Union:  # Union
+                # it's a Union
+                union_params = type_hint.type_.__args__[:]
+                first_union_type = union_params[0]
+                if issubclass(first_union_type, FastORM):
+                    # we can have a reference to another Table, so it could be that
+                    # the table ist the first entry and the actual field type is the second.
+                    # Union[Table, int]
+                    # Union[Table, Tuple[int, int]]
+                    pk_keys = first_union_type.get_primary_keys_keys()
+                    typehints = first_union_type.get_fields_typehints()
+                    key_types = [typehints[key] for key in pk_keys]
+                    if not len(union_params) == 2:
+                        raise TypeError(
+                            f'Union with other table type must have it\'s primary key(s) as second argument: Union{union_params!r}'
+                        )
+                    # end if
+                    if len(key_types) > 1:
+                        raise TypeError(
+                            f'The type hint union must be the Table class followed by the single id type, or a tuple[…] if it\'s a composite key: Union[{first_union_type.__name__!s}, {key_types!r}'
+                        )
+                    # end if
+                    # TODO: handle tuple[int,int] type hints.
+                    typehint_union_types = [key_type.type_ for key_type in key_types]
+                    if list(union_params)[1:] == typehint_union_types:
+                        # so basically the we know Table has _id = ['id'],
+                        # and Table.id is of type int,
+                        # and now our given type is Union[Table, int], matching that.
+                        other_class = first_union_type
+                    else:
+                        other_class = None
+                    # end if
+                else:
+                    other_class = None
+                # end if
+            else:
+                other_class = None
+            # end if
+            if not other_class:
+                try:
+                    if issubclass(type_hint.type_, FastORM):
+                        other_class: Type[FastORM] = type_hint.type_
+                    else:
+                        other_class = None
+                except TypeError:
+                    other_class = None
+                # end try
+            # end if
+            other_class: Union[Type[FastORM], None]
+            if not other_class:
                 # is a regular key, just keep it as is
                 flattened_type_hints[key] = type_hint  # TODO: make a copy?
+                # and then let's do the next key
                 continue
             # end if
 
             # now it's another FastORM table definition.
-            other_class: Type[FastORM] = type_hint.type_
+            assert issubclass(other_class, FastORM)
             other_class_type_hints: Dict[str, ModelField] = other_class.get_fields_typehints(flatten_table_references=True)
             for other_class_primary_key in other_class.get_primary_keys_keys():
                 new_key = f'{key}__{other_class_primary_key}'
