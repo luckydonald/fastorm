@@ -98,10 +98,3 @@ await auction.update()
 ```py
 await user.delete()
 ```
-
-
-
-# My internal deploy procedure
-```bash
-make upload
-```
