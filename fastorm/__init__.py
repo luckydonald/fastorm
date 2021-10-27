@@ -224,7 +224,7 @@ class FastORM(BaseModel):
 
     @classmethod
     def get_automatic_fields(cls) -> List[str]:
-        _automatic_fields = getattr(cls, '_automatic_fields')[:]
+        _automatic_fields = getattr(cls, '_automatic_fields', [])[:]
         return _automatic_fields
     # end def
 
