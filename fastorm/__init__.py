@@ -490,7 +490,7 @@ class FastORM(BaseModel):
         :param ignore_setting_automatic_fields:
             Skip setting fields marked as automatic, even if you provided.
             For example if the id field is marked automatic, as it's an autoincrement int.
-            If `True`, setting `id=123` (commonly `id=None`) would be ignored, and instead the database assignes that value.
+            If `True`, setting `id=123` (commonly `id=None`) would be ignored, and instead the database assigns that value.
             If `False`, the value there will be written to the database.
             If `None`, it will be ignored as long as the value actually is None, but set if it is non-None.
             The default setting is `None`.
@@ -512,7 +512,7 @@ class FastORM(BaseModel):
             logger.debug(f'INSERT query for {self.__class__.__name__}: {fetch_params!r}')
         # end if
         updated_automatic_values_rows = await conn.fetch(*fetch_params)
-        logger.debug(f'INSERTed {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
+        logger.debug(f'INSERT for {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
         assert len(updated_automatic_values_rows) == 1
         updated_automatic_values = updated_automatic_values_rows[0]
         if ignore_setting_automatic_fields and write_back_automatic_fields:
@@ -633,7 +633,7 @@ class FastORM(BaseModel):
         fetch_params = self.build_sql_update()
         logger.debug(f'UPDATE query for {self.__class__.__name__}: {fetch_params!r}')
         update_status = await conn.execute(*fetch_params)
-        logger.debug(f'UPDATEed {self.__class__.__name__}: {update_status} for {self}')
+        logger.debug(f'UPDATE for {self.__class__.__name__}: {update_status} for {self}')
         self._database_cache_overwrite_with_current()
     # end if
 
@@ -675,7 +675,7 @@ class FastORM(BaseModel):
         fetch_params = self.build_sql_delete()
         logger.debug(f'DELETE query for {self.__class__.__name__}: {fetch_params!r}')
         delete_status = await conn.execute(*fetch_params)
-        logger.debug(f'DELETEed {self.__class__.__name__}: {delete_status} for {self}')
+        logger.debug(f'DELETE for {self.__class__.__name__}: {delete_status} for {self}')
         self._database_cache_remove()
     # end if
 
@@ -1192,7 +1192,7 @@ class FastORM(BaseModel):
         def json_dumps(obj):
             logger.debug(f'Encoding to JSON: {obj!r}')
 
-            def myconverter(o):
+            def my_converter(o):
                 if isinstance(o, datetime.datetime):
                     return o.isoformat()
                 # end def
@@ -1211,7 +1211,7 @@ class FastORM(BaseModel):
                     # end if
                 # end for
             # end def
-            return json.dumps(obj, default=myconverter)
+            return json.dumps(obj, default=my_converter)
         # end def
 
         for sql_type in ('json', 'jsonb'):
@@ -1300,4 +1300,3 @@ class AutoincrementType(object):
 
 
 Autoincrement = AutoincrementType()
-
