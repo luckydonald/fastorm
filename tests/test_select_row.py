@@ -29,7 +29,7 @@ class OtherTable(FastORM):
 # end class
 
 
-class SelectTableTestCase(unittest.TestCase):
+class SelectRowTestCase(unittest.TestCase):
     def test_foo(self):
         expected_foo = 123.2
         # noinspection SqlResolve,SqlNoDataSourceInspection

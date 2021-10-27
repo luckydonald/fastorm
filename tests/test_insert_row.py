@@ -30,7 +30,7 @@ class Table1(FastORM):
 # ----------------------------------------------------
 
 
-class InsertTableTestCase(unittest.TestCase):
+class InsertRowTestCase(unittest.TestCase):
     def test_insert(self):
         expected_sql = extract_sql_from_docstring(Table1)
         expected_params = ["Sample Text", 123]

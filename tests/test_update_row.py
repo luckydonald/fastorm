@@ -30,7 +30,7 @@ class OtherTable(FastORM):
 # end class
 
 
-class UpdateTableTestCase(unittest.TestCase):
+class UpdateRowTestCase(unittest.TestCase):
     def test_foo(self):
         object = OtherTable(
             id_part_1=12,
