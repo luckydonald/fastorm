@@ -7,6 +7,7 @@ from typing import Optional, Union, Any, Type, List, Tuple, Dict
 
 from fastorm import FastORM
 from tests.test_create_table import remove_prefix
+from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
 
 
 class Table1(FastORM):
@@ -24,11 +25,6 @@ class Table1(FastORM):
     name: str
     number: int
 # end class
-
-
-def extract_sql_from_docstring(cls):
-    return "\n".join(remove_prefix(line, '        ') for line in cls.__doc__.strip().splitlines() if not line.strip().startswith('#'))
-# end def
 
 
 # ----------------------------------------------------

@@ -7,6 +7,7 @@ from pydantic.fields import ModelField, Undefined, Field
 
 from fastorm import FastORM, Autoincrement
 from fastorm.compat import get_type_hints_with_annotations
+from tests.tools_for_the_tests_of_fastorm import remove_prefix
 
 
 @dataclasses.dataclass
@@ -231,20 +232,7 @@ class WrongStuff(BaseModel):
 
     # t4_5: str = None
     __result__t4_5 = ValueError
-
 # end class
-
-
-def remove_prefix(line, prefix):
-    try:
-        return line.removeprefix(prefix)
-    except AttributeError:
-        if line.startswith(prefix):
-            return line[len(prefix):]
-        # end if
-        return line
-    # end try
-# end def
 
 
 class CreateTableTestCase(unittest.TestCase):
