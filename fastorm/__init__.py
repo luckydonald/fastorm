@@ -110,6 +110,7 @@ class FastORM(BaseModel):
 
             >>> class ActualTable(FastORM):
             ...     _table_name = 'actual_table'
+            ...     _ignored_fields = []
             ...     cool_reference: OtherTable
             ...
 
@@ -124,9 +125,11 @@ class FastORM(BaseModel):
         # copy the type hints as we might add more type hints for the primary key fields of referenced models, and we wanna filter.
         type_hints = {
             key: value for key, value in cls.__fields__.items()
-            if not key.startswith('_')
-               and not key.isupper()
-               and not key in _ignored_fields
+            if (
+                not key.startswith('_')
+                and not key.isupper()
+                and not key in _ignored_fields
+            )
         }
         if flatten_table_references is False:
             return type_hints
@@ -238,7 +241,12 @@ class FastORM(BaseModel):
 
     @classmethod
     def get_ignored_fields(cls) -> List[str]:
-        _ignored_fields = getattr(cls, '_ignored_fields', [])[:]
+        _ignored_fields = getattr(cls, '_ignored_fields', [])
+        if isinstance(_ignored_fields, types.MemberDescriptorType):
+            # basically that means it couldn't find any actually existing field
+            _ignored_fields = []
+        # end if
+        _ignored_fields = [*_ignored_fields]  # make copy
         assert_type_or_raise(_ignored_fields, list, parameter_name=f'{cls.__name__}._ignored_fields')
         _ignored_fields += [
             '_table_name',
