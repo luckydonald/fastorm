@@ -565,9 +565,9 @@ class FastORM(BaseModel):
 
         assert update_keys
         sql = f'UPDATE "{_table_name}"\n'
-        sql += f' SET {",".join(update_keys)}'
-        sql += f' WHERE {",".join(primary_key_where)}'
-        sql += '\n;'
+        sql += f' SET {",".join(update_keys)}\n'
+        sql += f' WHERE {" AND ".join(primary_key_where)}\n'
+        sql += ';'
         # noinspection PyRedundantParentheses
         return (sql, *values)
     # end def
@@ -577,8 +577,8 @@ class FastORM(BaseModel):
         Returns all values which got changed and are now different to the last downloaded database version.
         """
         own_keys = self.get_fields()
-        _database_cache = getattr(self, '_database_cache')
-        _ignored_fields = getattr(self, '_ignored_fields')
+        _database_cache = self._database_cache
+        _ignored_fields = self.get_ignored_fields()
         assert_type_or_raise(own_keys, list, parameter_name='own_keys')
         assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
@@ -591,8 +591,7 @@ class FastORM(BaseModel):
             value = getattr(self, key)
             if key not in _database_cache:
                 update_values[key] = value
-            # end if
-            if _database_cache[key] != value:
+            elif _database_cache[key] != value:
                 update_values[key] = value
             # end if
         # end if
