@@ -409,7 +409,7 @@ class FastORM(BaseModel):
 
     @classmethod
     def build_sql_select(cls, **kwargs):
-        _ignored_fields = getattr(cls, '_ignored_fields')
+        _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, Any] = get_type_hints(cls)
         non_ignored_fields = [field for field in cls.get_fields() if field not in _ignored_fields]
         fields = ','.join([
