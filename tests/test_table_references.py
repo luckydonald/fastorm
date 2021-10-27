@@ -1,24 +1,8 @@
 import unittest
-from datetime import datetime
-from typing import get_type_hints
 from typing import Optional, Union, Any, Type, List, Tuple, Dict
-from pydantic import dataclasses, BaseModel
-from pydantic.fields import ModelField, Undefined, Field
 
-from fastorm import FastORM, Autoincrement
-from fastorm.compat import get_type_hints_with_annotations
+from fastorm import FastORM
 from tests.test_create_table import remove_prefix
-
-
-@dataclasses.dataclass
-class ExpectedResult(object):
-    is_optional: bool
-    sql_type: str
-    default: Any
-# end class
-
-ExpectedResult: Type[Any]
-
 
 class Table1(FastORM):
     _table_name = 'table1'
