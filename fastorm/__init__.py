@@ -647,7 +647,7 @@ class FastORM(BaseModel):
         logger.debug(f'Fields to DELETE for selector {primary_key_parts!r}: {where_values!r}')
 
         # noinspection SqlWithoutWhere,SqlResolve,SqlNoDataSourceInspection
-        sql = f'DELETE FROM "{self.get_table()}"\n'
+        sql = f'DELETE FROM {self.get_table()}\n'
         sql += f' WHERE {" AND ".join(primary_key_parts)}'
         sql += '\n;'
         # noinspection PyRedundantParentheses
