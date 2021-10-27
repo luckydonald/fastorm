@@ -1,6 +1,9 @@
 # v0.0.6
 - Handle `Optional[Table, <Table Primary Key Type>]` for references.
     - Works for referencing other tables with a multi-field primary key, too. 
+- Added lots of unit tests and also fix bugs found by this
+    - added support for multiple primary keys in most places now
+    - fixes for errors/wonkyness introduced by using pydantic's BaseModel.
 
 # v0.0.5
 - Added `create_table(cls, conn: Connection, if_not_exists: bool = False)`.
