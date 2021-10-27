@@ -21,7 +21,7 @@ from luckydonaldUtils.logger import logging
 from luckydonaldUtils.typing import JSONType
 
 from pydantic import BaseModel
-from pydantic.fields import ModelField, UndefinedType, Undefined, Field
+from pydantic.fields import ModelField, UndefinedType, Undefined, Field, PrivateAttr
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
@@ -43,18 +43,11 @@ class FastORM(BaseModel):
     _ignored_fields: List[str]  # fields which never are intended for the database and will be excluded in every operation. (So are all fields starting with an underscore)
     _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
     _primary_keys: List[str]  # this is how we identify ourself.
-    _database_cache: Dict[str, JSONType]  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
-    __selectable_fields: List[str]  # cache for `cls.get_sql_fields()`
-
-    __slots__ = ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields']
+    _database_cache: Dict[str, JSONType] = PrivateAttr()  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
+    __selectable_fields: List[str] = PrivateAttr()  # cache for `cls.get_sql_fields()`
 
     def __init__(self, **data: Any):
         super().__init__(**data)
-        self.__post_init__()
-    # end def
-
-    def __post_init__(self):
-        setattr(self, '_database_cache', {})
         self._database_cache: Dict[str, Any] = {}
     # end def
 
@@ -319,13 +312,10 @@ class FastORM(BaseModel):
         on_conflict_upsert_field_list: Optional[List[str]] = None,
     ) -> Tuple[str, Any]:
         own_keys = self.get_fields()
-        _table_name = getattr(self, '_table_name')
-        _ignored_fields = getattr(self, '_ignored_fields')
+        _ignored_fields = self.get_ignored_fields()
         _automatic_fields = self.get_automatic_fields()
-        assert_type_or_raise(_table_name, str, parameter_name='self._table_name')
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
         assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
-        _ignored_fields += ['_table_name', '_ignored_fields']
 
         placeholder = []
         values: List[JSONType] = []
@@ -370,7 +360,7 @@ class FastORM(BaseModel):
         # end if
 
         # noinspection SqlNoDataSourceInspection,SqlResolve
-        sql = f'INSERT INTO "{_table_name}" ({",".join(keys)})\n VALUES ({",".join(placeholder)})'
+        sql = f'INSERT INTO {self.get_table()} ({",".join(keys)})\n VALUES ({",".join(placeholder)})'
         if on_conflict_upsert_field_list and upsert_fields:
             upsert_sql = ', '.join([f'"{key}" = ${placeholder_index}' for key, placeholder_index in upsert_fields.items()])
             upsert_fields_sql = ', '.join([f'"{field}"' for field in on_conflict_upsert_field_list])
