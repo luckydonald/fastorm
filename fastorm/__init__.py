@@ -49,17 +49,13 @@ class FastORM(BaseModel):
     __slots__ = ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields']
 
     def __init__(self, **data: Any):
-        self._set_database_cache({})
         super().__init__(**data)
         self.__post_init__()
     # end def
 
-    def _set_database_cache(self, database_cache: Dict[str, Any]):
-        object.__setattr__(self, '_database_cache', database_cache)
-    # end def
-
     def __post_init__(self):
-        pass
+        setattr(self, '_database_cache', {})
+        self._database_cache: Dict[str, Any] = {}
     # end def
 
     def _database_cache_overwrite_with_current(self):
@@ -68,7 +64,7 @@ class FastORM(BaseModel):
         This is used just after something is loaded from a database row.
         :return:
         """
-        self._set_database_cache({})
+        self._database_cache = {}
         for field in self.get_fields():
             self._database_cache[field] = getattr(self, field)
         # end if
@@ -79,7 +75,7 @@ class FastORM(BaseModel):
         This is used after deleting an entry.
         :return:
         """
-        self._set_database_cache({})
+        self._database_cache = {}
     # end def
 
     def as_dict(self) -> Dict[str, JSONType]:
