@@ -861,7 +861,7 @@ class FastORM(BaseModel):
 
         :return:
         """
-        create_params = cls.build_sql_create(if_not_exists=if_not_exists)
+        create_params = cls.build_sql_create(if_not_exists=if_not_exists, psycopg2_conn=psycopg2_conn if psycopg2_conn else conn)
         logger.debug(f'CREATE query for {cls.__name__}: {create_params!r}')
         crate_status = await conn.execute(*create_params)
         logger.debug(f'CREATEed {cls.__name__}: {crate_status}')
@@ -883,7 +883,10 @@ class FastORM(BaseModel):
             If you have complex default types for your fields (everything other than None, bool, int, and pure ascii strings),
             The psycopg2 library is used to build a injection safe SQL string.
             Therefore then psycopg2 has to be installed (pip install psycopg2-binary),
-            and a connection (or cursor) to the database must be provided (psycopg2_conn = psycopg2.connect(…)).
+            and a connection to the database must be provided.
+            This can be either a psycopg2 connection (psycopg2_conn = psycopg2.connect(…)),
+            a psycopg2 cursor.
+            If a asyncpg Connection is given we try to create a psycopg2 connection from it automatically.
         :return:
         """
         assert issubclass(cls, BaseModel)  # because we no longer use typing.get_type_hints, but pydantic's `cls.__fields__`
@@ -974,7 +977,7 @@ class FastORM(BaseModel):
             else:
                 try:
                     from psycopg2 import sql as sql_escaping  # you need to have `psycopg2-binary` installed.
-                    from psycopg2 import extensions as ext
+                    from psycopg2 import extensions as ext, connect as psycopg2_connect
                 except ImportError:
                     # enhance error message with useful information
                     raise ImportError(
@@ -983,7 +986,7 @@ class FastORM(BaseModel):
                     )
                 # end try
                 try:
-                    assert_type_or_raise(psycopg2_conn, ext.connection, ext.cursor, parameter_name='psycopg2_conn')
+                    assert_type_or_raise(psycopg2_conn, Connection, ext.connection, ext.cursor, parameter_name='psycopg2_conn')
                 except TypeError:
                     # enhance error message with useful information
                     error_class = ValueError if psycopg2_conn is None else TypeError
@@ -992,6 +995,18 @@ class FastORM(BaseModel):
                         'a psycopg2 connection or cursor needs to be provided as the psycopg2_conn parameter.'
                     )
                 # end try
+                if isinstance(psycopg2_conn, Connection):
+                    # if it's a asyncpg Connection, try to build the needed psycopg2 connection from it.
+                    settings = psycopg2_conn.get_settings()
+                    # noinspection PyProtectedMember
+                    psycopg2_conn = psycopg2_connect(
+                        database=settings.database,  # aka dbname
+                        user=settings.user,
+                        password=settings.password,
+                        host=psycopg2_conn._addr[0],
+                        port=psycopg2_conn._addr[1],
+                    )
+                # end if
 
                 placeholder_values = [sql_escaping.Literal(value) for value in placeholder_values]
                 formatting_dict = {f'default_placeholder_{i}': val for i, val in enumerate(placeholder_values)}
