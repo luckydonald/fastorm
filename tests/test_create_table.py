@@ -24,9 +24,8 @@ class OtherTable(FastORM):
     """
         CREATE TABLE "other_table" (
           "id_part_1" BIGINT NOT NULL,
-          "id_part_2" TEXT NOT NULL
-          # "id_part_2" TEXT NOT NULL,
-          # PRIMARY KEY ("id_part_1", "id_part_2")
+          "id_part_2" TEXT NOT NULL,
+          PRIMARY KEY ("id_part_1", "id_part_2")
         )
     """
     _table_name = 'other_table'
@@ -42,9 +41,8 @@ class TheReferenceHasBeenDoubled(FastORM):
     """
         CREATE TABLE "double_reference" (
           "another_reference__id_part_1" BIGINT NOT NULL,
-          "another_reference__id_part_2" TEXT NOT NULL
-          # "another_reference__id_part_2" TEXT NOT NULL,
-          # PRIMARY KEY ("another_reference__id_part_1", "another_reference__id_part_2")
+          "another_reference__id_part_2" TEXT NOT NULL,
+          PRIMARY KEY ("another_reference__id_part_1", "another_reference__id_part_2")
         )
     """
     _table_name = 'double_reference'
@@ -58,7 +56,7 @@ class TheReferenceHasBeenDoubled(FastORM):
 class SystemUnderTest(FastORM):
     """
         CREATE TABLE "cool_table_yo" (
-          "t0_id" BIGSERIAL NOT NULL,
+          "t0_id" BIGSERIAL NOT NULL PRIMARY KEY,
           "t1_1" TEXT NOT NULL,
           "t1_2" TEXT NOT NULL,
           "t1_3" TEXT NOT NULL,
@@ -89,8 +87,6 @@ class SystemUnderTest(FastORM):
           "t8_4" JSONB NOT NULL,
           "t9_1" BIGINT[] NOT NULL,
           "t9_2" JSONB NOT NULL
-          # "t9_2" JSONB NOT NULL,
-          # PRIMARY KEY ("t0_id")
         )
         """
     _table_name = 'cool_table_yo'

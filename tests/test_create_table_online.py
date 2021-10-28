@@ -37,7 +37,7 @@ DATETIME_NOW = datetime(4458, 12, 24, 0, 6, 9)
 class SystemUnderTest(FastORM):
     """
         CREATE TABLE "cool_table_yo" (
-          "t0_id" BIGSERIAL NOT NULL,
+          "t0_id" BIGSERIAL NOT NULL PRIMARY KEY,
           "t1_1" TEXT NOT NULL DEFAULT 'test',
           "t1_2" TEXT DEFAULT NULL,
           "t1_3" BIGINT NOT NULL DEFAULT 4458,

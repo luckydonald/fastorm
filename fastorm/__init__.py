@@ -1081,9 +1081,12 @@ class FastORM(BaseModel):
         assert issubclass(cls, BaseModel)  # because we no longer use typing.get_type_hints, but pydantic's `cls.__fields__`
         _table_name = getattr(cls, '_table_name')
         _automatic_fields = cls.get_automatic_fields()
+        _primary_keys = cls.get_primary_keys_keys()
         assert_type_or_raise(_table_name, str, parameter_name='cls._table_name')
         assert_type_or_raise(_automatic_fields, list, parameter_name='cls._automatic_fields')
         _ignored_fields = cls.get_ignored_fields()
+
+        single_primary_key = len(_primary_keys) == 1
 
         type_hints: Dict[str, ModelField] = cls.get_fields_typehints(flatten_table_references=True)
 
@@ -1106,7 +1109,7 @@ class FastORM(BaseModel):
             # Now let's build that column's sql part
 
             # column_name, data_type:
-            type_definition_parts = [f'\n  "{key}"', sql_type]
+            type_definition_parts = [f'  "{key}"', sql_type]
 
             # column_constraints:
             if not is_optional:
@@ -1127,16 +1130,25 @@ class FastORM(BaseModel):
                 # end if
                 placeholder_values.append(default_value)
             # end if
+            if single_primary_key and key in _primary_keys:
+                type_definition_parts.append('PRIMARY KEY')
+            # end if
+
+            # merge the line
             type_definitions.append(" ".join(type_definition_parts))
         # end for
-        sql = ",".join(
-            type_definitions
-        ).join(
-            [
-                f"CREATE TABLE {'IF NOT EXISTS ' if if_not_exists else ''}{cls.get_table()} (",
-                # <joined type_definitions>
-                "\n)"
-            ]
+        sql_lines = [
+            f"CREATE TABLE {'IF NOT EXISTS ' if if_not_exists else ''}{cls.get_table()} (",
+            ",\n".join(type_definitions),
+        ]
+        if len(_primary_keys) > 1:
+            sql_lines[-1] += ','
+            # keys = [key for key, item in type_hints.items()]
+            sql_lines.append(f'''  PRIMARY KEY ({', '.join(f'"{key}"' for key in _primary_keys)})''')
+        # end if
+        sql_lines.append(")")
+        sql = "\n".join(
+            sql_lines
         )
         if placeholder_values:
             # we do have at least one row like
