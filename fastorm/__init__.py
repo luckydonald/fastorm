@@ -838,7 +838,29 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    async def create_table(cls, conn: Connection, if_not_exists: bool = False):
+    async def create_table(
+        cls,
+        conn: Connection,
+        if_not_exists: bool = False,
+        psycopg2_conn: Union['psycopg2.extensions.connection', 'psycopg2.extensions.cursor', None] = None,
+    ):
+        """
+        Builds and executes a CREATE TABLE statement.
+
+        :param conn: the `asyncpg` database connection to execute this with.
+
+        :param if_not_exists:
+            If the table definition should include IF NOT EXISTS, thus not producing an error if it does, but instead being silently ignored.
+
+        :param psycopg2_conn:
+            If you have complex default types for your fields (everything other than None, bool, int, and pure ascii strings),
+            The psycopg2 library is used to build a injection safe SQL string.
+            Therefore then psycopg2 has to be installed (pip install psycopg2-binary),
+            and a connection (or cursor) to the database must be provided (psycopg2_conn = psycopg2.connect(…)).
+
+
+        :return:
+        """
         create_params = cls.build_sql_create(if_not_exists=if_not_exists)
         logger.debug(f'CREATE query for {cls.__name__}: {create_params!r}')
         crate_status = await conn.execute(*create_params)
@@ -848,8 +870,22 @@ class FastORM(BaseModel):
     @classmethod
     def build_sql_create(
         cls,
-        if_not_exists: bool = False
+        if_not_exists: bool = False,
+        psycopg2_conn: Union['psycopg2.extensions.connection', 'psycopg2.extensions.cursor', None] = None,
     ) -> Tuple[str, Any]:
+        """
+        Builds a CREATE TABLE statement.
+
+        :param if_not_exists:
+            If the table definition should include IF NOT EXISTS, thus not producing an error if it does, but instead being silently ignored.
+
+        :param psycopg2_conn:
+            If you have complex default types for your fields (everything other than None, bool, int, and pure ascii strings),
+            The psycopg2 library is used to build a injection safe SQL string.
+            Therefore then psycopg2 has to be installed (pip install psycopg2-binary),
+            and a connection (or cursor) to the database must be provided (psycopg2_conn = psycopg2.connect(…)).
+        :return:
+        """
         assert issubclass(cls, BaseModel)  # because we no longer use typing.get_type_hints, but pydantic's `cls.__fields__`
         _table_name = getattr(cls, '_table_name')
         _automatic_fields = cls.get_automatic_fields()
@@ -866,6 +902,7 @@ class FastORM(BaseModel):
         placeholder_index = 0
         placeholder_values = []
         type_definitions = []
+        all_defaults_are_simple_types_and_save_to_concatenate = True  # they only contain ints, boolean and None
         for key, type_hint in type_hints.items():
             is_automatic_field = key in _automatic_fields
 
@@ -886,9 +923,17 @@ class FastORM(BaseModel):
 
             # has it a default value?
             if not isinstance(type_hint.field_info.default, UndefinedType):
+                type_definition_parts.append(f'DEFAULT {{default_placeholder_{placeholder_index}}}')
                 placeholder_index += 1
-                type_definition_parts.append(f'DEFAULT ${placeholder_index}')
-                placeholder_values.append(type_hint.field_info.default)
+                default_value = type_hint.field_info.default
+                if not (
+                    default_value is None or
+                    isinstance(default_value, (int, bool)) or
+                    (isinstance(default_value, str) and default_value.isascii())  # py 3.7+, see https://stackoverflow.com/a/51141941/3423324#how-to-check-if-a-string-in-python-is-in-ascii
+                ):
+                    all_defaults_are_simple_types_and_save_to_concatenate = False
+                # end if
+                placeholder_values.append(default_value)
             # end if
             type_definitions.append(" ".join(type_definition_parts))
         # end for
@@ -901,7 +946,58 @@ class FastORM(BaseModel):
                 "\n)"
             ]
         )
+        if placeholder_values:
+            # we do have at least one row like
+            # "blah" SOME_TYPE ... DEFAULT {default_placeholder_0}
+            # or maybe even more.
+            # now we need to fill those in.
+            # To do it safely, we use `psycopg2.sql.SQL` and `psycopg2.sql.Literal` as soon as we have complex types.
+            if all_defaults_are_simple_types_and_save_to_concatenate:
+                # special case where it's enough to use python only formatting, as we have only NONE, bool, ints and pure ascii strings.
+                formatting_dict = {}
+                for i, default_value in enumerate(placeholder_values):
+                    assert_type_or_raise(default_value, None, bool, int, str, parameter_name=f'default_values[{i}]')
+                    if default_value is None:
+                        sql_value = 'NULL'
+                    elif isinstance(default_value, bool):
+                        sql_value = 'true' if default_value else 'false'
+                    elif isinstance(default_value, int):
+                        sql_value = str(default_value)
+                    else:  # str
+                        assert isinstance(default_value, str)
+                        assert default_value.isascii()
+                        sql_value = "'" + default_value.replace("'", "''") + "'"
+                    # end if
+                    formatting_dict[f'default_placeholder_{i}'] = sql_value
+                # end if
+                sql = sql.format(**formatting_dict)
+            else:
+                try:
+                    from psycopg2 import sql as sql_escaping  # you need to have `psycopg2-binary` installed.
+                    from psycopg2 import extensions as ext
+                except ImportError:
+                    # enhance error message with useful information
+                    raise ImportError(
+                        'For using complex default values (everything other than None, bool, int, and pure ascii strings) '
+                        'psycopg2 needs to be installed (pip install psycopg2-binary).'
+                    )
+                # end try
+                try:
+                    assert_type_or_raise(psycopg2_conn, ext.connection, ext.cursor, parameter_name='psycopg2_conn')
+                except TypeError:
+                    # enhance error message with useful information
+                    error_class = ValueError if psycopg2_conn is None else TypeError
+                    raise error_class(
+                        'For using complex default values (everything other than None, bool, int, and pure ascii strings) '
+                        'a psycopg2 connection or cursor needs to be provided as the psycopg2_conn parameter.'
+                    )
+                # end try
 
+                placeholder_values = [sql_escaping.Literal(value) for value in placeholder_values]
+                formatting_dict = {f'default_placeholder_{i}': val for i, val in enumerate(placeholder_values)}
+                sql = sql_escaping.SQL(sql)
+                sql = sql.format(**formatting_dict).as_string(context=psycopg2_conn)
+            # end if
         # noinspection PyRedundantParentheses
         return (sql, *placeholder_values)
     # end def

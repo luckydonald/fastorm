@@ -35,6 +35,8 @@ classifiers = [
 ]
 requires = [
     "asyncpg",
+    "psycopg2-binary",
+    #   ^--- needed for escaping defaults on CREATE TABLE statements.
     "luckydonald-utils>=0.83",
     "typeguard",
     "pydantic",

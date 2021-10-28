@@ -75,8 +75,10 @@ class SystemUnderTest(FastORM):
           "t3_3" DOUBLE PRECISION NOT NULL,
           "t3_4" BOOLEAN NOT NULL,
           "t5_1" TIMESTAMP NOT NULL,
-          "t6_1" TEXT NOT NULL DEFAULT $1,
-          "t6_2" TEXT DEFAULT $2,
+          "t6_1" TEXT NOT NULL DEFAULT 'test',
+          "t6_2" TEXT DEFAULT NULL,
+          "t6_3" BIGINT NOT NULL DEFAULT 69,
+          "t6_4" TEXT NOT NULL DEFAULT 'this test will proof if "something" ain''t escaped properly. ^^''',
           "t7_1__id_part_1" BIGINT NOT NULL,
           "t7_1__id_part_2" TEXT NOT NULL,
           "t8_1" JSONB NOT NULL,
@@ -175,6 +177,12 @@ class SystemUnderTest(FastORM):
 
     t6_2: Optional[str] = None
     __result__t6_2 = ExpectedResult(is_optional=True, sql_type="TEXT", default=None)
+
+    t6_3: int = 69
+    __result__t6_3 = ExpectedResult(is_optional=False, sql_type="BIGINT", default=69)
+
+    t6_4: str = "this test will proof if \"something\" ain't escaped properly. ^^'"
+    __result__t6_4 = ExpectedResult(is_optional=False, sql_type="TEXT", default="this test will proof if \"something\" ain't escaped properly. ^^'")
 
     #
     # references
