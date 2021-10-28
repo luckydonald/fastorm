@@ -86,6 +86,7 @@ class SystemUnderTest(FastORM):
     __result__t3_1 = ExpectedResult(is_optional=True, sql_type="DATETIME", default=DATETIME_NOW)
 # end class
 
+
 class CreateTableOnlineTestCase(unittest_cls):
     def test_sql_text_connection_missing(self):
         with self.assertRaises(ValueError) as e:
