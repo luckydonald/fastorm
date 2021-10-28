@@ -1,3 +1,11 @@
+# v0.0.7
+- Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
+    - Needs psycopg2 installed for complex types (everything other than None, bool, int, and pure ascii strings)
+Known bugs:
+  - CREATE TABLE (only python < 3.10) 
+    - `list[int]` will be missing an array at the end `BIGINT[]` (will be only `BIGINT`)
+    - Referencing other tables in an optional segment will result in an `JSONB` field instead of the referencing fields. 
+ 
 # v0.0.6
 - Handle `Optional[Table, <Table Primary Key Type>]` for references.
     - Works for referencing other tables with a multi-field primary key, too. 
