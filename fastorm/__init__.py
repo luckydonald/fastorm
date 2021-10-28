@@ -213,6 +213,196 @@ class FastORM(BaseModel):
         return flattened_type_hints
     # end def
 
+    _GET_FIELDS_REFERENCES_TYPE = Dict[str, Tuple[bool, type, Optional[Dict[str, str]]]]
+
+    @classmethod
+    def get_fields_references(cls, *, recursive: bool = False) -> _GET_FIELDS_REFERENCES_TYPE:
+        """
+        Get's all fields which have type hints and thus we consider as fields for the database.
+        Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
+        Then
+
+        :param flatten_table_references:
+                True if we should flatten the references to other table's primary key in the format of `f"{original_key}__{other_table_key}`.
+                False to not resolve those fields, and instead return the type hint for the other FastORM class.
+        :return: the dictionary with pydantic's ModelField descriptions.
+
+        Example:
+
+            >>> class OtherTable(FastORM):
+            ...     _table_name = 'other_table'
+            ...     _primary_keys = ['id_part_1', 'id_part_2']
+            ...
+            ...     id_part_1: int
+            ...     id_part_2: str
+            ... # end class
+            ...
+
+            >>> class ActualTable(FastORM):
+            ...     _table_name = 'actual_table'
+            ...     _primary_keys = ['cool_reference']
+            ...     cool_reference: OtherTable
+            ...     foobar: int
+            ...
+
+            >>> class ThirdTable(FastORM):
+            ...     _table_name = 'third_table'
+            ...     _primary_keys = ['id']
+            ...     int: id
+            ...     reference_to_other_table: OtherTable
+            ...     reference_to_actual_table: ActualTable
+            ...
+
+            >>> class TableWithIdAndRefPK(FastORM):
+            ...     _table_name = 'mayham_group_tables'
+            ...     _primary_keys = ['id', 'reference']
+            ...     _automatic_fields = ['id']
+            ...     int: id
+            ...     reference: OtherTable
+            ...
+
+            >>> class TableWithIdAndRefPK(FastORM):
+            ...     _table_name = 'mayham_group_tables'
+            ...     _primary_keys = ['id', 'reference']
+            ...     _automatic_fields = ['id']
+            ...     reference: OtherTable
+            ...
+
+            >>>
+
+
+
+            >>> ActualTable.get_fields_references(recursive=False)
+            {'cool_reference': (OtherTable, ['cool_reference__id_part_1', 'cool_reference__id_part_2']), 'foobar': (int, None)}
+
+            >>> ThirdTable.get_fields_typehints(recursive=False)
+            {'id': (int, None), 'reference_to_other_table': (OtherTable, {"id_part_1": 'reference_to_other_table__id_part_1', "id_part_2": 'reference_to_other_table__id_part_2'}), 'reference_to_actual_table': (ActualTable, {"cool_reference": 'reference_to_actual_table__cool_reference'})}
+
+            >>> ThirdTable.get_fields_typehints(recursive=True)
+            {'id': (int, None), 'reference_to_other_table': (OtherTable, {"id_part_1": 'reference_to_other_table__id_part_1', "id_part_2": 'reference_to_other_table__id_part_2'}), 'reference_to_actual_table': (ActualTable, {"cool_reference__id_part_1": 'reference_to_actual_table__cool_reference__id_part_1', "cool_reference__id_part_2": 'reference_to_actual_table__cool_reference__id_part_2'})}
+
+            >>> ThirdTable.get_fields_typehints(recursive=False)
+            {'id': (int, None), 'reference': (OtherTable, {"id_part_1": 'reference__id_part_1', "id_part_2": 'reference__id_part_2'}), 'reference_to_actual_table': (ActualTable, {"cool_reference": 'reference_to_actual_table__cool_reference'})}
+
+            >>> ThirdTable.get_fields_typehints(recursive=True)
+            {'id': (int, None), 'reference': (OtherTable, {"id_part_1": 'reference__id_part_1', "id_part_2": 'reference__id_part_2'}), 'reference_to_actual_table': (ActualTable, {"cool_reference__id_part_1": 'reference_to_actual_table__cool_reference__id_part_1', "cool_reference__id_part_2": 'reference_to_actual_table__cool_reference__id_part_2'})}
+
+        """
+        _ignored_fields = cls.get_ignored_fields()
+        _primary_keys = cls.get_primary_keys_keys()
+        # copy the type hints as we might add more type hints for the primary key fields of referenced models, and we wanna filter.
+        type_hints = {
+            key: value for key, value in cls.__fields__.items()
+            if (
+                not key.startswith('_')
+                and not key.isupper()
+                and not key in _ignored_fields
+            )
+        }
+        return_val: FastORM._GET_FIELDS_REFERENCES_TYPE = {}
+        for key, value in type_hints.items():
+            type_hint = type_hints[key]
+            inner_type = type_hint.type_
+            other_class: Union[Type[FastORM], None] = None
+            if (
+                check_is_generic_alias(inner_type) and
+                hasattr(inner_type, '__origin__') and
+                type_hint.type_.__origin__ == typing.Union
+            ):  # Union
+                # it's a Union
+                union_params = type_hint.type_.__args__[:]
+                first_union_type = union_params[0]
+                if issubclass(first_union_type, FastORM):
+                    # we can have a reference to another Table, so it could be that
+                    # the table ist the first entry and the actual field type is the second.
+                    # Union[Table, int]
+                    # Union[Table, Tuple[int, int]]
+                    pk_keys = first_union_type.get_primary_keys_keys()
+                    typehints = first_union_type.get_fields_typehints()
+                    key_types = [typehints[key] for key in pk_keys]
+                    if not len(union_params) == 2:
+                        raise TypeError(
+                            f'Union with other table type must have it\'s primary key(s) as second argument: Union{union_params!r}'
+                        )
+                    # end if
+                    implied_other_class_pk_types = union_params[1]
+                    if (
+                        check_is_generic_alias(implied_other_class_pk_types) and
+                        hasattr(implied_other_class_pk_types, '__origin__') and
+                        implied_other_class_pk_types.__origin__ == tuple and
+                        hasattr(implied_other_class_pk_types, '__args__') and
+                        implied_other_class_pk_types.__args__
+                    ):
+                        implied_other_class_pk_types = list(implied_other_class_pk_types.__args__)
+                    else:
+                        implied_other_class_pk_types = [implied_other_class_pk_types]
+                    # end if
+                    typehint_union_types = [key_type.type_ for key_type in key_types]
+                    if implied_other_class_pk_types == typehint_union_types:
+                        # so basically the we know Table has _id = ['id'],
+                        # and Table.id is of type int,
+                        # and now our given type is Union[Table, int], matching that.
+                        other_class = first_union_type
+                    # end if
+                # end if
+            # end if
+            if not other_class:
+                try:
+                    if issubclass(type_hint.type_, FastORM):
+                        other_class: Type[FastORM] = type_hint.type_
+                    # end if
+                except TypeError:
+                    pass
+                # end try
+            # end if
+            other_class: Union[Type[FastORM], None]
+            if not other_class:
+                # is a regular key, just keep it as is
+                # e.g. {'id': (int, None)}
+                return_val[key] = (key in _primary_keys, type_hint.type_, None)  # TODO: make a copy?
+                # and then let's do the next key
+                continue
+            # end if
+
+            # now we know: it's another FastORM table definition.
+            assert issubclass(other_class, FastORM)
+            other_class_type_hints: Dict[str, ModelField] = other_class.get_fields_typehints(flatten_table_references=True)
+            if not recursive:
+                # 'reference_to_actual_table': (ActualTable, {"cool_reference": 'reference_to_actual_table__cool_reference'
+                return_val[key] = (
+                    key in _primary_keys,
+                    other_class,
+                    {
+                        other_class_primary_key: f'{key}__{other_class_primary_key}'
+                        for other_class_primary_key
+                        in other_class.get_primary_keys_keys()
+                    }
+                )
+                continue
+            else:
+                # 'reference_to_actual_table': (ActualTable, {"cool_reference__id_part_1": 'reference_to_actual_table__cool_reference__id_part_1', "cool_reference__id_part_2": 'reference_to_actual_table__cool_reference__id_part_2'
+                return_val[key] = (
+                    key in _primary_keys,
+                    other_class,
+                    {
+                        k: {
+                            v_: f'{key}__{v_}'  # we wanna extend the current interation to the name of it  'lv2_lv1' -> 'lv3_lv2_lv1'
+                            for k_, v_
+                            in v[2].items()  # v[2] is the mapping of 'final_field' -> 'current_long_field_eventually_pointing_to_final_field'
+                        }
+                        for k, v
+                        in other_class.get_fields_references(recursive=False).items()
+                        if v[0]  # the boolean if it's a primary key
+                    }
+                )
+                # end if
+                continue
+            # end if
+        # end for
+        return return_val
+
+    # end def
+
     @classmethod
     def get_fields(cls, flatten_table_references: bool = False) -> List[str]:
         """
