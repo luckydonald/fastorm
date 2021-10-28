@@ -23,9 +23,8 @@ ExpectedResult: Type[Any]
 class OtherTable(FastORM):
     """
         CREATE TABLE "other_table" (
-          "id_part_1" TEXT NOT NULL,
-          "id_part_2" BIGINT NOT NULL,
-          PRIMARY KEY ("id_part_1", "id_part_2")
+          "id_part_1" BIGINT NOT NULL,
+          "id_part_2" TEXT NOT NULL
         )
     """
     _table_name = 'other_table'
@@ -40,9 +39,8 @@ class OtherTable(FastORM):
 class TheReferenceHasBeenDoubled(FastORM):
     """
         CREATE TABLE "double_reference" (
-          "another_reference__id_part_1" TEXT NOT NULL,
-          "another_reference__id_part_2" BIGINT NOT NULL,
-          PRIMARY KEY ("another_reference__id_part_1", "another_reference__id_part_2")
+          "another_reference__id_part_1" BIGINT NOT NULL,
+          "another_reference__id_part_2" TEXT NOT NULL
         )
     """
     _table_name = 'double_reference'
@@ -288,10 +286,14 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_sql_text(self):
-        expected_sql = extract_sql_from_docstring(SystemUnderTest)
-        actual_sql, *actual_params = SystemUnderTest.build_sql_create()
-        self.assertEqual(expected_sql, actual_sql)
-        self.assertListEqual([], actual_params)
+        for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest):
+            with self.subTest(msg=f'class {table_cls.__name__}'):
+                expected_sql = extract_sql_from_docstring(table_cls)
+                actual_sql, *actual_params = table_cls.build_sql_create()
+                self.assertEqual(expected_sql, actual_sql)
+                self.assertListEqual([], actual_params)
+            # end with
+        # end for
     # end def
 
     def test_TYPES_mapping_subclass_shadowing(self):
