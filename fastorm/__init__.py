@@ -14,6 +14,7 @@ import decimal
 import typing
 import types
 import uuid
+import re
 from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable
 from asyncpg import Connection
 from luckydonaldUtils.exceptions import assert_type_or_raise
@@ -995,15 +996,20 @@ class FastORM(BaseModel):
                 # end try
                 if isinstance(psycopg2_conn, Connection):
                     # if it's a asyncpg Connection, try to build the needed psycopg2 connection from it.
-                    settings = psycopg2_conn.get_settings()
                     # noinspection PyProtectedMember
-                    psycopg2_conn = psycopg2_connect(
-                        database=settings.database,  # aka dbname
-                        user=settings.user,
-                        password=settings.password,
-                        host=psycopg2_conn._addr[0],
-                        port=psycopg2_conn._addr[1],
+                    params = dict(
+                        database=psycopg2_conn._params.database,  # aka dbname
+                        user=psycopg2_conn._params.user,
+                        password=psycopg2_conn._params.password,
+                        host=psycopg2_conn._addr[0] if isinstance(psycopg2_conn._addr, tuple) else psycopg2_conn._addr,
+                        port=psycopg2_conn._addr[1] if isinstance(psycopg2_conn._addr, tuple) else None,
                     )
+                    unix_socket_match = re.match(r'^(?P<path>/.*)(?<=/)\.s\.PGSQL\.(?P<port>\d+)$', params['host'])  # https://regex101.com/r/bNWUzG/1/
+                    if unix_socket_match:
+                        params['host'] = unix_socket_match.group('path')
+                        params['port'] = int(unix_socket_match.group('port'))
+                    # end if
+                    psycopg2_conn = psycopg2_connect(**params)
                 # end if
 
                 placeholder_values = [sql_escaping.Literal(value) for value in placeholder_values]
