@@ -1012,7 +1012,7 @@ class FastORM(BaseModel):
                 sql = sql.format(**formatting_dict).as_string(context=psycopg2_conn)
             # end if
         # noinspection PyRedundantParentheses
-        return (sql, *placeholder_values)
+        return (sql, *[])
     # end def
 
     @classmethod

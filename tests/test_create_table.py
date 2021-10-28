@@ -7,7 +7,7 @@ from pydantic.fields import ModelField, Undefined, Field
 
 from fastorm import FastORM, Autoincrement
 from fastorm.compat import get_type_hints_with_annotations
-from tests.tools_for_the_tests_of_fastorm import remove_prefix
+from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
 
 
 @dataclasses.dataclass
@@ -288,14 +288,10 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_sql_text(self):
-        expected_sql = "\n".join(remove_prefix(line, '        ') for line in SystemUnderTest.__doc__.strip().splitlines() if not line.strip().startswith('#'))
+        expected_sql = extract_sql_from_docstring(SystemUnderTest)
         actual_sql, *actual_params = SystemUnderTest.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
-        expected_defaults = [getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}') for key in get_type_hints(SystemUnderTest).keys() if not key.startswith('_')]
-        expected_defaults = [expected.default for expected in expected_defaults if isinstance(expected, ExpectedResult)]
-        expected_params = [default for default in expected_defaults if default != Undefined]
-        print(expected_params, actual_params)
-        self.assertListEqual(expected_params, actual_params)
+        self.assertListEqual([], actual_params)
     # end def
 
     def test_TYPES_mapping_subclass_shadowing(self):
@@ -323,6 +319,7 @@ class CreateTableTestCase(unittest.TestCase):
                 # end for
             # end with
         # end for
+    # end def
 # end class
 
 
