@@ -6,7 +6,6 @@ from typing import get_type_hints
 from typing import Optional, Union, Any, Type, List, Tuple, Dict
 
 from fastorm import FastORM
-from tests.test_create_table import remove_prefix
 from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
 
 
