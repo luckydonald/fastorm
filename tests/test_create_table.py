@@ -25,6 +25,8 @@ class OtherTable(FastORM):
         CREATE TABLE "other_table" (
           "id_part_1" BIGINT NOT NULL,
           "id_part_2" TEXT NOT NULL
+          # "id_part_2" TEXT NOT NULL,
+          # PRIMARY KEY ("id_part_1", "id_part_2")
         )
     """
     _table_name = 'other_table'
@@ -41,6 +43,8 @@ class TheReferenceHasBeenDoubled(FastORM):
         CREATE TABLE "double_reference" (
           "another_reference__id_part_1" BIGINT NOT NULL,
           "another_reference__id_part_2" TEXT NOT NULL
+          # "another_reference__id_part_2" TEXT NOT NULL,
+          # PRIMARY KEY ("another_reference__id_part_1", "another_reference__id_part_2")
         )
     """
     _table_name = 'double_reference'
@@ -85,6 +89,8 @@ class SystemUnderTest(FastORM):
           "t8_4" JSONB NOT NULL,
           "t9_1" BIGINT[] NOT NULL,
           "t9_2" JSONB NOT NULL
+          # "t9_2" JSONB NOT NULL,
+          # PRIMARY KEY ("t0_id")
         )
         """
     _table_name = 'cool_table_yo'
