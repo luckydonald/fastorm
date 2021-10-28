@@ -977,7 +977,7 @@ class FastORM(BaseModel):
                 try:
                     from psycopg2 import sql as sql_escaping  # you need to have `psycopg2-binary` installed.
                     from psycopg2 import extensions as ext, connect as psycopg2_connect
-                except ImportError:
+                except (ImportError, ModuleNotFoundError):
                     # enhance error message with useful information
                     raise ImportError(
                         'For using complex default values (everything other than None, bool, int, and pure ascii strings) '
