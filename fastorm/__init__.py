@@ -857,8 +857,6 @@ class FastORM(BaseModel):
             The psycopg2 library is used to build a injection safe SQL string.
             Therefore then psycopg2 has to be installed (pip install psycopg2-binary),
             and a connection (or cursor) to the database must be provided (psycopg2_conn = psycopg2.connect(…)).
-
-
         :return:
         """
         create_params = cls.build_sql_create(if_not_exists=if_not_exists, psycopg2_conn=psycopg2_conn if psycopg2_conn else conn)
