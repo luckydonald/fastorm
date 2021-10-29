@@ -225,10 +225,8 @@ class FastORM(BaseModel):
         Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
         Then
 
-        :param flatten_table_references:
-                True if we should flatten the references to other table's primary key in the format of `f"{original_key}__{other_table_key}`.
-                False to not resolve those fields, and instead return the type hint for the other FastORM class.
-        :return: the dictionary with pydantic's ModelField descriptions.
+        :param recursive: If we should not only take into account the current layer, but add the primary keys of the referenced tables to it as well, in the format `f"{our_key}__{referenced_primary_key}`.
+        :return: the dictionary with the
 
         Example:
 
