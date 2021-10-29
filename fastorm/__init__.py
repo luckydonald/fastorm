@@ -213,7 +213,7 @@ class FastORM(BaseModel):
         return flattened_type_hints
     # end def
 
-    _GET_FIELDS_REFERENCES_TYPE = Dict[str, Tuple[bool, type, Optional[Dict[str, str]]]]
+    _GET_FIELDS_REFERENCES_TYPE = Dict[str, Tuple[bool, List[Tuple[str, Union[type|Type['FastORM']]]]]]
 
     @classmethod
     def get_fields_references(cls, *, recursive: bool = False) -> _GET_FIELDS_REFERENCES_TYPE:
@@ -358,49 +358,39 @@ class FastORM(BaseModel):
             other_class: Union[Type[FastORM], None]
             if not other_class:
                 # is a regular key, just keep it as is
-                # e.g. {'id': (int, None)}
-                return_val[key] = (key in _primary_keys, type_hint.type_, None)  # TODO: make a copy?
+                # e.g. 'title': (False, [('title', str)]),
+                return_val[key] = (key in _primary_keys, [(key, type_hint.type_)])  # TODO: make a copy?
                 # and then let's do the next key
                 continue
             # end if
 
             # now we know: it's another FastORM table definition.
             assert issubclass(other_class, FastORM)
-            other_class_type_hints: Dict[str, ModelField] = other_class.get_fields_typehints(flatten_table_references=True)
+            # 'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
             if not recursive:
-                # 'reference_to_actual_table': (ActualTable, {"cool_reference": 'reference_to_actual_table__cool_reference'
-                return_val[key] = (
-                    key in _primary_keys,
-                    other_class,
-                    {
-                        other_class_primary_key: f'{key}__{other_class_primary_key}'
-                        for other_class_primary_key
-                        in other_class.get_primary_keys_keys()
-                    }
-                )
-                continue
-            else:
-                # 'reference_to_actual_table': (ActualTable, {"cool_reference__id_part_1": 'reference_to_actual_table__cool_reference__id_part_1', "cool_reference__id_part_2": 'reference_to_actual_table__cool_reference__id_part_2'
-                return_val[key] = (
-                    key in _primary_keys,
-                    other_class,
-                    {
-                        k: {
-                            v_: f'{key}__{v_}'  # we wanna extend the current interation to the name of it  'lv2_lv1' -> 'lv3_lv2_lv1'
-                            for k_, v_
-                            in v[2].items()  # v[2] is the mapping of 'final_field' -> 'current_long_field_eventually_pointing_to_final_field'
-                        }
-                        for k, v
-                        in other_class.get_fields_references(recursive=False).items()
-                        if v[0]  # the boolean if it's a primary key
-                    }
-                )
-                # end if
+                return_val[key] = (key in _primary_keys, [(key, type_hint.type_)])  # TODO: make a copy?
                 continue
             # end if
+            other_refs = other_class.get_fields_references(recursive=True).items()
+            for other_long_name, (other_is_pk, other_history) in other_refs:
+                if not other_is_pk:
+                    continue
+                # end if
+                if not other_history:
+                    raise ValueError(f'Huh? No history at all! {other_long_name!r}, {other_class!r}, {other_history!r}')
+                # end if
+                if other_history[0][0] == key:   # other_history[0]
+                    return_val[f'{key}__{other_long_name}'] = (
+                        key in _primary_keys,
+                        [(key, other_class)] + other_history
+                    )
+                    break
+                # end if
+            else:  # no `break` for the right key -> key not found
+                return_val[key] = (key in _primary_keys, [(key, type_hint.type_)])  # TODO: make a copy?
+            # end for
         # end for
         return return_val
-
     # end def
 
     @classmethod
