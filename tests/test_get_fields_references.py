@@ -11,7 +11,6 @@ Item = FastORM.FieldReference.Item
 _subtest_msg_sentinel = unittest.case._subtest_msg_sentinel
 
 
-
 class VerboseTestCase(unittest.TestCase):
     show_real_diffs_in_pycharm_instead_of_having_subtests = True
 
