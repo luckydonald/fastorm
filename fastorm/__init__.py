@@ -216,24 +216,25 @@ class FastORM(BaseModel):
     # end def
 
     @dataclass
-    class FieldReferenceItem(object):
-        field: str
-        type_: Union[type | Type['FastORM']]
-
-        def __getitem__(self, key):
-            return getattr(self, key)
-
-        # end def
-
-        def __iter__(self):
-            return iter(dataclasses.astuple(self))
-        # end def
-    # end class
-
-    @dataclass
     class FieldReference(object):
+        @dataclass
+        class Item(object):
+            field: str
+            type_: Union[type | Type['FastORM']]
+
+            def __getitem__(self, key):
+                return getattr(self, key)
+
+            # end def
+
+            def __iter__(self):
+                return iter(dataclasses.astuple(self))
+            # end def
+
+        # end class
+
         is_primary_key: bool
-        types: List['FastORM.FieldReferenceItem']
+        types: List[Item]
 
         def __getitem__(self, key):
             return getattr(self, key)

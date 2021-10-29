@@ -4,7 +4,7 @@ import unittest.case
 from fastorm import FastORM
 
 FieldReference = FastORM.FieldReference
-Item = FastORM.FieldReferenceItem
+Item = FastORM.FieldReference.Item
 
 
 # noinspection PyUnresolvedReferences
