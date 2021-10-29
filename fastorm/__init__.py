@@ -386,7 +386,7 @@ class FastORM(BaseModel):
             if not other_class:
                 # is a regular key, just keep it as is
                 # e.g. 'title': (False, [('title', str)]),
-                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReferenceItem(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
                 # and then let's do the next key
                 continue
             # end if
@@ -395,7 +395,7 @@ class FastORM(BaseModel):
             assert issubclass(other_class, FastORM)
             # 'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
             if not recursive:
-                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReferenceItem(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
                 continue
             # end if
             other_refs = other_class.get_fields_references(recursive=True).items()
@@ -406,15 +406,11 @@ class FastORM(BaseModel):
                 if not other_history:
                     raise ValueError(f'Huh? No history at all! {other_long_name!r}, {other_class!r}, {other_history!r}')
                 # end if
-                if other_history[0][1] == key:   # other_history[0]
-                    return_val[f'{key}__{other_long_name}'] = cls.FieldReference(
+                return_val[f'{key}__{other_long_name}'] = cls.FieldReference(
                         key in _primary_keys,
-                        [cls.FieldReferenceItem(key, other_class)] + other_history
-                    )
-                    break
+                        [cls.FieldReference.Item(key, other_class)] + other_history
+                )
                 # end if
-            else:  # no `break` for the right key -> key not found
-                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReferenceItem(key, type_hint.type_)])  # TODO: make a copy?
             # end for
         # end for
         return return_val

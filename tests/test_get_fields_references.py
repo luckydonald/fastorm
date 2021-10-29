@@ -543,6 +543,7 @@ class GetFieldsReferencesMultiLayerReferenceTest(VerboseTestCase):
             self.assertEqual(expected, refs, msg='recursive=True')
         # end with
     # end def
+# end class
 
 if __name__ == '__main__':
     unittest.main()
