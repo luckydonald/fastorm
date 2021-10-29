@@ -2,9 +2,7 @@ import contextlib
 import unittest.case
 
 from fastorm import FastORM
-
-FieldReference = FastORM.FieldReference
-Item = FastORM.FieldReference.Item
+from fastorm.classes import FieldReference, Item
 
 
 # noinspection PyUnresolvedReferences

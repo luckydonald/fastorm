@@ -28,6 +28,7 @@ from pydantic.fields import ModelField, UndefinedType, Undefined, Field, Private
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
+from .classes import FieldReference
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 from .compat import Annotated, NoneType
 
@@ -215,31 +216,6 @@ class FastORM(BaseModel):
         return flattened_type_hints
     # end def
 
-    @dataclass
-    class FieldReference(object):
-        @dataclass
-        class Item(object):
-            field: str
-            type_: Union[type | Type['FastORM']]
-
-            def __getitem__(self, key):
-                return getattr(self, key)
-
-            # end def
-
-            def __iter__(self):
-                return iter(dataclasses.astuple(self))
-            # end def
-
-        # end class
-
-        is_primary_key: bool
-        types: List[Item]
-
-        __getitem__ = Item.__getitem__  # reuse, as it's the same function basically
-        __iter__ = Item.__iter__  # reuse, as it's the same function basically
-    # end class
-
     _GET_FIELDS_REFERENCES_TYPE = Dict[str, FieldReference]
 
     @classmethod
@@ -386,7 +362,7 @@ class FastORM(BaseModel):
             if not other_class:
                 # is a regular key, just keep it as is
                 # e.g. 'title': (False, [('title', str)]),
-                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = FieldReference(key in _primary_keys, [FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
                 # and then let's do the next key
                 continue
             # end if
@@ -395,7 +371,7 @@ class FastORM(BaseModel):
             assert issubclass(other_class, FastORM)
             # 'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
             if not recursive:
-                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = FieldReference(key in _primary_keys, [FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
                 continue
             # end if
             other_refs = other_class.get_fields_references(recursive=True).items()
@@ -406,9 +382,9 @@ class FastORM(BaseModel):
                 if not other_history:
                     raise ValueError(f'Huh? No history at all! {other_long_name!r}, {other_class!r}, {other_history!r}')
                 # end if
-                return_val[f'{key}__{other_long_name}'] = cls.FieldReference(
+                return_val[f'{key}__{other_long_name}'] = FieldReference(
                         key in _primary_keys,
-                        [cls.FieldReference.Item(key, other_class)] + other_history
+                        [FieldReference.Item(key, other_class)] + other_history
                 )
                 # end if
             # end for
@@ -1101,7 +1077,7 @@ class FastORM(BaseModel):
 
         single_primary_key = len(_primary_keys) == 1
 
-        type_hints: Dict[str, ModelField] = cls.get_fields_typehints(flatten_table_references=True)
+        type_hints: Dict[str, FieldReference] = cls.get_fields_typehints(recursive=True)
 
         # .required tells us if we have a default value set or not.
         # .allow_none tells us if None is supported
