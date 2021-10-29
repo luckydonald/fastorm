@@ -1,9 +1,30 @@
+import contextlib
 import unittest
+import unittest.case
 
 from fastorm import FastORM
 
 
+# noinspection PyUnresolvedReferences
+_subtest_msg_sentinel = unittest.case._subtest_msg_sentinel
+
+
+
 class VerboseTestCase(unittest.TestCase):
+    show_real_diffs_in_pycharm_instead_of_having_subtests = True
+
+    def subTest(self, msg=_subtest_msg_sentinel, **params):
+        if not VerboseTestCase.show_real_diffs_in_pycharm_instead_of_having_subtests:
+            return super().subTest(msg=msg, **params)
+        else:
+            @contextlib.contextmanager
+            def subTestNoOP(msg=msg, **params):
+                yield
+            # end def
+            return subTestNoOP(msg=msg, **params)
+        # end if
+    # end def
+
     def setUp(self) -> None:
         self.maxDiff = None
     # end def
@@ -20,7 +41,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             id_part_2: str
         # end class
 
-        with self.subTest(msg='recursive=False'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=False)
             expected = {
                 'id_part_1': (True, [('id_part_1', int)]),
@@ -29,7 +50,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             self.assertEqual(expected, refs)
         # end with
 
-        with self.subTest(msg='recursive=True'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=False)
             expected = {
                 'id_part_1': (True, [('id_part_1', int)]),
@@ -48,7 +69,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             text: str
         # end class
 
-        with self.subTest(msg='recursive=False'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=False)
             expected = {
                 'id': (True, [('id', int)]),
@@ -57,7 +78,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             self.assertEqual(expected, refs)
         # end with
 
-        with self.subTest(msg='recursive=True'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
                 'id': (True, [('id', int)]),
@@ -75,7 +96,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             id_part_1: int
             id_part_2: str
         # end class
-        with self.subTest(msg='recursive=False'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
                 'id_part_1': (True, [('id_part_1', int)]),
@@ -84,7 +105,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             self.assertEqual(expected, refs)
         # end with
 
-        with self.subTest(msg='recursive=True'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
                 'id_part_1': (True, [('id_part_1', int)]),
@@ -103,7 +124,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             text: str
         # end class
 
-        with self.subTest(msg='recursive=False'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
                 'id': (True, [('id', int)]),
@@ -112,7 +133,7 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
             self.assertEqual(expected, refs)
         # end with
 
-        with self.subTest(msg='recursive=True'):
+        with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
                 'id': (True, [('id', int)]),
