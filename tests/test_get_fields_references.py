@@ -4,6 +4,8 @@ import unittest.case
 
 from fastorm import FastORM
 
+FieldReference = FastORM.FieldReference
+
 
 # noinspection PyUnresolvedReferences
 _subtest_msg_sentinel = unittest.case._subtest_msg_sentinel
@@ -44,8 +46,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=False)
             expected = {
-                'id_part_1': (True, [('id_part_1', int)]),
-                'id_part_2': (True, [('id_part_2', str)]),
+                'id_part_1': FieldReference(True, [('id_part_1', int)]),
+                'id_part_2': FieldReference(True, [('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -53,8 +55,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=False)
             expected = {
-                'id_part_1': (True, [('id_part_1', int)]),
-                'id_part_2': (True, [('id_part_2', str)]),
+                'id_part_1': FieldReference(True, [('id_part_1', int)]),
+                'id_part_2': FieldReference(True, [('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -72,8 +74,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=False)
             expected = {
-                'id': (True, [('id', int)]),
-                'text': (False, [('text', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'text': FieldReference(False, [('text', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -81,8 +83,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
-                'id': (True, [('id', int)]),
-                'text': (False, [('text', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'text': FieldReference(False, [('text', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -99,8 +101,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
-                'id_part_1': (True, [('id_part_1', int)]),
-                'id_part_2': (True, [('id_part_2', str)]),
+                'id_part_1': FieldReference(True, [('id_part_1', int)]),
+                'id_part_2': FieldReference(True, [('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -108,8 +110,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
-                'id_part_1': (True, [('id_part_1', int)]),
-                'id_part_2': (True, [('id_part_2', str)]),
+                'id_part_1': FieldReference(True, [('id_part_1', int)]),
+                'id_part_2': FieldReference(True, [('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -127,8 +129,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
-                'id': (True, [('id', int)]),
-                'text': (False, [('text', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'text': FieldReference(False, [('text', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -136,8 +138,8 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
         with self.subTest():
             refs = Test1.get_fields_references(recursive=True)
             expected = {
-                'id': (True, [('id', int)]),
-                'text': (False, [('text', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'text': FieldReference(False, [('text', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -166,17 +168,17 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=False'):
             refs = Test2.get_fields_references(recursive=False)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one': (False, [('test_one', Test1)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one': FieldReference(False, [('test_one', Test1)]),
             }
             self.assertEqual(expected, refs, msg='recursive=False')
         # end with
         with self.subTest(msg='recursive=True'):
             refs = Test2.get_fields_references(recursive=True)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one__id_part_1': (False, [('test_one', Test1), ('id_part_1', str)]),
-                'test_one__id_part_2': (False, [('test_one', Test1), ('id_part_2', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one__id_part_1': FieldReference(False, [('test_one', Test1), ('id_part_1', str)]),
+                'test_one__id_part_2': FieldReference(False, [('test_one', Test1), ('id_part_2', str)]),
             }
             self.assertEqual(expected, refs, msg='recursive=True')
         # end with
@@ -202,8 +204,8 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=False'):
             refs = Test2.get_fields_references(recursive=False)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one': (False, [('test_one', Test1)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one': FieldReference(False, [('test_one', Test1)]),
             }
             self.assertEqual(expected, refs)
         # end if
@@ -211,9 +213,9 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=True'):
             refs = Test2.get_fields_references(recursive=True)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one__id_part_1': (False, [('test_one', Test1), ('id_part_1', str)]),
-                'test_one__id_part_2': (False, [('test_one', Test1), ('id_part_2', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one__id_part_1': FieldReference(False, [('test_one', Test1), ('id_part_1', str)]),
+                'test_one__id_part_2': FieldReference(False, [('test_one', Test1), ('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end if
@@ -239,8 +241,8 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=False'):
             refs = Test2.get_fields_references(recursive=False)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one': (False, [('test_one', Test1)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one': FieldReference(False, [('test_one', Test1)]),
             }
             self.assertEqual(expected, refs, msg='recursive=False')
         # end with
@@ -248,9 +250,9 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=True'):
             refs = Test2.get_fields_references(recursive=True)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one__id_part_1': (False, [('test_one', Test1), ('id_part_1', str)]),
-                'test_one__id_part_2': (False, [('test_one', Test1), ('id_part_2', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one__id_part_1': FieldReference(False, [('test_one', Test1), ('id_part_1', str)]),
+                'test_one__id_part_2': FieldReference(False, [('test_one', Test1), ('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -276,8 +278,8 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=False'):
             refs = Test2.get_fields_references(recursive=False)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one': (False, [('test_one', Test1)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one': FieldReference(False, [('test_one', Test1)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -285,9 +287,9 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=True'):
             refs = Test2.get_fields_references(recursive=True)
             expected = {
-                'id': (True, [('id', int)]),
-                'test_one__id_part_1': (False, [('test_one', Test1), ('id_part_1', str)]),
-                'test_one__id_part_2': (False, [('test_one', Test1), ('id_part_2', str)]),
+                'id': FieldReference(True, [('id', int)]),
+                'test_one__id_part_1': FieldReference(False, [('test_one', Test1), ('id_part_1', str)]),
+                'test_one__id_part_2': FieldReference(False, [('test_one', Test1), ('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -313,8 +315,8 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=False'):
             refs = Test2.get_fields_references(recursive=False)
             expected = {
-                'id': (False, [('id', int)]),
-                'test_one': (True, [('test_one', Test1)]),
+                'id': FieldReference(False, [('id', int)]),
+                'test_one': FieldReference(True, [('test_one', Test1)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -322,9 +324,9 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=True'):
             refs = Test2.get_fields_references(recursive=True)
             expected = {
-                'id': (False, [('id', int)]),
-                'test_one__id_part_1': (True, [('test_one', Test1), ('id_part_1', int)]),
-                'test_one__id_part_2': (True, [('test_one', Test1), ('id_part_2', str)]),
+                'id': FieldReference(False, [('id', int)]),
+                'test_one__id_part_1': FieldReference(True, [('test_one', Test1), ('id_part_1', int)]),
+                'test_one__id_part_2': FieldReference(True, [('test_one', Test1), ('id_part_2', str)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -350,8 +352,8 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=True'):
             refs = Test2.get_fields_references(recursive=False)
             expected = {
-                'id': (False, [('id', int)]),
-                'test_one': (True, [('test_one', Test1)]),
+                'id': FieldReference(False, [('id', int)]),
+                'test_one': FieldReference(True, [('test_one', Test1)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -359,8 +361,8 @@ class GetFieldsReferencesSingleReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=True'):
             refs = Test2.get_fields_references(recursive=True)
             expected = {
-                'id': (False, [('id', int)]),
-                'test_one__id': (True, [('test_one', Test1), ('id', int)]),
+                'id': FieldReference(False, [('id', int)]),
+                'test_one__id': FieldReference(True, [('test_one', Test1), ('id', int)]),
             }
             self.assertEqual(expected, refs)
         # end with
@@ -378,6 +380,24 @@ class GetFieldsReferencesMultiLayerReferenceTest(VerboseTestCase):
             id_part_2: str
         # end class
 
+        with self.subTest(msg='Test1, recursive=False'):
+            refs = Test1.get_fields_references(recursive=False)
+            expected = {
+                'id_part_1': FieldReference(True, [('id_part_1', int)]),
+                'id_part_2': FieldReference(True, [('id_part_2', str)]),
+            }
+            self.assertEqual(expected, refs, msg='Test1, recursive=False')
+        # end with
+
+        with self.subTest(msg='Test1, recursive=True'):
+            refs = Test1.get_fields_references(recursive=True)
+            expected = {
+                'id_part_1': FieldReference(True, [('id_part_1', int)]),
+                'id_part_2': FieldReference(True, [('id_part_2', str)]),
+            }
+            self.assertEqual(expected, refs, msg='Test1, recursive=True')
+        # end with
+
         class Test2(FastORM):
             _table_name = 'test2'
             _primary_keys = ['test_one']
@@ -385,6 +405,25 @@ class GetFieldsReferencesMultiLayerReferenceTest(VerboseTestCase):
             some_number: int
             test_one: Test1
         # end class
+
+        with self.subTest(msg='Test2, recursive=False'):
+            refs = Test2.get_fields_references(recursive=False)
+            expected = {
+                'some_number': FieldReference(False, [('some_number', int)]),
+                'test_one': FieldReference(True, [('test_one', Test1)]),
+            }
+            self.assertEqual(expected, refs, msg='Test2, recursive=False')
+        # end with
+
+        with self.subTest(msg='Test2, recursive=True'):
+            refs = Test2.get_fields_references(recursive=True)
+            expected = {
+                'some_number': FieldReference(False, [('some_number', int)]),
+                'test_one__id_part_1': FieldReference(True, [('test_one', Test1)]),
+                'test_one__id_part_2': FieldReference(True, [('test_one', Test1)]),
+            }
+            self.assertEqual(expected, refs, msg='Test2, recursive=True')
+        # end with
 
         class Test3(FastORM):
             _table_name = 'test3'
@@ -394,23 +433,23 @@ class GetFieldsReferencesMultiLayerReferenceTest(VerboseTestCase):
             title: str
         # end class
 
-        with self.subTest(msg='recursive=False'):
+        with self.subTest(msg='Test3, recursive=False'):
             refs = Test3.get_fields_references(recursive=False)
             expected = {
-                'test_two': (True, [('test_two', Test2)]),
-                'title': (False, [('title', str)]),
+                'test_two': FieldReference(True, [('test_two', Test2)]),
+                'title': FieldReference(False, [('title', str)]),
             }
-            self.assertEqual(expected, refs, msg='recursive=False')
+            self.assertEqual(expected, refs, msg='Test3, recursive=False')
         # end with
 
-        with self.subTest(msg='recursive=True'):
+        with self.subTest(msg='Test3, recursive=True'):
             refs = Test3.get_fields_references(recursive=True)
             expected = {
-                'test_two__test_one__id_part_1': (True, [('test_two', Test2), ('test_one', Test1), ('id_part_1', int)]),
-                'test_two__test_one__id_part_2': (True, [('test_two', Test2), ('test_one', Test1), ('id_part_2', str)]),
-                'title': (False, [('title', str)]),
+                'test_two__test_one__id_part_1': FieldReference(True, [('test_two', Test2), ('test_one', Test1), ('id_part_1', int)]),
+                'test_two__test_one__id_part_2': FieldReference(True, [('test_two', Test2), ('test_one', Test1), ('id_part_2', str)]),
+                'title': FieldReference(False, [('title', str)]),
             }
-            self.assertEqual(expected, refs, msg='recursive=True')
+            self.assertEqual(expected, refs, msg='Test3, recursive=True')
         # end with
     # end def
 
@@ -451,9 +490,9 @@ class GetFieldsReferencesMultiLayerReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=False'):
             refs = Test3.get_fields_references(recursive=False)
             expected = {
-                'test_two': (True, [('test_two', Test2)]),
-                'test_one_b': (True, [('test_one_b', Test1B)]),
-                'title': (False, [('title', str)]),
+                'test_two': FieldReference(True, [('test_two', Test2)]),
+                'test_one_b': FieldReference(True, [('test_one_b', Test1B)]),
+                'title': FieldReference(False, [('title', str)]),
             }
             self.assertEqual(expected, refs, msg='recursive=False')
         # end with
@@ -461,10 +500,10 @@ class GetFieldsReferencesMultiLayerReferenceTest(VerboseTestCase):
         with self.subTest(msg='recursive=True'):
             refs = Test3.get_fields_references(recursive=True)
             expected = {
-                'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
-                'test_two__test_one_a__id_part_2': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_2', str)]),
-                'test_one_b__id': (True, [('test_one_b', Test1B), ('id', int)]),
-                'title': (False, [('title', str)]),
+                'test_two__test_one_a__id_part_1': FieldReference(True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
+                'test_two__test_one_a__id_part_2': FieldReference(True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_2', str)]),
+                'test_one_b__id': FieldReference(True, [('test_one_b', Test1B), ('id', int)]),
+                'title': FieldReference(False, [('title', str)]),
             }
             self.assertEqual(expected, refs, msg='recursive=True')
         # end with
