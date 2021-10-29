@@ -236,13 +236,8 @@ class FastORM(BaseModel):
         is_primary_key: bool
         types: List[Item]
 
-        def __getitem__(self, key):
-            return getattr(self, key)
-        # end def
-
-        def __iter__(self):
-            return iter(dataclasses.astuple(self))
-        # end def
+        __getitem__ = Item.__getitem__  # reuse, as it's the same function basically
+        __iter__ = Item.__iter__  # reuse, as it's the same function basically
     # end class
 
     _GET_FIELDS_REFERENCES_TYPE = Dict[str, FieldReference]
