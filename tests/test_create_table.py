@@ -1,6 +1,5 @@
 import unittest
 from datetime import datetime
-from typing import get_type_hints
 from typing import Optional, Union, Any, Type, List, Tuple, Dict
 from pydantic import dataclasses, BaseModel
 from pydantic.fields import ModelField, Undefined, Field
@@ -288,6 +287,7 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_sql_text(self):
+        self.maxDiff = None
         for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest):
             with self.subTest(msg=f'class {table_cls.__name__}'):
                 expected_sql = extract_sql_from_docstring(table_cls)
