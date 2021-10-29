@@ -216,9 +216,24 @@ class FastORM(BaseModel):
     # end def
 
     @dataclass
+    class FieldReferenceItem(object):
+        field: str
+        type_: Union[type | Type['FastORM']]
+
+        def __getitem__(self, key):
+            return getattr(self, key)
+
+        # end def
+
+        def __iter__(self):
+            return iter(dataclasses.astuple(self))
+        # end def
+    # end class
+
+    @dataclass
     class FieldReference(object):
         is_primary_key: bool
-        types: List[Tuple[str, Union[type | Type['FastORM']]]]
+        types: List['FastORM.FieldReferenceItem']
 
         def __getitem__(self, key):
             return getattr(self, key)
@@ -375,7 +390,7 @@ class FastORM(BaseModel):
             if not other_class:
                 # is a regular key, just keep it as is
                 # e.g. 'title': (False, [('title', str)]),
-                return_val[key] = cls.FieldReference(key in _primary_keys, [(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReferenceItem(key, type_hint.type_)])  # TODO: make a copy?
                 # and then let's do the next key
                 continue
             # end if
@@ -384,7 +399,7 @@ class FastORM(BaseModel):
             assert issubclass(other_class, FastORM)
             # 'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
             if not recursive:
-                return_val[key] = cls.FieldReference(key in _primary_keys, [(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReferenceItem(key, type_hint.type_)])  # TODO: make a copy?
                 continue
             # end if
             other_refs = other_class.get_fields_references(recursive=True).items()
@@ -398,12 +413,12 @@ class FastORM(BaseModel):
                 if other_history[0][1] == key:   # other_history[0]
                     return_val[f'{key}__{other_long_name}'] = cls.FieldReference(
                         key in _primary_keys,
-                        [(key, other_class)] + other_history
+                        [cls.FieldReferenceItem(key, other_class)] + other_history
                     )
                     break
                 # end if
             else:  # no `break` for the right key -> key not found
-                return_val[key] = cls.FieldReference(key in _primary_keys, [(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = cls.FieldReference(key in _primary_keys, [cls.FieldReferenceItem(key, type_hint.type_)])  # TODO: make a copy?
             # end for
         # end for
         return return_val
