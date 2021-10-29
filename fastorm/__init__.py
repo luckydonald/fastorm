@@ -372,8 +372,9 @@ class FastORM(BaseModel):
                 return_val[key] = FieldReference(key in _primary_keys, [FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
                 continue
             # end if
-            other_refs = other_class.get_fields_references(recursive=True).items()
-            for other_long_name, (other_is_pk, other_history) in other_refs:
+            other_refs = other_class.get_fields_references(recursive=True)
+
+            for other_long_name, (other_is_pk, other_history) in other_refs.items():
                 if not other_is_pk:
                     continue
                 # end if
