@@ -43,7 +43,8 @@ class Table1HavingTable2VersionSingleReferencesMandatory(FastORM):
     """
         CREATE TABLE "table1_having_table2" (
           "table1__id" BIGINT,
-          "table2__id" BIGINT
+          "table2__id" BIGINT,
+          PRIMARY KEY("table1__id", "table2__id")
         )
     """
     _table_name = 'table1_having_table2'

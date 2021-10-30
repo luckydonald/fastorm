@@ -28,7 +28,7 @@ from pydantic.fields import ModelField, UndefinedType, Undefined, Field, Private
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
-from .classes import FieldReference, FieldTypehint
+from .classes import FieldReference, FieldTypehint, FieldItem
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 from .compat import Annotated, NoneType
 
@@ -108,11 +108,11 @@ class FastORM(BaseModel):
             ...
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=False)
-            {'cool_reference': FieldTypehint(is_primary_key=True, type=Item(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), Item=<class '__main__.Item'>)}
+            {'cool_reference': FieldTypehint(is_primary_key=True, type=FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)))}
 
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=True)
-            {'cool_reference__id_part_1': FieldTypehint(is_primary_key=True, type=Item(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True)), Item=<class '__main__.Item'>), 'cool_reference__id_part_2': FieldTypehint(is_primary_key=True, type=Item(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True)), Item=<class '__main__.Item'>)}
+            {'cool_reference__id_part_1': FieldTypehint(is_primary_key=True, type=FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True))), 'cool_reference__id_part_2': FieldTypehint(is_primary_key=True, type=FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True)))}
 
         """
         _ignored_fields = cls.get_ignored_fields()
@@ -144,7 +144,7 @@ class FastORM(BaseModel):
                 )
             }
             for long_key, short_class_key in long_key_to_short_key_mapping.items():
-                result_hints[long_key] = FieldTypehint[ModelField](is_primary_key=references[long_key].is_primary_key, type=FieldTypehint.Item(field=short_class_key, type_=type_hints[short_class_key]))
+                result_hints[long_key] = FieldTypehint[ModelField](is_primary_key=references[long_key].is_primary_key, type=FieldItem(field=short_class_key, type_=type_hints[short_class_key]))
             # end for
         # end for
         return result_hints
@@ -205,19 +205,19 @@ class FastORM(BaseModel):
 
 
             >>> ActualTable.get_fields_references(recursive=False)
-            {'cool_reference': FieldReference(is_primary_key=True, types=[Item(field='cool_reference', type_=<class '__main__.OtherTable'>)], Item=<class '__main__.Item'>), 'foobar': FieldReference(is_primary_key=False, types=[Item(field='foobar', type_=<class 'int'>)], Item=<class '__main__.Item'>)}
+            {'cool_reference': FieldReference(is_primary_key=True, types=[Item(field='cool_reference', type_=<class '__main__.OtherTable'>)]), 'foobar': FieldReference(is_primary_key=False, types=[Item(field='foobar', type_=<class 'int'>)])}
 
             >>> ThirdTable.get_fields_references(recursive=False)
-            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)], Item=<class '__main__.Item'>), 'reference_to_other_table': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>)], Item=<class '__main__.Item'>), 'reference_to_actual_table': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>)], Item=<class '__main__.Item'>)}
+            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)]), 'reference_to_other_table': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>)]), 'reference_to_actual_table': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>)])}
 
             >>> ThirdTable.get_fields_references(recursive=True)
-            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)], Item=<class '__main__.Item'>), 'reference_to_other_table__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)], Item=<class '__main__.Item'>), 'reference_to_other_table__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)], Item=<class '__main__.Item'>), 'reference_to_actual_table__cool_reference__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)], Item=<class '__main__.Item'>), 'reference_to_actual_table__cool_reference__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)], Item=<class '__main__.Item'>)}
+            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)]), 'reference_to_other_table__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_other_table__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)]), 'reference_to_actual_table__cool_reference__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_actual_table__cool_reference__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)])}
 
             >>> ThirdTable.get_fields_references(recursive=False)
             {'id': (int, None), 'reference': (OtherTable, {"id_part_1": 'reference__id_part_1', "id_part_2": 'reference__id_part_2'}), 'reference_to_actual_table': (ActualTable, {"cool_reference": 'reference_to_actual_table__cool_reference'})}
 
             >>> ThirdTable.get_fields_references(recursive=True)
-            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)], Item=<class '__main__.Item'>), 'reference_to_other_table__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)], Item=<class '__main__.Item'>), 'reference_to_other_table__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)], Item=<class '__main__.Item'>), 'reference_to_actual_table__cool_reference__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)], Item=<class '__main__.Item'>), 'reference_to_actual_table__cool_reference__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)], Item=<class '__main__.Item'>)}
+            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)]), 'reference_to_other_table__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_other_table__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)]), 'reference_to_actual_table__cool_reference__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_actual_table__cool_reference__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)])}
 
         """
         _ignored_fields = cls.get_ignored_fields()
@@ -291,7 +291,7 @@ class FastORM(BaseModel):
             if not other_class:
                 # is a regular key, just keep it as is
                 # e.g. 'title': (False, [('title', str)]),
-                return_val[key] = FieldReference(key in _primary_keys, [FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = FieldReference(key in _primary_keys, [FieldItem(key, type_hint.type_)])  # TODO: make a copy?
                 # and then let's do the next key
                 continue
             # end if
@@ -300,7 +300,7 @@ class FastORM(BaseModel):
             assert issubclass(other_class, FastORM)
             # 'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
             if not recursive:
-                return_val[key] = FieldReference(key in _primary_keys, [FieldReference.Item(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = FieldReference(key in _primary_keys, [FieldItem(key, type_hint.type_)])  # TODO: make a copy?
                 continue
             # end if
             other_refs = other_class.get_fields_references(recursive=True)
@@ -314,7 +314,7 @@ class FastORM(BaseModel):
                 # end if
                 return_val[f'{key}__{other_long_name}'] = FieldReference(
                         key in _primary_keys,
-                        [FieldReference.Item(key, other_class)] + field_ref.types
+                        [FieldItem(key, other_class)] + field_ref.types
                 )
                 # end if
             # end for
