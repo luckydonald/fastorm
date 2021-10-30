@@ -374,16 +374,16 @@ class FastORM(BaseModel):
             # end if
             other_refs = other_class.get_fields_references(recursive=True)
 
-            for other_long_name, (other_is_pk, other_history) in other_refs.items():
-                if not other_is_pk:
+            for other_long_name, field_ref in other_refs.items():
+                if not field_ref.is_primary_key:
                     continue
                 # end if
-                if not other_history:
-                    raise ValueError(f'Huh? No history at all! {other_long_name!r}, {other_class!r}, {other_history!r}')
+                if not field_ref.types:
+                    raise ValueError(f'Huh? No history at all! {other_long_name!r}, {other_class!r}, {field_ref.types!r}')
                 # end if
                 return_val[f'{key}__{other_long_name}'] = FieldReference(
                         key in _primary_keys,
-                        [FieldReference.Item(key, other_class)] + other_history
+                        [FieldReference.Item(key, other_class)] + field_ref.types
                 )
                 # end if
             # end for
