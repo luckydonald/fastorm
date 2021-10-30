@@ -1009,7 +1009,7 @@ class FastORM(BaseModel):
 
         single_primary_key = len(_primary_keys) == 1
 
-        type_hints: Dict[str, FieldReference] = cls.get_fields_typehints(recursive=True)
+        type_hints: Dict[str, FieldReference[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
 
         # .required tells us if we have a default value set or not.
         # .allow_none tells us if None is supported
@@ -1019,6 +1019,7 @@ class FastORM(BaseModel):
         placeholder_values = []
         type_definitions = []
         all_defaults_are_simple_types_and_save_to_concatenate = True  # they only contain ints, boolean and None
+
         for key, type_hint in type_hints.items():
             is_automatic_field = key in _automatic_fields
 
