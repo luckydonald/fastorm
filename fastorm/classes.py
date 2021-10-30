@@ -3,6 +3,7 @@
 import dataclasses
 import typing
 
+import pydantic.fields
 from luckydonaldUtils.logger import logging
 
 __author__ = 'luckydonald'
@@ -25,10 +26,16 @@ def __iter__(self):
 # end def
 
 
+FIELD_REFERENCE_TYPE = typing.TypeVar("FIELD_REFERENCE_TYPE")
+
+FIELD_REFERENCE_ITEM_WITH_TYPE = typing.Union[type | typing.Type['FastORM']]   # the FIELD_REFERENCE_TYPE of TYPE type()
+FIELD_REFERENCE_ITEM_WITH_TYPE_HINT = pydantic.fields.FieldInfo  # the FIELD_REFERENCE_TYPE of TYPE pydantic.typehint
+
+
 @dataclass
-class Item(object):
+class Item(typing.Generic[FIELD_REFERENCE_TYPE]):
     field: str
-    type_: typing.Union[type | typing.Type['FastORM']]
+    type_: FIELD_REFERENCE_TYPE
 
     __getitem__ = __getitem__  # reuse, as it's the same function basically
     __iter__ = __iter__  # reuse, as it's the same function basically
@@ -36,11 +43,11 @@ class Item(object):
 
 
 @dataclass
-class FieldReference(object):
+class FieldReference(typing.Generic[FIELD_REFERENCE_TYPE]):
     is_primary_key: bool
-    types: typing.List[Item]
+    types: typing.List[Item[FIELD_REFERENCE_TYPE]]
 
-    Item = Item
+    Item: typing.Type[Item] = Item
     __getitem__ = __getitem__  # reuse, as it's the same function basically
     __iter__ = __iter__  # reuse, as it's the same function basically
 # end class
