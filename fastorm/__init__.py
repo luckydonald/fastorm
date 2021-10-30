@@ -28,7 +28,7 @@ from pydantic.fields import ModelField, UndefinedType, Undefined, Field, Private
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
 
-from .classes import FieldReference
+from .classes import FieldReference, FieldTypehint
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 from .compat import Annotated, NoneType
 
@@ -80,7 +80,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def get_fields_typehints(cls, *, flatten_table_references: bool = False) -> Dict[str, ModelField]:
+    def get_fields_typehints(cls, *, flatten_table_references: bool = False) -> dict[str, FieldTypehint[ModelField]]:
         """
         Get's all fields which have type hints and thus we consider as fields for the database.
         Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
@@ -108,112 +108,45 @@ class FastORM(BaseModel):
             ...
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=False)
-            {'cool_reference': ModelField(name='cool_reference', type=OtherTable, required=True)}
+            {'cool_reference': FieldTypehint(True, Item('cool_reference', ModelField(name='cool_reference', type=OtherTable, required=True)))}
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=True)
-            {'cool_reference__id_part_1': ModelField(name='id_part_1', type=int, required=True), 'cool_reference__id_part_2': ModelField(name='id_part_2', type=str, required=True)}
+            {'cool_reference__id_part_1': FieldTypehint(True, Item('id_part_1', ModelField(name='id_part_1', type=int, required=True))),'cool_reference__id_part_2': FieldTypehint(True, Item('id_part_1', ModelField(name='id_part_2', type=str, required=True))),}
 
         """
         _ignored_fields = cls.get_ignored_fields()
-        # copy the type hints as we might add more type hints for the primary key fields of referenced models, and we wanna filter.
-        type_hints = {
-            key: value for key, value in cls.__fields__.items()
-            if (
-                not key.startswith('_')
-                and not key.isupper()
-                and not key in _ignored_fields
-            )
-        }
-        if flatten_table_references is False:
-            return type_hints
-        # end if
-        flattened_type_hints = {}
-        for key, value in type_hints.items():
-            type_hint = type_hints[key]
-            inner_type = type_hint.type_
-            other_class: Union[Type[FastORM], None]
-            if (
-                check_is_generic_alias(inner_type) and
-                hasattr(inner_type, '__origin__') and
-                type_hint.type_.__origin__ == typing.Union
-            ):  # Union
-                # it's a Union
-                union_params = type_hint.type_.__args__[:]
-                first_union_type = union_params[0]
-                if issubclass(first_union_type, FastORM):
-                    # we can have a reference to another Table, so it could be that
-                    # the table ist the first entry and the actual field type is the second.
-                    # Union[Table, int]
-                    # Union[Table, Tuple[int, int]]
-                    pk_keys = first_union_type.get_primary_keys_keys()
-                    typehints = first_union_type.get_fields_typehints()
-                    key_types = [typehints[key] for key in pk_keys]
-                    if not len(union_params) == 2:
-                        raise TypeError(
-                            f'Union with other table type must have it\'s primary key(s) as second argument: Union{union_params!r}'
-                        )
-                    # end if
-                    implied_other_class_pk_types = union_params[1]
-                    if (
-                        check_is_generic_alias(implied_other_class_pk_types) and
-                        hasattr(implied_other_class_pk_types, '__origin__') and
-                        implied_other_class_pk_types.__origin__ == tuple and
-                        hasattr(implied_other_class_pk_types, '__args__') and
-                        implied_other_class_pk_types.__args__
-                    ):
-                        implied_other_class_pk_types = list(implied_other_class_pk_types.__args__)
-                    else:
-                        implied_other_class_pk_types = [implied_other_class_pk_types]
-                    # end if
-                    typehint_union_types = [key_type.type_ for key_type in key_types]
-                    if implied_other_class_pk_types == typehint_union_types:
-                        # so basically the we know Table has _id = ['id'],
-                        # and Table.id is of type int,
-                        # and now our given type is Union[Table, int], matching that.
-                        other_class = first_union_type
-                    else:
-                        other_class = None
-                    # end if
-                else:
-                    other_class = None
-                # end if
-            else:
-                other_class = None
+        references = cls.get_fields_references(recursive=flatten_table_references)
+        result_classes: Dict[Type, Dict[str, str]] = {}  # SomeFastORM: {'long_key_to__key_foo': 'key_foo, 'long_key_to__key_bar': 'key_bar'}
+        for long_key, field_reference in references.items():
+            try:
+                # this one will work if we have more than one level of elements, so actual sub-keys
+                interesting_cls = field_reference.types[-2].type_   # this one will probably raise the index error.
+                interesting_field = field_reference.types[-1].field
+            except IndexError:
+                interesting_cls = cls
+                interesting_field = long_key
+            # end try
+            if interesting_cls not in result_classes:
+                result_classes[interesting_cls] = {}
             # end if
-            if not other_class:
-                try:
-                    if issubclass(type_hint.type_, FastORM):
-                        other_class: Type[FastORM] = type_hint.type_
-                    else:
-                        other_class = None
-                except TypeError:
-                    other_class = None
-                # end try
-            # end if
-            other_class: Union[Type[FastORM], None]
-            if not other_class:
-                # is a regular key, just keep it as is
-                flattened_type_hints[key] = type_hint  # TODO: make a copy?
-                # and then let's do the next key
-                continue
-            # end if
+            result_classes[interesting_cls][long_key] = interesting_field  # group the classes, so we only need to look up the type hints once per class
+        # end for
 
-            # now it's another FastORM table definition.
-            assert issubclass(other_class, FastORM)
-            other_class_type_hints: Dict[str, ModelField] = other_class.get_fields_typehints(flatten_table_references=True)
-            for other_class_primary_key in other_class.get_primary_keys_keys():
-                new_key = f'{key}__{other_class_primary_key}'
-                if new_key in type_hints:
-                    raise ValueError(
-                        f'The constructed reference key {new_key!r}, for field {cls.__name__}.{key} pointing to '
-                        f'table {other_class.__name__}.{other_class_primary_key}, would overwrite an already existing key.'
-                    )
-                # end if
-                other_class_type_hint = other_class_type_hints[other_class_primary_key]
-                flattened_type_hints[new_key] = other_class_type_hint  # TODO: make a copy?
+        result_hints: Dict[str, FieldTypehint[ModelField]] = {}
+        for interesting_cls, long_key_to_short_key_mapping in result_classes.items():
+            type_hints = {
+                key: value for key, value in interesting_cls.__fields__.items()
+                if (
+                    not key.startswith('_')
+                    and not key.isupper()
+                    and not key in _ignored_fields
+                )
+            }
+            for long_key, short_class_key in long_key_to_short_key_mapping.items():
+                result_hints[long_key] = FieldTypehint[ModelField](is_primary_key=references[long_key].is_primary_key, type=FieldTypehint.Item(field=short_class_key, type_=type_hints[short_class_key]))
             # end for
         # end for
-        return flattened_type_hints
+        return result_hints
     # end def
 
     _GET_FIELDS_REFERENCES_TYPE = Dict[str, FieldReference[typing.Union[type | typing.Type['FastORM']]]]
