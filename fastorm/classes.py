@@ -28,7 +28,7 @@ def __iter__(self):
 
 FIELD_REFERENCE_TYPE = typing.TypeVar("FIELD_REFERENCE_TYPE")
 
-FIELD_REFERENCE_ITEM_WITH_TYPE = typing.Union[type | typing.Type['FastORM']]   # the FIELD_REFERENCE_TYPE of TYPE type()
+FIELD_REFERENCE_ITEM_WITH_TYPE = typing.Union[type, typing.Type['FastORM']]   # the FIELD_REFERENCE_TYPE of TYPE type()
 FIELD_REFERENCE_ITEM_WITH_TYPE_HINT = pydantic.fields.FieldInfo  # the FIELD_REFERENCE_TYPE of TYPE pydantic.typehint
 
 

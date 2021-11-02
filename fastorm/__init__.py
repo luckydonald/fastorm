@@ -158,7 +158,7 @@ class FastORM(BaseModel):
         return result_hints
     # end def
 
-    _GET_FIELDS_REFERENCES_TYPE = Dict[str, FieldReference[typing.Union[type | typing.Type['FastORM']]]]
+    _GET_FIELDS_REFERENCES_TYPE = Dict[str, FieldReference[typing.Union[type, typing.Type['FastORM']]]]
 
     @classmethod
     def get_fields_references(cls, *, recursive: bool = False) -> _GET_FIELDS_REFERENCES_TYPE:
