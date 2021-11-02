@@ -5,6 +5,9 @@
 >   **Workaround**: Change the type of the field after creation in python versions if you must use both 3.10 and the `create_table(…)` (or `build_sql_create(…)`) function
 > - That's all we know of
 
+# v0.0.8
+- added `get_connection_pool(…)` to get a connection pool ready to use.
+
 # v0.0.7
 - Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
     - Needs psycopg2 installed for complex types (everything other than None, bool, int, and pure ascii strings)
