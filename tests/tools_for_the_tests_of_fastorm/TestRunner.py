@@ -13,6 +13,8 @@ This TestRunner is based on HTMLTestRunner <http://tungwaiyip.info/software/HTML
 It is likely that I will rewrite this module form scracth soon.
 By the way, HTMLTestRunner's license does not cover forking, given that I removed HTMLTestRunner's main characteristic(the HTML), I decided also removing the license. If I did not interpret the license properly, please, let me know.
 HTMLTestRunner's author is Wai Yip Tung and I am grateful for his contribution.
+
+Via https://gist.github.com/viniciusd/73e6eccd39dea5e714b1464e3c47e067
 """
 import datetime
 
@@ -66,8 +68,13 @@ class Table(object):
         self.padding = padding
         self.allow_newlines = allow_newlines
 
+    @classmethod
+    def remove_ansi_colors(cls, string):
+        return re.sub("\033\[[0-9];[0-9];[0-9]{1,2}m", "", string)
+    # end def
+
     def __len__(self, x):
-        return len(re.sub("\033\[[0-9];[0-9];[0-9]{1,2}m", "", x))
+        return len(self.remove_ansi_colors(x))
 
     def addRow(self, row):
         rows = [[''] for l in range(len(row))]
@@ -94,6 +101,38 @@ class Table(object):
             except IndexError:
                 self.__columnSize__.append(self.__len__(x))
         self.__titles__ = titles
+
+    def __str__(self):
+        """
+        Markdown version
+        :return:
+        """
+        lines = []
+        if self.__titles__ is None:
+            title = " | ".join(f'{".": ^ {chars}}' for chars in self.__columnSize__)
+        else:
+            if len(self.__titles__) < len(self.__columnSize__):
+                self.__titles__ += ((len(self.__columnSize__) - len(self.__titles__)) * [''])
+            for i, x in enumerate(self.__titles__):
+                self.__titles__[i] = x.center(self.__columnSize__[i])
+            title = " | ".join(self.__titles__)
+        # end if
+        lines.append(title)
+
+        lines.append(" | ".join(chars * '-' for chars in self.__columnSize__))  # dash for every character and space on the outside.
+
+        for x in self.__rows__:
+            if len(x) < len(self.__columnSize__):
+                x += ((len(self.__columnSize__) - len(x)) * [''])
+            for i, c in enumerate(x):
+                x[i] = self.remove_ansi_colors(c).ljust(self.__columnSize__[i]) + (len(c) - self.__len__(c) - 3) * ' '
+            lines.append(" | ".join(x) + "")
+        # end for
+
+        lines.append("")
+
+        return "\n".join(lines)
+        # self.padding
 
     def __repr__(self):
         hline = self.padding + "+"
@@ -152,9 +191,9 @@ class Template_mixin(object):
     bc = bcolors()
 
     STATUS = {
-        0: bc.GREEN + 'pass' + bc.END,
-        1: bc.PURPLE + 'fail' + bc.END,
-        2: bc.RED + 'error' + bc.END,
+        0: bc.GREEN + '✅ pass' + bc.END,
+        1: bc.PURPLE + '❌ fail' + bc.END,
+        2: bc.RED + '⚠️ error' + bc.END,
     }
 
     # ------------------------------------------------------------------------
@@ -371,7 +410,7 @@ class TestRunner(Template_mixin):
         tests = ''
         for cid, (testClass, classResults) in enumerate(sortedResult):  # Iterate over the test cases
             classTable = Table(padding=2 * padding)
-            classTable.addTitles(["Test name", "Stack", "Status"])
+            classTable.addTitles(["Test name", "Status", "Stack"])
             # subtotal for a class
             np = nf = ne = 0
             for n, t, o, e in classResults:
@@ -387,14 +426,14 @@ class TestRunner(Template_mixin):
                 name = testClass.__name__
             else:
                 name = "%s.%s" % (testClass.__module__, testClass.__name__)
-            tests += padding + name + "\n"
+            tests += f'\n\n### `{name}` <a name="{name}" />\n\n'
             doc = testClass.__doc__ and testClass.__doc__.split("\n")[0] or ""
-            desc = doc and '%s: %s' % (name, doc) or name
+            desc = doc and '%s: %s' % (name, doc) or f'[`{name}`](#{name})'
             # style = ne > 0 and 'errorClass' or nf > 0 and 'failClass' or 'passClass',
-
             table.addRow([desc, str(np + nf + ne), str(np), str(nf), str(ne)])
             for tid, (n, test, output, error) in enumerate(classResults):  # Iterate over the unit tests
-                classTable.addRow(self._generate_report_test(cid, tid, n, test, output, error))
+                t_name, t_stack, t_status = self._generate_report_test(cid, tid, n, test, output, error)
+                classTable.addRow([t_name, t_status, t_stack])
             tests += str(classTable)
         table.addRow(
             ["Total", str(result.success_count + result.failure_count + result.error_count), str(result.success_count),
