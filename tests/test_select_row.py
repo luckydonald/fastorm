@@ -30,7 +30,7 @@ class OtherTable(FastORM):
 
 
 class SelectRowTestCase(unittest.TestCase):
-    def test_foo(self):
+    def test_simple_select_single_parameter_no_pk(self):
         expected_foo = 123.2
         # noinspection SqlResolve,SqlNoDataSourceInspection
         expected_sql = """
@@ -41,7 +41,7 @@ class SelectRowTestCase(unittest.TestCase):
         self.assertEqual([expected_foo], where_values)
     # end def
 
-    def test_foo_bar(self):
+    def test_simple_select_multiple_parameters_no_pk(self):
         expected_foo = 123.2
         expected_bar = "Läääl"
         # noinspection SqlResolve,SqlNoDataSourceInspection
@@ -51,6 +51,16 @@ class SelectRowTestCase(unittest.TestCase):
         sql, *where_values = OtherTable.build_sql_select(foo=expected_foo, bar=expected_bar)
         self.assertEqual(expected_sql, sql)
         self.assertEqual([expected_foo, expected_bar], where_values)
+    # end def
+
+    def test_simple_select_no_parameters_no_pk(self):
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected_sql = """
+        SELECT "id_part_1","id_part_2","foo","bar" FROM "cool_table_name_yoooo"
+        """.strip()
+        sql, *where_values = OtherTable.build_sql_select()
+        self.assertEqual(expected_sql, sql)
+        self.assertEqual([], where_values)
     # end def
 # end class
 
