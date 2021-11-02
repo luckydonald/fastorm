@@ -108,11 +108,11 @@ class FastORM(BaseModel):
             ...
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=False)
-            {'cool_reference': FieldTypehint(is_primary_key=True, type=FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)))}
+            {'cool_reference': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True))])}
 
 
             >>> ActualTable.get_fields_typehints(flatten_table_references=True)
-            {'cool_reference__id_part_1': FieldTypehint(is_primary_key=True, type=FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True))), 'cool_reference__id_part_2': FieldTypehint(is_primary_key=True, type=FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True)))}
+            {'cool_reference__id_part_1': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True))]), 'cool_reference__id_part_2': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True))])}
 
         """
         _ignored_fields = cls.get_ignored_fields()
@@ -213,19 +213,13 @@ class FastORM(BaseModel):
 
 
             >>> ActualTable.get_fields_references(recursive=False)
-            {'cool_reference': FieldReference(is_primary_key=True, types=[Item(field='cool_reference', type_=<class '__main__.OtherTable'>)]), 'foobar': FieldReference(is_primary_key=False, types=[Item(field='foobar', type_=<class 'int'>)])}
+            {'cool_reference': FieldReference(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=<class 'fastorm.OtherTable'>)]), 'foobar': FieldReference(is_primary_key=False, types=[FieldItem(field='foobar', type_=<class 'int'>)])}
 
             >>> ThirdTable.get_fields_references(recursive=False)
-            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)]), 'reference_to_other_table': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>)]), 'reference_to_actual_table': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>)])}
+            {'id': FieldReference(is_primary_key=True, types=[FieldItem(field='id', type_=<class 'int'>)]), 'reference_to_other_table': FieldReference(is_primary_key=False, types=[FieldItem(field='reference_to_other_table', type_=<class 'fastorm.OtherTable'>)]), 'reference_to_actual_table': FieldReference(is_primary_key=False, types=[FieldItem(field='reference_to_actual_table', type_=<class 'fastorm.ActualTable'>)])}
 
             >>> ThirdTable.get_fields_references(recursive=True)
-            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)]), 'reference_to_other_table__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_other_table__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)]), 'reference_to_actual_table__cool_reference__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_actual_table__cool_reference__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)])}
-
-            >>> ThirdTable.get_fields_references(recursive=False)
-            {'id': (int, None), 'reference': (OtherTable, {"id_part_1": 'reference__id_part_1', "id_part_2": 'reference__id_part_2'}), 'reference_to_actual_table': (ActualTable, {"cool_reference": 'reference_to_actual_table__cool_reference'})}
-
-            >>> ThirdTable.get_fields_references(recursive=True)
-            {'id': FieldReference(is_primary_key=True, types=[Item(field='id', type_=<class 'int'>)]), 'reference_to_other_table__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_other_table__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_other_table', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)]), 'reference_to_actual_table__cool_reference__id_part_1': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_1', type_=<class 'int'>)]), 'reference_to_actual_table__cool_reference__id_part_2': FieldReference(is_primary_key=False, types=[Item(field='reference_to_actual_table', type_=<class '__main__.ActualTable'>), Item(field='cool_reference', type_=<class '__main__.OtherTable'>), Item(field='id_part_2', type_=<class 'str'>)])}
+            {'id': FieldReference(is_primary_key=True, types=[FieldItem(field='id', type_=<class 'int'>)]), 'reference_to_other_table__id_part_1': FieldReference(is_primary_key=False, types=[FieldItem(field='reference_to_other_table', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_1', type_=<class 'int'>)]), 'reference_to_other_table__id_part_2': FieldReference(is_primary_key=False, types=[FieldItem(field='reference_to_other_table', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_2', type_=<class 'str'>)]), 'reference_to_actual_table__cool_reference__id_part_1': FieldReference(is_primary_key=False, types=[FieldItem(field='reference_to_actual_table', type_=<class 'fastorm.ActualTable'>), FieldItem(field='cool_reference', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_1', type_=<class 'int'>)]), 'reference_to_actual_table__cool_reference__id_part_2': FieldReference(is_primary_key=False, types=[FieldItem(field='reference_to_actual_table', type_=<class 'fastorm.ActualTable'>), FieldItem(field='cool_reference', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_2', type_=<class 'str'>)])}
 
         """
         _ignored_fields = cls.get_ignored_fields()
