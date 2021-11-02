@@ -39,8 +39,8 @@ class MyTestCase(unittest.TestCase):
         """
         print(type_hints)
         self.assertListEqual(list(type_hints.keys()), ['cool_reference__id_part_1', 'cool_reference__id_part_2'])
-        self.assertEqual(type_hints['cool_reference__id_part_1'].type_, int)
-        self.assertEqual(type_hints['cool_reference__id_part_2'].type_, str)
+        self.assertEqual(type_hints['cool_reference__id_part_1'].types[-1].type_.type_, int)
+        self.assertEqual(type_hints['cool_reference__id_part_2'].types[-1].type_.type_, str)
     # end def
 
     def test_not_fattened(self):
@@ -51,7 +51,7 @@ class MyTestCase(unittest.TestCase):
         }
         """
         self.assertListEqual(list(type_hints.keys()), ['cool_reference'])
-        self.assertEqual(type_hints['cool_reference'].type_, OtherTable)
+        self.assertEqual(type_hints['cool_reference'].types[0].type_.type_, OtherTable)
     # end def
 
     @unittest.skip('Currently out of scope.')
