@@ -6,7 +6,6 @@ __author__ = 'luckydonald'
 __version__ = "0.0.6"
 __all__ = ['__author__', '__version__', 'FastORM', 'Autoincrement']
 
-import dataclasses
 import ipaddress
 import builtins
 import datetime
@@ -23,7 +22,6 @@ from luckydonaldUtils.logger import logging
 from luckydonaldUtils.typing import JSONType
 
 from pydantic import BaseModel
-from pydantic.dataclasses import dataclass
 from pydantic.fields import ModelField, UndefinedType, Undefined, Field, PrivateAttr
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
