@@ -8,7 +8,8 @@
 # v0.0.8
 - 🆕 added `get_connection_pool(…)` to get a connection pool ready to use.
 - ⚠️ renamed `get_connection(…)` to `create_connection(…)`. To fit the naming of `get_connection_pool(…)`.
-- 🔨 Fixed invalid SELECT query if there were no parameters given. 
+- 🔨 Fixed invalid `SELECT` query if there were no parameters given to `.select(…)` (or the underlying `.build_sql_select(…)`).
+    - Empty selectors will continue to be allowed for `.get(…)` as well, to keep that funny case possible, where there's only one row in a table and you wanna simply `SomeTable.get()` it. 
 
 # v0.0.7
 - 🔨 Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
