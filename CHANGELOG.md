@@ -1,8 +1,8 @@
-### Known bugs:
-- In Python versions **before Python 3.10**, the automated **CREATE TABLE statement** will have problems with referencing other tables and list types:   
-    - `list[int]` will be missing an array at the end `BIGINT[]` (will be only `BIGINT`)
-    - Referencing other tables in an optional segment will result in an `JSONB` field instead of the referencing fields. 
-- That's all we know of
+> ### Known bugs:
+> - In Python versions **before Python 3.10**, the automated **CREATE TABLE statement** will have problems with referencing other tables and list types:   
+>     - `list[int]` will be missing an array at the end `BIGINT[]` (will be only `BIGINT`)
+>     - Referencing other tables in an optional segment will result in an `JSONB` field instead of the referencing fields. 
+> - That's all we know of
 
 # v0.0.7
 - Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
