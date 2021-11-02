@@ -271,8 +271,8 @@ class FastORM(BaseModel):
                     else:
                         implied_other_class_pk_types = [implied_other_class_pk_types]
                     # end if
-                    typehint_union_types = [key_type.type_ for key_type in key_types]
-                    if implied_other_class_pk_types == typehint_union_types:
+                    typehint_union_actual_field_types = [key_type.types[-1].type_.type_ for key_type in key_types]
+                    if implied_other_class_pk_types == typehint_union_actual_field_types:
                         # so basically the we know Table has _id = ['id'],
                         # and Table.id is of type int,
                         # and now our given type is Union[Table, int], matching that.
