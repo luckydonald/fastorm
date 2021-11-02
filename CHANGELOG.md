@@ -6,30 +6,30 @@
 > - That's all we know of
 
 # v0.0.8
-- added `get_connection_pool(…)` to get a connection pool ready to use.
+- 🆕 added `get_connection_pool(…)` to get a connection pool ready to use.
 - ⚠️ renamed `get_connection(…)` to `create_connection(…)`. To fit the naming of `get_connection_pool(…)`.
-- Fixed invalid SELECT query if there were no parameters given. 
+- 🔨 Fixed invalid SELECT query if there were no parameters given. 
 
 # v0.0.7
-- Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
-    - Needs psycopg2 installed for complex types (everything other than None, bool, int, and pure ascii strings)
-- Added support for `PRIMARY KEY`(`S`).
-- Added support for creating `REFERENCES` to other tables. 
+- 🔨 Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
+    - ℹ️ Needs psycopg2 installed for complex types (everything other than None, bool, int, and pure ascii strings)
+- 🆕 Added support for `PRIMARY KEY`(`S`).
+- 🆕 Added support for creating `REFERENCES` to other tables. 
      
 # v0.0.6
-- Handle `Optional[Table, <Table Primary Key Type>]` for references.
+- 🆕 Handle `Optional[Table, <Table Primary Key Type>]` for references.
     - Works for referencing other tables with a multi-field primary key, too. 
 - Added lots of unit tests and also fix bugs found by this
-    - added support for multiple primary keys in most places now
-    - fixes for errors/wonkyness introduced by using pydantic's BaseModel.
+    - 🆕 added support for multiple primary keys in most places now
+    - 🔨 fixes for errors/wonkyness introduced by using pydantic's BaseModel.
 
 # v0.0.5
-- Added `create_table(cls, conn: Connection, if_not_exists: bool = False)`.
-- Added boolean `if_not_exists: bool = False` to the  `build_sql_create(…)`
+- 🆕 Added `create_table(cls, conn: Connection, if_not_exists: bool = False)`.
+- 🆕 Added boolean `if_not_exists: bool = False` to the  `build_sql_create(…)`
 
 
 # v0.0.4
-- Added `has_changes()` and `get_changes()`. 
+- 🆕 Added `has_changes()` and `get_changes()`. 
 
 
 # v0.0.3
