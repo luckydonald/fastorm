@@ -27,7 +27,8 @@ class Table1HavingTable2VersionSingleReferencesOptional(FastORM):
     """
         CREATE TABLE "table1_having_table2" (
           "table1__id" BIGINT,
-          "table2__id" BIGINT
+          "table2__id" BIGINT,
+          PRIMARY KEY ("table1__id", "table2__id")
         )
     """
     _table_name = 'table1_having_table2'
@@ -44,7 +45,7 @@ class Table1HavingTable2VersionSingleReferencesMandatory(FastORM):
         CREATE TABLE "table1_having_table2" (
           "table1__id" BIGINT,
           "table2__id" BIGINT,
-          PRIMARY KEY("table1__id", "table2__id")
+          PRIMARY KEY ("table1__id", "table2__id")
         )
     """
     _table_name = 'table1_having_table2'
@@ -60,7 +61,8 @@ class DoublePrimaryKeyTable(FastORM):
     """
         CREATE TABLE "table1_having_table2" (
           "table1__id" BIGINT NOT NULL,
-          "table2__id" BIGINT
+          "table2__id" BIGINT,
+          PRIMARY KEY ("id_part1", "id_part2")
         )
     """
     _table_name = 'double_primary_key'
@@ -76,7 +78,8 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesMandatory(FastORM):
     """
         CREATE TABLE "double_primary_key" (
           "double_trouble__id_part1" BIGINT NOT NULL,
-          "double_trouble__id_part2" BIGINT
+          "double_trouble__id_part2" BIGINT,
+          PRIMARY KEY ("double_trouble__id_part1", "double_trouble__id_part2")
         )
     """
     _table_name = 'double_primary_key'
@@ -91,7 +94,8 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional(FastORM):
     """
         CREATE TABLE "double_primary_key" (
           "double_trouble__id_part1" BIGINT NOT NULL,
-          "double_trouble__id_part2" BIGINT
+          "double_trouble__id_part2" BIGINT,
+          PRIMARY KEY ("double_trouble__id_part1", "double_trouble__id_part2")
         )
     """
     _table_name = 'double_primary_key'
