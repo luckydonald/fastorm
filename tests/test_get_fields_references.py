@@ -4,30 +4,9 @@ import unittest.case
 from fastorm import FastORM
 from fastorm.classes import FieldInfo, FieldItem
 
-
-# noinspection PyUnresolvedReferences
-_subtest_msg_sentinel = unittest.case._subtest_msg_sentinel
+from tests.tools_for_the_tests_of_fastorm import VerboseTestCase
 
 
-class VerboseTestCase(unittest.TestCase):
-    show_real_diffs_in_pycharm_instead_of_having_subtests = True
-
-    def subTest(self, msg=_subtest_msg_sentinel, **params):
-        if not VerboseTestCase.show_real_diffs_in_pycharm_instead_of_having_subtests:
-            return super().subTest(msg=msg, **params)
-        else:
-            @contextlib.contextmanager
-            def subTestNoOP(msg=msg, **params):
-                yield
-            # end def
-            return subTestNoOP(msg=msg, **params)
-        # end if
-    # end def
-
-    def setUp(self) -> None:
-        self.maxDiff = None
-    # end def
-# end def
 
 
 class GetFieldsReferencesSimpleTest(VerboseTestCase):
