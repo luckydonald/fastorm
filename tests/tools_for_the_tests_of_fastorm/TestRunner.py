@@ -71,7 +71,7 @@ class Table(object):
 
     @classmethod
     def remove_ansi_colors(cls, string):
-        return re.sub("\033\[[0-9];[0-9];[0-9]{1,2}m", "", string)
+        return re.sub("\033\[[0-9](?:;[0-9])?;[0-9]{1,2}m", "", string)
     # end def
 
     def __len__(self, x):
