@@ -1406,7 +1406,7 @@ class FastORM(BaseModel):
     }
 
     @classmethod
-    async def get_connection(cls, database_url) -> Connection:
+    async def create_connection(cls, database_url) -> Connection:
         # https://magicstack.github.io/asyncpg/current/usage.html#example-automatic-json-conversion
         conn = await asyncpg.connect(database_url)
         return await cls._set_up_connection(conn=conn)
@@ -1477,6 +1477,19 @@ class FastORM(BaseModel):
             )
         # end for
         return conn
+    # end def
+
+
+    @classmethod
+    async def get_connection(cls, database_url):
+        """
+        Deprecated, use `FastORM.create_connection(…)` instead.
+        """
+        logger.warning(
+            'The use of FastORM.get_connection(…) is deprecated, use FastORM.create_connection(…)` instead.',
+            exc_info=True,
+        )
+        return await cls.create_connection(database_url=database_url)
     # end def
 # end class
 

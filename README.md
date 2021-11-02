@@ -54,7 +54,7 @@ class Auction(FastORM):
 Now you can quickly write classes to the database:
 
 ```py
-conn = await FastORM.get_connection('postgresql://user:password@postgres_host/database')
+conn = await FastORM.create_connection('postgresql://user:password@postgres_host/database')
 
 
 user = User(id=None, name="hunter24")  # id will be filled by the database

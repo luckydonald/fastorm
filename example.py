@@ -53,7 +53,7 @@ class Auction(FastORM):
 
 
 async def run():
-    conn = await FastORM.get_connection('postgresql://user:password@postgres_host/database')
+    conn = await FastORM.create_connection('postgresql://user:password@postgres_host/database')
 
     await migrate_database(conn)  # a function (below) which prepares the database for use, creates tables and manages schema changes.
 
