@@ -251,9 +251,6 @@ class FastORM(BaseModel):
                     # the table ist the first entry and the actual field type is the second.
                     # Union[Table, int]
                     # Union[Table, Tuple[int, int]]
-                    pk_keys = first_union_type.get_primary_keys_keys()
-                    typehints = first_union_type.get_fields_typehints()
-                    key_types = [typehints[key] for key in pk_keys]
                     if not len(union_params) == 2:
                         raise TypeError(
                             f'Union with other table type must have it\'s primary key(s) as second argument: Union{union_params!r}'
@@ -271,12 +268,17 @@ class FastORM(BaseModel):
                     else:
                         implied_other_class_pk_types = [implied_other_class_pk_types]
                     # end if
-                    typehint_union_actual_field_types = [key_type.types[-1].type_.type_ for key_type in key_types]
-                    if implied_other_class_pk_types == typehint_union_actual_field_types:
-                        # so basically the we know Table has _id = ['id'],
-                        # and Table.id is of type int,
-                        # and now our given type is Union[Table, int], matching that.
-                        other_class = first_union_type
+                    typehints = first_union_type.get_fields_typehints(flatten_table_references=True)
+                    pk_keys_actual_types = [hint.resulting_type.type_ for hint in typehints.values() if hint.is_primary_key]
+                    if implied_other_class_pk_types == pk_keys_actual_types:
+                        # so basically the we know the referenced(!) `SomeTable` has `_id = ['id']`,
+                        # and the referenced `SomeTable.id` is of type `int`,
+                        # and now our given type, which is referencing it, is `Union[SomeTable, int]`, that is matching that.
+
+                        # in other words:
+                        # A `SomeTable` with primary key  being `int`        needs to have the reference called either `SomeTable` or `Union[SomeTable, int]` (`Union[SomeTable, [int]]` is possible too)
+                        # A `SomeTable` with primary keys being `[int, str]` needs to have the reference called either `SomeTable` or `Union[SomeTable, [int, str]]`
+                        other_class = first_union_type  # okey, we can use Table even if there's more. That way we have normalized it and there won't be an error later.
                     # end if
                 # end if
             # end if
