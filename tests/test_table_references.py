@@ -29,7 +29,11 @@ class Table1HavingTable2VersionSingleReferencesOptional(FastORM):
           "table1__id" BIGINT,
           "table2__id" BIGINT,
           PRIMARY KEY ("table1__id", "table2__id")
-        )
+        );
+        CREATE INDEX "idx_table1_having_table2___table1__id" ON "table1_having_table2" ("table1__id");
+        CREATE INDEX "idx_table1_having_table2___table2__id" ON "table1_having_table2" ("table2__id");
+        ALTER TABLE "table1_having_table2" ADD CONSTRAINT "fk_table1_having_table2___table1__id" FOREIGN KEY ("table1__id") REFERENCES "table1" ("id") ON DELETE CASCADE;
+        ALTER TABLE "table1_having_table2" ADD CONSTRAINT "fk_table1_having_table2___table2__id" FOREIGN KEY ("table2__id") REFERENCES "table2" ("id") ON DELETE CASCADE;
     """
     _table_name = 'table1_having_table2'
     _primary_keys = ['table1', 'table2']
@@ -46,7 +50,11 @@ class Table1HavingTable2VersionSingleReferencesMandatory(FastORM):
           "table1__id" BIGINT,
           "table2__id" BIGINT,
           PRIMARY KEY ("table1__id", "table2__id")
-        )
+        );
+        CREATE INDEX "idx_table1_having_table2___table1__id" ON "table1_having_table2" ("table1__id");
+        CREATE INDEX "idx_table1_having_table2___table2__id" ON "table1_having_table2" ("table2__id");
+        ALTER TABLE "table1_having_table2" ADD CONSTRAINT "fk_table1_having_table2___table1__id" FOREIGN KEY ("table1__id") REFERENCES "table1" ("id") ON DELETE CASCADE;
+        ALTER TABLE "table1_having_table2" ADD CONSTRAINT "fk_table1_having_table2___table2__id" FOREIGN KEY ("table2__id") REFERENCES "table2" ("id") ON DELETE CASCADE;
     """
     _table_name = 'table1_having_table2'
     _primary_keys = ['table1', 'table2']
@@ -63,7 +71,7 @@ class DoublePrimaryKeyTable(FastORM):
           "table1__id" BIGINT NOT NULL,
           "table2__id" BIGINT,
           PRIMARY KEY ("id_part1", "id_part2")
-        )
+        );
     """
     _table_name = 'double_primary_key'
     _primary_keys = ['id_part1', 'id_part2']
@@ -80,7 +88,11 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesMandatory(FastORM):
           "double_trouble__id_part1" BIGINT NOT NULL,
           "double_trouble__id_part2" BIGINT,
           PRIMARY KEY ("double_trouble__id_part1", "double_trouble__id_part2")
-        )
+        );
+        CREATE INDEX "idx_double_primary_key___double_trouble__id_part1" ON "double_primary_key" ("double_trouble__id_part1");
+        CREATE INDEX "idx_double_primary_key___double_trouble__id_part2" ON "double_primary_key" ("double_trouble__id_part2");
+        ALTER TABLE "double_primary_key" ADD CONSTRAINT "fk_double_primary_key___double_trouble__id_part1" FOREIGN KEY ("double_trouble__id_part1") REFERENCES "double_primary_key" ("id_part1") ON DELETE CASCADE;
+        ALTER TABLE "double_primary_key" ADD CONSTRAINT "fk_double_primary_key___double_trouble__id_part2" FOREIGN KEY ("double_trouble__id_part2") REFERENCES "double_primary_key" ("id_part2") ON DELETE CASCADE;
     """
     _table_name = 'double_primary_key'
     _primary_keys = ['double_trouble']
@@ -96,7 +108,11 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional(FastORM):
           "double_trouble__id_part1" BIGINT NOT NULL,
           "double_trouble__id_part2" BIGINT,
           PRIMARY KEY ("double_trouble__id_part1", "double_trouble__id_part2")
-        )
+        );
+        CREATE INDEX "idx_double_primary_key___double_trouble__id_part1" ON "double_primary_key" ("double_trouble__id_part1");
+        CREATE INDEX "idx_double_primary_key___double_trouble__id_part2" ON "double_primary_key" ("double_trouble__id_part2");
+        ALTER TABLE "double_primary_key" ADD CONSTRAINT "fk_double_primary_key___double_trouble__id_part1" FOREIGN KEY ("double_trouble__id_part1") REFERENCES "double_primary_key" ("id_part1") ON DELETE CASCADE;
+        ALTER TABLE "double_primary_key" ADD CONSTRAINT "fk_double_primary_key___double_trouble__id_part2" FOREIGN KEY ("double_trouble__id_part2") REFERENCES "double_primary_key" ("id_part2") ON DELETE CASCADE;
     """
     _table_name = 'double_primary_key'
     _primary_keys = ['double_trouble']

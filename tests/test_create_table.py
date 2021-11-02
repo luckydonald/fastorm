@@ -25,7 +25,7 @@ class OtherTable(FastORM):
           "id_part_1" BIGINT NOT NULL,
           "id_part_2" TEXT NOT NULL,
           PRIMARY KEY ("id_part_1", "id_part_2")
-        )
+        );
     """
     _table_name = 'other_table'
     _primary_keys = ['id_part_1', 'id_part_2']
@@ -42,7 +42,11 @@ class TheReferenceHasBeenDoubled(FastORM):
           "another_reference__id_part_1" BIGINT NOT NULL,
           "another_reference__id_part_2" TEXT NOT NULL,
           PRIMARY KEY ("another_reference__id_part_1", "another_reference__id_part_2")
-        )
+        );
+        CREATE INDEX "idx_double_reference___another_reference__id_part_1" ON "double_reference" ("another_reference__id_part_1");
+        CREATE INDEX "idx_double_reference___another_reference__id_part_2" ON "double_reference" ("another_reference__id_part_2");
+        ALTER TABLE "double_reference" ADD CONSTRAINT "fk_double_reference___another_reference__id_part_1" FOREIGN KEY ("another_reference__id_part_1") REFERENCES "other_table" ("id_part_1") ON DELETE CASCADE;
+        ALTER TABLE "double_reference" ADD CONSTRAINT "fk_double_reference___another_reference__id_part_2" FOREIGN KEY ("another_reference__id_part_2") REFERENCES "other_table" ("id_part_2") ON DELETE CASCADE;
     """
     _table_name = 'double_reference'
     _primary_keys = ['another_reference']

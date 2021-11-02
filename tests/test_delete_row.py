@@ -10,7 +10,7 @@ class OtherTable(FastORM):
           "id_part_1" TEXT NOT NULL,
           "id_part_2" BIGINT NOT NULL,
           PRIMARY KEY ("id_part_1", "id_part_2")
-        )
+        );
     """
     _table_name = 'cool_table_name_yoooo'
     _primary_keys = ['id_part_1', 'id_part_2']

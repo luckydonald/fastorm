@@ -44,7 +44,7 @@ class SystemUnderTest(FastORM):
           "t1_4" TEXT NOT NULL DEFAULT 'this test will proof if "something" ain''t escaped properly. ^^''',
           "t2_1" TEXT NOT NULL DEFAULT 'test ööö',
           "t3_1" TIMESTAMP NOT NULL DEFAULT '4458-12-24T00:06:09'::timestamp
-        )
+        );
     """
     _table_name = 'cool_table_yo'
     _primary_keys = ['t0_id']
