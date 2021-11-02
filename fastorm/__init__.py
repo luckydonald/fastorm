@@ -570,9 +570,10 @@ class FastORM(BaseModel):
                 where_parts.append(f'"{key}" IN ({where_part.rstrip(",")})')
             # end if
         # end if
+        where_sql = "" if not where_parts else f' WHERE {" AND ".join(where_parts)}'
 
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        sql = f'SELECT {fields} FROM "{cls._table_name}" WHERE {" AND ".join(where_parts)}'
+        sql = f'SELECT {fields} FROM "{cls._table_name}"{where_sql}'
         # noinspection PyRedundantParentheses
         return (sql, *where_values)
     # end def
