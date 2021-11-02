@@ -1070,7 +1070,32 @@ class FastORM(BaseModel):
             # keys = [key for key, item in type_hints.items()]
             sql_lines.append(f'''  PRIMARY KEY ({', '.join(f'"{key}"' for key in primary_keys)})''')
         # end if
-        sql_lines.append(")")
+        sql_lines.append(");")
+
+        # references to other tables
+        references_types: Dict[str, FieldInfo[ModelField]] = {
+            # everything with a different table will have more than one type in there.
+            long_key: field_typehint for long_key, field_typehint in cls.get_fields_references(recursive=True).items() if len(field_typehint.types) > 1
+        }
+
+        if references_types:
+            index_lines = []
+            reference_lines = []
+            current_table = cls.get_name()
+            for current_table_field, field_typehint in references_types.items():
+                field_typehint: FieldInfo[ModelField]
+                assert issubclass(field_typehint.referenced_type, FastORM)
+                referenced_table = field_typehint.referenced_type.get_name()
+                referenced_table_field = field_typehint.referenced_field
+                # noinspection SqlNoDataSourceInspection,SqlResolve
+                index_lines.append(f'CREATE INDEX "idx_{current_table}___{current_table_field}" ON "{current_table}" ("{current_table_field}");')
+                # noinspection SqlNoDataSourceInspection,SqlResolve
+                reference_lines.append(f'ALTER TABLE "{current_table}" ADD CONSTRAINT "fk_{current_table}___{current_table_field}" FOREIGN KEY ("{current_table_field}") REFERENCES "{referenced_table}" ("{referenced_table_field}") ON DELETE CASCADE;')
+            # end for
+            sql_lines.extend(index_lines)
+            sql_lines.extend(reference_lines)
+        # end if
+
         sql = "\n".join(
             sql_lines
         )

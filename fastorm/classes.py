@@ -59,7 +59,7 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     # end def
 
     @property
-    def starting_type(self) -> FIELD_REFERENCE_TYPE:
+    def referenced_type(self) -> FIELD_REFERENCE_TYPE:
         """
         The first type in the type resolving list.
 
@@ -67,6 +67,17 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
         TL;DR: no flattening to the end type
         """
         return self.types[0].type_
+    # end def
+
+    @property
+    def referenced_field(self) -> FIELD_REFERENCE_TYPE:
+        """
+        The first type in the type resolving list.
+
+        That means this is the first type, pointing to either the actual type if there's no reference or the table it references to
+        TL;DR: no flattening to the end type
+        """
+        return self.types[1].field
     # end def
 
     __getitem__ = __getitem__  # reuse, as it's the same function basically
