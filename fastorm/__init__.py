@@ -16,7 +16,7 @@ import types
 import uuid
 import re
 from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable
-from asyncpg import Connection
+from asyncpg import Connection, Pool
 from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
 from luckydonaldUtils.typing import JSONType
@@ -1411,6 +1411,13 @@ class FastORM(BaseModel):
         conn = await asyncpg.connect(database_url)
         return await cls._set_up_connection(conn=conn)
     # end def
+
+    @classmethod
+    async def create_connection_pool(cls, database_url) -> Pool:
+        # https://magicstack.github.io/asyncpg/current/usage.html#example-automatic-json-conversion
+        return await asyncpg.create_pool(database_url, setup=cls._set_up_connection)
+    # end def
+
 
     @classmethod
     async def _set_up_connection(cls, conn: Connection):
