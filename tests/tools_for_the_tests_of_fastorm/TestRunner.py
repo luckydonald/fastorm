@@ -14,7 +14,8 @@ It is likely that I will rewrite this module form scracth soon.
 By the way, HTMLTestRunner's license does not cover forking, given that I removed HTMLTestRunner's main characteristic(the HTML), I decided also removing the license. If I did not interpret the license properly, please, let me know.
 HTMLTestRunner's author is Wai Yip Tung and I am grateful for his contribution.
 
-Via https://gist.github.com/viniciusd/73e6eccd39dea5e714b1464e3c47e067
+Based on https://stackoverflow.com/a/31665827/3423324#display-python-unittest-results-in-nice-tabular-form
+and https://gist.github.com/viniciusd/73e6eccd39dea5e714b1464e3c47e067
 """
 import datetime
 
