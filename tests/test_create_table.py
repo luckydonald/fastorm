@@ -4,7 +4,7 @@ from typing import Optional, Union, Any, Type, List, Tuple, Dict
 from pydantic import dataclasses, BaseModel
 from pydantic.fields import ModelField, Undefined, Field
 
-from fastorm import FastORM, Autoincrement, FieldTypehint
+from fastorm import FastORM, Autoincrement, FieldInfo
 from fastorm.compat import get_type_hints_with_annotations
 from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
 
@@ -267,7 +267,7 @@ class CreateTableTestCase(unittest.TestCase):
     # end def
 
     def test_type_detection_pydantic(self):
-        type_hints: Dict[str, FieldTypehint[ModelField]] = SystemUnderTest.get_fields_typehints()
+        type_hints: Dict[str, FieldInfo[ModelField]] = SystemUnderTest.get_fields_typehints()
         for key, type_hint in type_hints.items():
             expected_result: ExpectedResult | Type[Exception]
             expected_result = getattr(SystemUnderTest, f'_{SystemUnderTest.__name__}__result__{key}')

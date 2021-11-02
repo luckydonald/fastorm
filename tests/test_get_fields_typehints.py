@@ -6,7 +6,7 @@ from pydantic import BaseConfig
 from pydantic.fields import ModelField
 
 from fastorm import FastORM
-from fastorm.classes import FieldReference, FieldItem, FieldTypehint
+from fastorm.classes import FieldInfo, FieldItem
 
 # noinspection PyUnresolvedReferences
 _subtest_msg_sentinel = unittest.case._subtest_msg_sentinel
@@ -50,14 +50,14 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
 
         with self.subTest():
             expected = dedent("""
-            {'cool_reference': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True))])}
+            {'cool_reference': FieldInfo(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True))])}
             """).strip()
             refs = ActualTable.get_fields_typehints(flatten_table_references=False)
             self.assertEqual(expected, repr(refs))
         # end with
         with self.subTest():
             expected = dedent("""
-            {'cool_reference__id_part_1': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True))]), 'cool_reference__id_part_2': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True))])}            """).strip()
+            {'cool_reference__id_part_1': FieldInfo(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True))]), 'cool_reference__id_part_2': FieldInfo(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True))])}            """).strip()
             refs = ActualTable.get_fields_typehints(flatten_table_references=True)
             self.assertEqual(expected, repr(refs))
         # end with

@@ -72,6 +72,3 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     __getitem__ = __getitem__  # reuse, as it's the same function basically
     __iter__ = __iter__  # reuse, as it's the same function basically
 # end class
-
-FieldReference = FieldInfo
-FieldTypehint = FieldInfo
