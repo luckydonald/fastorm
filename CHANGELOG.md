@@ -1,7 +1,8 @@
 > ### Known bugs:
-> - In Python versions **before Python 3.10**, the automated **CREATE TABLE statement** will have problems with referencing other tables and list types:   
->     - `list[int]` will be missing an array at the end `BIGINT[]` (will be only `BIGINT`)
->     - Referencing other tables in an optional segment will result in an `JSONB` field instead of the referencing fields. 
+> - In Python versions **before Python 3.10**, the automated **CREATE TABLE statement** (`build_sql_create(…)` thus also `create_table(…)`) will have problems with referencing other tables and list types:     
+>   That means, `list[int]` will be missing an array at the end (`BIGINT[]` will be only `BIGINT`, `BIGINT[][][]` will be only `BIGINT[][]`) and
+>   referencing other tables as part of an optional segment will result in an `JSONB` field instead of the referencing fields.   
+>   **Workaround**: Change the type of the field after creation in python versions if you must use both 3.10 and the `create_table(…)` (or `build_sql_create(…)`) function
 > - That's all we know of
 
 # v0.0.7
