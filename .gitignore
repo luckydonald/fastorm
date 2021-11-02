@@ -1,3 +1,4 @@
 .idea/
 .python-version
 dist/
+tests/results/
