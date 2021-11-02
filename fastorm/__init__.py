@@ -796,7 +796,7 @@ class FastORM(BaseModel):
     @classmethod
     def from_row(cls, row):
         # noinspection PyArgumentList
-        instance = cls(*row)
+        instance = cls(**row)
         instance._database_cache_overwrite_with_current()
         return instance
     # end def
