@@ -73,13 +73,5 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     __iter__ = __iter__  # reuse, as it's the same function basically
 # end class
 
-@dataclass
-class FieldReference(FieldInfo):
-    pass
-# end class
-
-
-@dataclass
-class FieldTypehint(typing.Generic[FIELD_REFERENCE_TYPE]):
-    pass
-# end class
+FieldReference = FieldInfo
+FieldTypehint = FieldInfo
