@@ -151,6 +151,7 @@ class FastORM(BaseModel):
             for field_item in field_reference.types:
                 type_hint = classes_typehints[last_class][field_item.field]
                 final_hint.types.append(FieldItem(field=field_item.field, type_=type_hint))
+                last_class = field_item.type_
             # end for
             result_hints[long_key] = final_hint
         # end for
