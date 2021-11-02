@@ -8,6 +8,7 @@
 # v0.0.8
 - added `get_connection_pool(…)` to get a connection pool ready to use.
 - ⚠️ renamed `get_connection(…)` to `create_connection(…)`. To fit the naming of `get_connection_pool(…)`.
+- Fixed invalid SELECT query if there were no parameters given. 
 
 # v0.0.7
 - Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
