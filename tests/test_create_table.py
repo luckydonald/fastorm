@@ -6,7 +6,7 @@ from pydantic.fields import ModelField, Undefined, Field
 
 from fastorm import FastORM, Autoincrement, FieldInfo
 from fastorm.compat import get_type_hints_with_annotations
-from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
+from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring, VerboseTestCase
 
 
 @dataclasses.dataclass
@@ -246,7 +246,7 @@ class WrongStuff(BaseModel):
 # end class
 
 
-class CreateTableTestCase(unittest.TestCase):
+class CreateTableTestCase(VerboseTestCase):
     def test_type_detection_typing(self):
         type_hints: Dict[str, any] = get_type_hints_with_annotations(SystemUnderTest)
         for key, type_hint in type_hints.items():

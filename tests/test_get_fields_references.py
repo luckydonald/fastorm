@@ -1,6 +1,3 @@
-import contextlib
-import unittest.case
-
 from fastorm import FastORM
 from fastorm.classes import FieldInfo, FieldItem
 
