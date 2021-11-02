@@ -304,7 +304,7 @@ class FastORM(BaseModel):
             assert issubclass(other_class, FastORM)
             # 'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
             if not recursive:
-                return_val[key] = FieldInfo(key in _primary_keys, [FieldItem(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = FieldInfo(key in _primary_keys, [FieldItem(key, other_class)])  # TODO: make a copy?
                 continue
             # end if
             other_refs = other_class.get_fields_references(recursive=True)
