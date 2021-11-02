@@ -43,20 +43,43 @@ class FieldItem(typing.Generic[FIELD_REFERENCE_TYPE]):
 
 
 @dataclass
-class FieldReference(typing.Generic[FIELD_REFERENCE_TYPE]):
+class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     is_primary_key: bool
     types: typing.List[FieldItem[FIELD_REFERENCE_TYPE]]
+
+    @property
+    def resulting_type(self) -> FIELD_REFERENCE_TYPE:
+        """
+        The last type in the type resolving list.
+
+        That means this is the final type this field is actually having after resolving all the table references.
+        TL;DR: flattened to the end type
+        """
+        return self.types[-1].type_
+    # end def
+
+    @property
+    def starting_type(self) -> FIELD_REFERENCE_TYPE:
+        """
+        The first type in the type resolving list.
+
+        That means this is the first type, pointing to either the actual type if there's no reference or the table it references to
+        TL;DR: no flattening to the end type
+        """
+        return self.types[0].type_
+    # end def
 
     __getitem__ = __getitem__  # reuse, as it's the same function basically
     __iter__ = __iter__  # reuse, as it's the same function basically
 # end class
 
+@dataclass
+class FieldReference(FieldInfo):
+    pass
+# end class
+
 
 @dataclass
 class FieldTypehint(typing.Generic[FIELD_REFERENCE_TYPE]):
-    is_primary_key: bool
-    types: typing.List[FieldItem[FIELD_REFERENCE_TYPE]]
-
-    __getitem__ = __getitem__  # reuse, as it's the same function basically
-    __iter__ = __iter__  # reuse, as it's the same function basically
+    pass
 # end class
