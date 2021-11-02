@@ -1,6 +1,6 @@
 import contextlib
 import unittest.case
-from pprint import pprint
+from textwrap import dedent
 
 from pydantic import BaseConfig
 from pydantic.fields import ModelField
@@ -49,14 +49,17 @@ class GetFieldsReferencesSimpleTest(VerboseTestCase):
 
 
         with self.subTest():
-            expected = {'cool_reference': FieldTypehint(True, FieldItem('cool_reference', ModelField(name='cool_reference', type_=OtherTable, required=True, model_config=BaseConfig, class_validators={})))}
+            expected = dedent("""
+            {'cool_reference': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True))])}
+            """).strip()
             refs = ActualTable.get_fields_typehints(flatten_table_references=False)
-            self.assertEqual(pprint(expected), pprint(refs))
+            self.assertEqual(expected, repr(refs))
         # end with
         with self.subTest():
-            expected = {'cool_reference__id_part_1': FieldTypehint(True, FieldItem('id_part_1', ModelField(name='id_part_1', type_=int, required=True, model_config=BaseConfig, class_validators={}))), 'cool_reference__id_part_2': FieldTypehint(True, FieldItem('id_part_1', ModelField(name='id_part_2', type_=str, required=True, model_config=BaseConfig, class_validators={}))),}
+            expected = dedent("""
+            {'cool_reference__id_part_1': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True))]), 'cool_reference__id_part_2': FieldTypehint(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True))])}            """).strip()
             refs = ActualTable.get_fields_typehints(flatten_table_references=True)
-            self.assertEqual(pprint(expected), pprint(refs))
+            self.assertEqual(expected, repr(refs))
         # end with
     # end def
 # end class
