@@ -80,7 +80,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def get_fields_typehints(cls, *, flatten_table_references: bool = False) -> dict[str, FieldTypehint[ModelField]]:
+    def get_fields_typehints(cls, *, flatten_table_references: bool = False) -> Dict[str, FieldTypehint[ModelField]]:
         """
         Get's all fields which have type hints and thus we consider as fields for the database.
         Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
@@ -117,25 +117,22 @@ class FastORM(BaseModel):
         """
         _ignored_fields = cls.get_ignored_fields()
         references = cls.get_fields_references(recursive=flatten_table_references)
-        result_classes: Dict[Type, Dict[str, str]] = {}  # SomeFastORM: {'long_key_to__key_foo': 'key_foo, 'long_key_to__key_bar': 'key_bar'}
+
+        # prepare the array with all the classes we wanna have typehints for.
+        classes_typehints: Dict[Type, Dict[str, ModelField]] = {
+            cls: {},
+        }
         for long_key, field_reference in references.items():
-            try:
-                # this one will work if we have more than one level of elements, so actual sub-keys
-                interesting_cls = field_reference.types[-2].type_   # this one will probably raise the index error.
-                interesting_field = field_reference.types[-1].field
-            except IndexError:
-                interesting_cls = cls
-                interesting_field = long_key
-            # end try
-            if interesting_cls not in result_classes:
-                result_classes[interesting_cls] = {}
-            # end if
-            result_classes[interesting_cls][long_key] = interesting_field  # group the classes, so we only need to look up the type hints once per class
+            for interesting_type in field_reference.types[:-1]:  # the last one always is a native type (int, str, …), so not interesting
+                classes_typehints[interesting_type.type_] = {}
+            # end for
         # end for
 
-        result_hints: Dict[str, FieldTypehint[ModelField]] = {}
-        for interesting_cls, long_key_to_short_key_mapping in result_classes.items():
-            type_hints = {
+        # now actually fill in type hints to that lookup table.
+        for interesting_cls in classes_typehints.keys():
+            interesting_cls: Type[FastORM]
+            assert issubclass(interesting_cls, FastORM)
+            type_hints: Dict[str, ModelField] = {
                 key: value for key, value in interesting_cls.__fields__.items()
                 if (
                     not key.startswith('_')
@@ -143,9 +140,19 @@ class FastORM(BaseModel):
                     and not key in _ignored_fields
                 )
             }
-            for long_key, short_class_key in long_key_to_short_key_mapping.items():
-                result_hints[long_key] = FieldTypehint[ModelField](is_primary_key=references[long_key].is_primary_key, type=FieldItem(field=short_class_key, type_=type_hints[short_class_key]))
+            classes_typehints[interesting_cls] = type_hints
+        # end for
+
+        # now go through the references and apply the type hints
+        result_hints: Dict[str, FieldTypehint[ModelField]] = {}
+        for long_key, field_reference in references.items():
+            last_class = cls
+            final_hint = FieldTypehint(is_primary_key=field_reference.is_primary_key, types=[])
+            for field_item in field_reference.types:
+                type_hint = classes_typehints[last_class][field_item.field]
+                final_hint.types.append(FieldItem(field=field_item.field, type_=type_hint))
             # end for
+            result_hints[long_key] = final_hint
         # end for
         return result_hints
     # end def
@@ -1007,7 +1014,7 @@ class FastORM(BaseModel):
 
         single_primary_key = len(_primary_keys) == 1
 
-        type_hints: Dict[str, FieldReference[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
+        type_hints = cls.get_fields_typehints(flatten_table_references=True)
 
         # .required tells us if we have a default value set or not.
         # .allow_none tells us if None is supported
@@ -1018,13 +1025,14 @@ class FastORM(BaseModel):
         type_definitions = []
         all_defaults_are_simple_types_and_save_to_concatenate = True  # they only contain ints, boolean and None
 
-        for key, type_hint in type_hints.items():
+        for key, type_hint_info in type_hints.items():
+            type_hint = type_hint_info.types[-1].type_
             is_automatic_field = key in _automatic_fields
 
             is_optional, sql_type = cls.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field, key=key)
-            # if is_automatic_field:
-            #     is_optional = False
-            # # end if
+            if is_automatic_field:
+                is_optional = False
+            # end if
 
             # Now let's build that column's sql part
 

@@ -55,7 +55,7 @@ class FieldReference(typing.Generic[FIELD_REFERENCE_TYPE]):
 @dataclass
 class FieldTypehint(typing.Generic[FIELD_REFERENCE_TYPE]):
     is_primary_key: bool
-    type: FieldItem[FIELD_REFERENCE_TYPE]
+    types: typing.List[FieldItem[FIELD_REFERENCE_TYPE]]
 
     __getitem__ = __getitem__  # reuse, as it's the same function basically
     __iter__ = __iter__  # reuse, as it's the same function basically
