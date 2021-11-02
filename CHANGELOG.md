@@ -9,6 +9,7 @@
 - Fix for CREATE table statement not allowing for a prepared statement, and thus needing the escaping of values.
     - Needs psycopg2 installed for complex types (everything other than None, bool, int, and pure ascii strings)
 - Added support for `PRIMARY KEY`(`S`).
+- Added support for creating `REFERENCES` to other tables. 
      
 # v0.0.6
 - Handle `Optional[Table, <Table Primary Key Type>]` for references.
