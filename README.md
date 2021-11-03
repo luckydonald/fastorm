@@ -6,7 +6,7 @@ FastORM is a modern, fast (async), database library for projects with Python 3.1
 
 The key features are:
  - Async postgres
- - Testet to work with Python 3.10
+ - Tested to work with Python 3.10
 
 #### Example
 > See [example.py](example.py) for more examples.
