@@ -248,7 +248,8 @@ class FastORM(BaseModel):
                     if isinstance(union_param, typing.ForwardRef):
                         if not union_param.__forward_evaluated__:
                             raise ValueError(
-                                f'The typehint of {cls.__name__}.{key} is still a unresolved ForwardRef. You should probably call {cls.__name__}.update_forward_refs() after the class it is pointing to is defined.')
+                                f'The typehint of {cls.__name__}.{key} is still a unresolved ForwardRef. You should probably call {cls.__name__}.update_forward_refs() after the class it is pointing to is defined.'
+                            )
                         # end if
                         union_param = union_param.__forward_value__
                     # end if
