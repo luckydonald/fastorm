@@ -27,10 +27,22 @@ class TableWithForwardRef(FastORM):
     """
         CREATE TABLE "table_with_forwardref" (
           "id" BIGSERIAL NOT NULL PRIMARY KEY,
-          "future_table_1__t0_id" BIGINT NOT NULL
+          "future_table_1__t0_id" BIGINT NOT NULL,
+          "future_table_2__t0_id" BIGINT,
+          "future_table_3__t0_id" BIGINT NOT NULL,
+          "future_table_4__t0_id" BIGINT,
+          "future_table_5__t0_id" BIGINT
         );
         CREATE INDEX "idx_table_with_forwardref___future_table_1__t0_id" ON "table_with_forwardref" ("future_table_1__t0_id");
+        CREATE INDEX "idx_table_with_forwardref___future_table_2__t0_id" ON "table_with_forwardref" ("future_table_2__t0_id");
+        CREATE INDEX "idx_table_with_forwardref___future_table_3__t0_id" ON "table_with_forwardref" ("future_table_3__t0_id");
+        CREATE INDEX "idx_table_with_forwardref___future_table_4__t0_id" ON "table_with_forwardref" ("future_table_4__t0_id");
+        CREATE INDEX "idx_table_with_forwardref___future_table_5__t0_id" ON "table_with_forwardref" ("future_table_5__t0_id");
         ALTER TABLE "table_with_forwardref" ADD CONSTRAINT "fk_table_with_forwardref___future_table_1__t0_id" FOREIGN KEY ("future_table_1__t0_id") REFERENCES "cool_table_yo" ("t0_id") ON DELETE CASCADE;
+        ALTER TABLE "table_with_forwardref" ADD CONSTRAINT "fk_table_with_forwardref___future_table_2__t0_id" FOREIGN KEY ("future_table_2__t0_id") REFERENCES "cool_table_yo" ("t0_id") ON DELETE CASCADE;
+        ALTER TABLE "table_with_forwardref" ADD CONSTRAINT "fk_table_with_forwardref___future_table_3__t0_id" FOREIGN KEY ("future_table_3__t0_id") REFERENCES "cool_table_yo" ("t0_id") ON DELETE CASCADE;
+        ALTER TABLE "table_with_forwardref" ADD CONSTRAINT "fk_table_with_forwardref___future_table_4__t0_id" FOREIGN KEY ("future_table_4__t0_id") REFERENCES "cool_table_yo" ("t0_id") ON DELETE CASCADE;
+        ALTER TABLE "table_with_forwardref" ADD CONSTRAINT "fk_table_with_forwardref___future_table_5__t0_id" FOREIGN KEY ("future_table_5__t0_id") REFERENCES "cool_table_yo" ("t0_id") ON DELETE CASCADE;
     """
     _table_name = 'table_with_forwardref'
     _primary_keys = ['id']
@@ -39,6 +51,10 @@ class TableWithForwardRef(FastORM):
 
     id: Optional[int]
     future_table_1: SystemUnderTest
+    future_table_2: Optional[SystemUnderTest]
+    future_table_3: Union[SystemUnderTest, int]
+    future_table_4: Optional[Union[SystemUnderTest, int]]
+    future_table_5: Union[SystemUnderTest, int, None]
 # end class
 
 
@@ -253,6 +269,7 @@ class SystemUnderTest(FastORM):
 # end class
 
 
+SystemUnderTest.update_forward_refs()
 TableWithForwardRef.update_forward_refs()
 
 
