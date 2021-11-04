@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from typing import Optional, Union, Any, Type, List, Tuple, Dict
+from typing import Optional, Union, Any, Type, List, Tuple, Dict, ForwardRef
 from pydantic import dataclasses, BaseModel
 from pydantic.fields import ModelField, Undefined, Field
 
@@ -16,7 +16,30 @@ class ExpectedResult(object):
     default: Any
 # end class
 
+
 ExpectedResult: Type[Any]
+
+
+SystemUnderTest = ForwardRef("SystemUnderTest")
+
+
+class TableWithForwardRef(FastORM):
+    """
+        CREATE TABLE "table_with_forwardref" (
+          "id" BIGSERIAL NOT NULL PRIMARY KEY,
+          "future_table_1__t0_id" BIGINT NOT NULL
+        );
+        CREATE INDEX "idx_table_with_forwardref___future_table_1__t0_id" ON "table_with_forwardref" ("future_table_1__t0_id");
+        ALTER TABLE "table_with_forwardref" ADD CONSTRAINT "fk_table_with_forwardref___future_table_1__t0_id" FOREIGN KEY ("future_table_1__t0_id") REFERENCES "cool_table_yo" ("t0_id") ON DELETE CASCADE;
+    """
+    _table_name = 'table_with_forwardref'
+    _primary_keys = ['id']
+    _automatic_fields = ['id']
+    _ignored_fields = []
+
+    id: Optional[int]
+    future_table_1: SystemUnderTest
+# end class
 
 
 class OtherTable(FastORM):
@@ -56,6 +79,7 @@ class TheReferenceHasBeenDoubled(FastORM):
 # end class
 
 
+# noinspection PyRedeclaration
 class SystemUnderTest(FastORM):
     """
         CREATE TABLE "cool_table_yo" (
@@ -229,6 +253,9 @@ class SystemUnderTest(FastORM):
 # end class
 
 
+TableWithForwardRef.update_forward_refs()
+
+
 class WrongStuff(BaseModel):
     #
     # wrong stuff
@@ -296,7 +323,7 @@ class CreateTableTestCase(VerboseTestCase):
 
     def test_sql_text(self):
         self.maxDiff = None
-        for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest):
+        for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest, TableWithForwardRef):
             with self.subTest(msg=f'class {table_cls.__name__}'):
                 expected_sql = extract_sql_from_docstring(table_cls)
                 actual_sql, *actual_params = table_cls.build_sql_create()
