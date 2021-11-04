@@ -242,8 +242,26 @@ class FastORM(BaseModel):
                 type_hint.type_.__origin__ == typing.Union
             ):  # Union
                 # it's a Union
-                union_params = type_hint.type_.__args__[:]
+                union_params_unclean = type_hint.type_.__args__[:]
+                union_params = []
+                for union_param in union_params_unclean:
+                    if isinstance(union_param, typing.ForwardRef):
+                        if not union_param.__forward_evaluated__:
+                            raise ValueError(
+                                f'The typehint of {cls.__name__}.{key} is still a unresolved ForwardRef. You should probably call {cls.__name__}.update_forward_refs() after the class it is pointing to is defined.')
+                        # end if
+                        union_param = union_param.__forward_value__
+                    # end if
+                    # We also need to handle NoneType in those once more,
+                    # Usually that would be filtered converted to Optional[…],
+                    # but apparently not for ForwardRefs.
+                    if union_param == NoneType:
+                        continue
+                    # end if
+                    union_params.append(union_param)
+                # end for
                 first_union_type = union_params[0]
+
                 if issubclass(first_union_type, FastORM):
                     # we can have a reference to another Table, so it could be that
                     # the table ist the first entry and the actual field type is the second.
