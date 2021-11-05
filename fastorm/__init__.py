@@ -167,6 +167,32 @@ class FastORM(BaseModel):
             final_hint = FieldInfo(is_primary_key=field_reference.is_primary_key, types=[])
             for field_item in field_reference.types:
                 type_hint = classes_typehints[last_class][field_item.field]
+                if isinstance(type_hint.outer_type_, typing.ForwardRef):
+                    # The .type_ of a resolved ForwardRef seems alright, only the Optional[…] wrapping goes poof.
+                    # We parse the inner resolved .type_ as a new hint (supplying Optional[…] where needed),
+                    # and if the inner parsed .type_ still matches, we replace the current type hint by this new one.
+                    new_type_hint = ModelField(
+                        name=type_hint.name,
+                        type_=type_hint.type_ if type_hint.allow_none else Optional[type_hint.type_],
+                        model_config=type_hint.model_config,
+                        default=type_hint.default,
+                        default_factory=type_hint.default_factory,
+                        required=type_hint.required,
+                        alias=type_hint.alias,
+                        field_info=type_hint.field_info,
+                        class_validators=type_hint.class_validators,
+                    )
+                    if (
+                        new_type_hint.type_ == type_hint.type_ and
+                        new_type_hint.required == type_hint.required and
+                        new_type_hint.outer_type_ != type_hint.outer_type_ and
+                        True
+                    ):
+                        type_hint = new_type_hint
+                    else:
+                        raise AssertionError('O_O this should not happen')
+                    # end if
+                # end if
                 final_hint.types.append(FieldItem(field=field_item.field, type_=type_hint))
                 last_class = field_item.type_
             # end for
