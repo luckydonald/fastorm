@@ -154,7 +154,7 @@ class FastORM(BaseModel):
                 if (
                     not key.startswith('_')
                     and not key.isupper()
-                    and not key in _ignored_fields
+                    and key not in _ignored_fields
                 )
             }
             classes_typehints[interesting_cls] = type_hints
@@ -216,7 +216,7 @@ class FastORM(BaseModel):
             ...
 
             >>> class TableWithIdAndRefPK(FastORM):
-            ...     _table_name = 'mayham_group_tables'
+            ...     _table_name = 'mayhem_group_tables'
             ...     _primary_keys = ['id', 'reference']
             ...     _automatic_fields = ['id']
             ...     id: int
@@ -224,7 +224,7 @@ class FastORM(BaseModel):
             ...
 
             >>> class TableWithIdAndRefPK(FastORM):
-            ...     _table_name = 'mayham_group_tables'
+            ...     _table_name = 'mayhem_group_tables'
             ...     _primary_keys = ['id', 'reference']
             ...     _automatic_fields = ['id']
             ...     reference: OtherTable
@@ -260,7 +260,7 @@ class FastORM(BaseModel):
             if (
                 not key.startswith('_')
                 and not key.isupper()
-                and not key in _ignored_fields
+                and key not in _ignored_fields
             )
         }
         return_val: FastORM._GET_FIELDS_REFERENCES_TYPE = {}
@@ -327,7 +327,7 @@ class FastORM(BaseModel):
                         # in other words:
                         # A `SomeTable` with primary key  being `int`        needs to have the reference called either `SomeTable` or `Union[SomeTable, int]` (`Union[SomeTable, [int]]` is possible too)
                         # A `SomeTable` with primary keys being `[int, str]` needs to have the reference called either `SomeTable` or `Union[SomeTable, [int, str]]`
-                        other_class = first_union_type  # okey, we can use Table even if there's more. That way we have normalized it and there won't be an error later.
+                        other_class = first_union_type  # okay, we can use Table even if there's more. That way we have normalized it and there won't be an error later.
                     # end if
                 # end if
             # end if
@@ -1484,7 +1484,6 @@ class FastORM(BaseModel):
         return await asyncpg.create_pool(database_url, setup=cls._set_up_connection)
     # end def
 
-
     @classmethod
     async def _set_up_connection(cls, conn: Connection):
         """
@@ -1544,7 +1543,6 @@ class FastORM(BaseModel):
         # end for
         return conn
     # end def
-
 
     @classmethod
     async def get_connection(cls, database_url):
