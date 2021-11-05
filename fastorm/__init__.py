@@ -1285,7 +1285,7 @@ class FastORM(BaseModel):
     # end if
 
     @classmethod
-    def build_sql_references(cls) -> Tuple[str, Any]:
+    def build_sql_references(cls) -> Tuple[str, ...]:
         """
         Prepare the query for generating references between tables, including the indexes on the outgoing fields.
         In case we don't have any references to other tables, `fastorm.SQL_DO_NOTHING` will be returned as SQL parameter.
@@ -1325,6 +1325,7 @@ class FastORM(BaseModel):
         sql = "\n".join(
             sql_lines
         )
+        # noinspection PyRedundantParentheses
         return (sql,)
         # end if
     # end def
