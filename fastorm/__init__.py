@@ -41,6 +41,8 @@ from .compat import Annotated, NoneType
 
 
 VERBOSE_SQL_LOG = True
+SQL_DO_NOTHING = "SELECT 1;"
+
 CLS_TYPE = TypeVar("CLS_TYPE")
 
 
@@ -1274,7 +1276,7 @@ class FastORM(BaseModel):
         """
         reference_params = cls.build_sql_references()
         logger.debug(f'REFERENCE query for {cls.__name__}: {reference_params!r}')
-        if reference_params[0] != cls.SQL_DO_NOTHING:
+        if reference_params[0] != SQL_DO_NOTHING:
             reference_status = await conn.execute(*reference_params)
             logger.debug(f'REFERENCEed {cls.__name__}: {reference_status}')
         else:
@@ -1282,17 +1284,15 @@ class FastORM(BaseModel):
         # end def
     # end if
 
-    SQL_DO_NOTHING = "SELECT 1;"
-
     @classmethod
     def build_sql_references(cls) -> Tuple[str, Any]:
         """
         Prepare the query for generating references between tables, including the indexes on the outgoing fields.
-        In case we don't have any references to other tables, `FastORM.SQL_DO_NOTHING` will be returned as SQL parameter.
+        In case we don't have any references to other tables, `fastorm.SQL_DO_NOTHING` will be returned as SQL parameter.
         This is also a valid SQL string which does nothing in your database, but can be executed.
         This way there won't be an error for users blindly executing the stuff returned from this function.
         But if you wanna save on that database roundtrip, for something like `sql, *params = SomeClass.build_sql_references()`,
-        you can check for `sql == SomeClass.SQL_DO_NOTHING` and then not do the database query.
+        you can check for `sql == fastorm.SQL_DO_NOTHING` and then not do the database query.
         """
         # references to other tables
         references_types: Dict[str, FieldInfo[ModelField]] = {
@@ -1301,7 +1301,8 @@ class FastORM(BaseModel):
             if len(field_typehint.types) > 1
         }
         if not references_types:
-            return (FastORM.SQL_DO_NOTHING,)
+            # noinspection PyRedundantParentheses
+            return (SQL_DO_NOTHING,)
         # end if
         index_lines = []
         reference_lines = []
