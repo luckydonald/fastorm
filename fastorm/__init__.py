@@ -19,10 +19,11 @@ from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union
 from asyncpg import Connection, Pool
 
 try:
-    from psycopg2 import sql as psycopg2_sql_escaping  # you need to have `psycopg2-binary` installed.
-    from psycopg2 import extensions as psycopg2_ext, connect as psycopg2_connect
+    import psycopg2
+    import psycopg2.sql
+    import psycopg2.extensions
 except (ImportError, ModuleNotFoundError):
-    psycopg2_sql_escaping, psycopg2_ext, psycopg2_connect = None, None, None
+    psycopg2 = None
 # end try
 
 from luckydonaldUtils.exceptions import assert_type_or_raise
@@ -37,11 +38,6 @@ from typeguard import check_type
 from .classes import FieldInfo, FieldItem
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 from .compat import Annotated, NoneType
-
-
-if TYPE_CHECKING:
-    import psycopg2.extensions
-# end if
 
 
 VERBOSE_SQL_LOG = True
@@ -1241,7 +1237,7 @@ class FastORM(BaseModel):
                 # end if
                 sql = sql.format(**formatting_dict)
             else:
-                if psycopg2_sql_escaping is None or psycopg2_ext is None or psycopg2_connect is None:
+                if psycopg2.sql is None or psycopg2.extensions is None or psycopg2.connect is None:
                     # so we had an import error earlier (on top of the file)
                     # raise a proper ImportError message with useful information
                     raise ImportError(
@@ -1250,7 +1246,7 @@ class FastORM(BaseModel):
                     )
                 # end if
                 try:
-                    assert_type_or_raise(psycopg2_conn, Connection, psycopg2_ext.connection, psycopg2_ext.cursor, parameter_name='psycopg2_conn')
+                    assert_type_or_raise(psycopg2_conn, Connection, psycopg2.extensions.connection, psycopg2.extensions.cursor, parameter_name='psycopg2_conn')
                 except TypeError:
                     # enhance error message with useful information
                     error_class = ValueError if psycopg2_conn is None else TypeError
@@ -1274,12 +1270,12 @@ class FastORM(BaseModel):
                         params['host'] = unix_socket_match.group('path')
                         params['port'] = int(unix_socket_match.group('port'))
                     # end if
-                    psycopg2_conn = psycopg2_connect(**params)
+                    psycopg2_conn = psycopg2.connect(**params)
                 # end if
 
-                placeholder_values = [psycopg2_sql_escaping.Literal(value) for value in placeholder_values]
+                placeholder_values = [psycopg2.sql.Literal(value) for value in placeholder_values]
                 formatting_dict = {f'default_placeholder_{i}': val for i, val in enumerate(placeholder_values)}
-                sql = psycopg2_sql_escaping.SQL(sql)
+                sql = psycopg2.sql.SQL(sql)
                 sql = sql.format(**formatting_dict).as_string(context=psycopg2_conn)
             # end if
         # noinspection PyRedundantParentheses
