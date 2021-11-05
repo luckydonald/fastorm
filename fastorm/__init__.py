@@ -1261,6 +1261,27 @@ class FastORM(BaseModel):
         return (sql, *[])
     # end def
 
+    @classmethod
+    async def reference_table(
+        cls,
+        conn: Connection,
+    ):
+        """
+        Builds and executes a ALTER TABLE and CREATE TABLE statement.
+
+        :param conn: the `asyncpg` database connection to execute this with.
+        :return:
+        """
+        reference_params = cls.build_sql_references()
+        logger.debug(f'REFERENCE query for {cls.__name__}: {reference_params!r}')
+        if reference_params[0] != cls.SQL_DO_NOTHING:
+            reference_status = await conn.execute(*reference_params)
+            logger.debug(f'REFERENCEed {cls.__name__}: {reference_status}')
+        else:
+            logger.debug(f'REFERENCEed {cls.__name__}: No need to do anything.')
+        # end def
+    # end if
+
     SQL_DO_NOTHING = "SELECT 1;"
 
     @classmethod
