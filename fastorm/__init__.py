@@ -413,7 +413,7 @@ class FastORM(BaseModel):
             '__fields_references',
             f'_{cls.__name__!s}__selectable_fields',
             f'_{cls.__name__!s}__fields_typehints',
-            f'_{cls.__name__!s}____fields_references',
+            f'_{cls.__name__!s}__fields_references',
             '__slots__'
         ]
         return _ignored_fields
