@@ -15,7 +15,7 @@ import typing
 import types
 import uuid
 import re
-from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable
+from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable, TYPE_CHECKING
 from asyncpg import Connection, Pool
 from luckydonaldUtils.exceptions import assert_type_or_raise
 from luckydonaldUtils.logger import logging
@@ -29,6 +29,12 @@ from typeguard import check_type
 from .classes import FieldInfo, FieldItem
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 from .compat import Annotated, NoneType
+
+
+if TYPE_CHECKING:
+    import psycopg2.extensions
+# end if
+
 
 VERBOSE_SQL_LOG = True
 CLS_TYPE = TypeVar("CLS_TYPE")
