@@ -1213,11 +1213,14 @@ class FastORM(BaseModel):
         )
         if placeholder_values:
             # we do have at least one row like
-            # "blah" SOME_TYPE ... DEFAULT {default_placeholder_0}
-            # or maybe even more.
-            # now we need to fill those in.
+            # '"blah" SOME_TYPE ... DEFAULT {default_placeholder_0}'
+            # or maybe even more of those.
+            # Now we need to fill them in.
             # To do it safely, we use `psycopg2.sql.SQL` and `psycopg2.sql.Literal` as soon as we have complex types.
-            if all_defaults_are_simple_types_and_save_to_concatenate:
+            # Complex means anything which isn't None (NULL), bool (true/false), ints (0,1,42,69,4458, etc.) and pure ascii strings (not “ª∂ﬁ˜ªæäß»Íƒ†”, etc.)
+            # We also do that if we detect psycopg2 and a given psycopg2_conn connection, so a user can be on the save side with having that installed and providing a connection.
+            # In fact, `FastORM.create_table(…)` already shares the connection details with us, in that case we automatically use the save approach when you got psycopg2 installed.
+            if all_defaults_are_simple_types_and_save_to_concatenate and not psycopg2_conn and not psycopg2:
                 # special case where it's enough to use python only formatting, as we have only NONE, bool, ints and pure ascii strings.
                 formatting_dict = {}
                 for i, default_value in enumerate(placeholder_values):
@@ -1231,7 +1234,7 @@ class FastORM(BaseModel):
                     else:  # str
                         assert isinstance(default_value, str)
                         assert default_value.isascii()
-                        sql_value = "'" + default_value.replace("'", "''") + "'"
+                        sql_value = "'" + default_value.replace("'", "''") + "'"  # this SHOULD be enough... hopefully.  If you don't trust it either, install psycopg2 and provide a connection.
                     # end if
                     formatting_dict[f'default_placeholder_{i}'] = sql_value
                 # end if
