@@ -1082,7 +1082,7 @@ class FastORM(BaseModel):
             is_automatic_field = key in _automatic_fields
 
             # start processing the default_factory, as it can contain AutoincrementType objects.
-            default_factory_to_process = type_hint.default_factory
+            default_factory_to_process = type_hint_info.referenced_type.default_factory
             # Check if it's an AutoincrementType type. Note, this can't be done with the flattened value, really.
             if isinstance(type_hint.default_factory, AutoincrementType):
                 is_automatic_field = True
