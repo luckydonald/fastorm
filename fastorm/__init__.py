@@ -1258,6 +1258,15 @@ class FastORM(BaseModel):
 
         """
         is_union_type = check_is_union_type(type_hint)
+        if isinstance(type_hint, typing.ForwardRef):
+            if not type_hint.__forward_evaluated__:
+                raise ValueError(
+                    f'The typehint of {cls.__name__}.{key} is still a unresolved ForwardRef. You should probably call {cls.__name__}.update_forward_refs() after the class it is pointing to is defined.'
+                )
+            # end if
+            type_hint = type_hint.__forward_value__
+        # end if
+
         if hasattr(type_hint, '__origin__') or is_union_type:
             if check_is_annotated_type(type_hint):
                 # https://stackoverflow.com/q/68275615/3423324#what-is-the-right-way-to-check-if-a-type-hint-is-annotated
