@@ -1198,7 +1198,7 @@ class FastORM(BaseModel):
             # Complex means anything which isn't None (NULL), bool (true/false), ints (0,1,42,69,4458, etc.) and pure ascii strings (not “ª∂ﬁ˜ªæäß»Íƒ†”, etc.)
             # We also do that if we detect psycopg2 and a given psycopg2_conn connection, so a user can be on the save side with having that installed and providing a connection.
             # In fact, `FastORM.create_table(…)` already shares the connection details with us, in that case we automatically use the save approach when you got psycopg2 installed.
-            if all_defaults_are_simple_types_and_save_to_concatenate and not psycopg2_conn and not psycopg2:
+            if all_defaults_are_simple_types_and_save_to_concatenate and not (psycopg2_conn is not None and psycopg2):
                 # special case where it's enough to use python only formatting, as we have only NONE, bool, ints and pure ascii strings.
                 formatting_dict = {}
                 for i, default_value in enumerate(placeholder_values):
