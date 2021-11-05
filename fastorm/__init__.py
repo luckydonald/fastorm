@@ -15,7 +15,7 @@ import typing
 import types
 import uuid
 import re
-from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable, TYPE_CHECKING
+from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable
 from asyncpg import Connection, Pool
 
 try:
