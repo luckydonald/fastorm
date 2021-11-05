@@ -1078,8 +1078,16 @@ class FastORM(BaseModel):
         all_defaults_are_simple_types_and_save_to_concatenate = True  # they only contain ints, boolean and None
 
         for key, type_hint_info in type_hints.items():
-            type_hint = type_hint_info.types[-1].type_
+            type_hint = type_hint_info.resulting_type
             is_automatic_field = key in _automatic_fields
+
+            # start processing the default_factory, as it can contain AutoincrementType objects.
+            default_factory_to_process = type_hint.default_factory
+            # Check if it's an AutoincrementType type. Note, this can't be done with the flattened value, really.
+            if isinstance(type_hint.default_factory, AutoincrementType):
+                is_automatic_field = True
+                default_factory_to_process = None  # it's processed
+            # end if
 
             is_optional, sql_type = cls.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field, key=key)
             if is_automatic_field:
