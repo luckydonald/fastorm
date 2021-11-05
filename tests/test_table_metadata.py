@@ -1,9 +1,10 @@
 import unittest
 
 from test_create_table import SystemUnderTest, OtherTable, TheReferenceHasBeenDoubled
+from tools_for_the_tests_of_fastorm import VerboseTestCase
 
 
-class TableMetadataTestCase(unittest.TestCase):
+class TableMetadataTestCase(VerboseTestCase):
     def test_table_quoted_name(self):
         tables = {
             SystemUnderTest: '"cool_table_yo"',
@@ -44,10 +45,16 @@ class TableMetadataTestCase(unittest.TestCase):
     # end def
 
     def test_ignored_fields(self):
+        standard_ignored_fields = [
+            '_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache',
+            '__selectable_fields', '__fields_typehints', '__fields_references',
+            f'_{SystemUnderTest.__name__!s}__selectable_fields', f'_{SystemUnderTest.__name__!s}__fields_typehints', f'_{SystemUnderTest.__name__!s}__fields_references',
+            '__slots__'
+        ]
         tables = {
-            SystemUnderTest: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{SystemUnderTest.__name__!s}__selectable_fields', '__slots__'],
-            OtherTable: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{OtherTable.__name__!s}__selectable_fields', '__slots__'],
-            TheReferenceHasBeenDoubled: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{TheReferenceHasBeenDoubled.__name__!s}__selectable_fields', '__slots__'],
+            SystemUnderTest: [] + standard_ignored_fields + [],
+            OtherTable: [] + standard_ignored_fields + [],
+            TheReferenceHasBeenDoubled: [] + standard_ignored_fields + [],
         }
         for table, expected_name in tables.items():
             with self.subTest(msg=table.__name__):
@@ -58,13 +65,13 @@ class TableMetadataTestCase(unittest.TestCase):
 
     def test_automatic_fields(self):
         tables = {
-            SystemUnderTest: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{SystemUnderTest.__name__!s}__selectable_fields', '__slots__'],
-            OtherTable: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{OtherTable.__name__!s}__selectable_fields', '__slots__'],
-            TheReferenceHasBeenDoubled: ['_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache', '__selectable_fields', f'_{TheReferenceHasBeenDoubled.__name__!s}__selectable_fields', '__slots__'],
+            SystemUnderTest: ['t0_id'],
+            OtherTable: [],
+            TheReferenceHasBeenDoubled: [],
         }
         for table, expected_name in tables.items():
             with self.subTest(msg=table.__name__):
-                self.assertEqual(expected_name, table.get_ignored_fields())
+                self.assertEqual(expected_name, table.get_automatic_fields())
             # end with
         # end for
     # end def
