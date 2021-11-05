@@ -5,6 +5,7 @@
 Yes, this has a very long name, but we need to import it absolutely so better make sure it's unique.
 """
 import contextlib
+import dataclasses
 import unittest.case
 
 from luckydonaldUtils.logger import logging
@@ -29,8 +30,22 @@ def remove_prefix(line, prefix):
 # end def
 
 
-def extract_sql_from_docstring(cls):
+def extract_sql_from_docstring(cls: type) -> str:
     return "\n".join(remove_prefix(line, '        ') for line in cls.__doc__.strip().splitlines() if not line.strip().startswith('#'))
+# end def
+
+
+@dataclasses.dataclass(match_args=False, kw_only=False, slots=True)
+class ExtractedSQL(object):
+    create: str
+    references: str
+# end class
+
+
+def extract_create_and_reference_sql_from_docstring(cls: type) -> ExtractedSQL:
+    # If you get: "TypeError: ExtractedSQL.__init__() missing 1 required positional argument: 'references'"
+    # that means that you re missing the  -- and now the references --  part.
+    return ExtractedSQL(*(part.strip() for part in extract_sql_from_docstring(cls).split('-- and now the references --')))
 # end def
 
 

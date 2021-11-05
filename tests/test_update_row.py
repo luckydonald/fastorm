@@ -8,7 +8,7 @@ from pydantic.fields import ModelField, Undefined, Field
 
 from fastorm import FastORM
 from fastorm.compat import get_type_hints_with_annotations
-from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
+from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring
 
 
 class OtherTable(FastORM):

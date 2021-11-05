@@ -6,7 +6,7 @@ from pydantic import dataclasses
 from pydantic.fields import Undefined, Field
 
 from fastorm import FastORM, Autoincrement
-from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
+from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring
 
 POSTGRES_DSN_URL = os.getenv('POSTGRES_DSN_URL', 'postgres://')  # default is to try localhost
 assert POSTGRES_DSN_URL is not None
@@ -45,6 +45,8 @@ class SystemUnderTest(FastORM):
           "t2_1" TEXT NOT NULL DEFAULT 'test ööö',
           "t3_1" TIMESTAMP NOT NULL DEFAULT '4458-12-24T00:06:09'::timestamp
         );
+        -- and now the references --
+        SELECT 1;
     """
     _table_name = 'cool_table_yo'
     _primary_keys = ['t0_id']
@@ -103,7 +105,7 @@ class CreateTableOnlineTestCase(unittest_cls):
     # end def
 
     def test_sql_text_connection_valid_psycop2(self):
-        expected_sql = extract_sql_from_docstring(SystemUnderTest)
+        expected_sql = extract_create_and_reference_sql_from_docstring(SystemUnderTest).create
         import psycopg2
         connection = psycopg2.connect(POSTGRES_DSN_URL)
         actual_sql, *actual_params = SystemUnderTest.build_sql_create(psycopg2_conn=connection)
@@ -112,7 +114,7 @@ class CreateTableOnlineTestCase(unittest_cls):
     # end def
 
     async def test_sql_text_connection_valid_asyncpg(self):
-        expected_sql = extract_sql_from_docstring(SystemUnderTest)
+        expected_sql = extract_create_and_reference_sql_from_docstring(SystemUnderTest).create
 
         import asyncpg
         connection = await asyncpg.connect(POSTGRES_DSN_URL)

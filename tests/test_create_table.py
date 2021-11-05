@@ -6,7 +6,7 @@ from pydantic.fields import ModelField, Undefined, Field
 
 from fastorm import FastORM, Autoincrement, FieldInfo
 from fastorm.compat import get_type_hints_with_annotations
-from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring, VerboseTestCase
+from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
 
 
 @dataclasses.dataclass
@@ -33,6 +33,7 @@ class TableWithForwardRef(FastORM):
           "future_table_4__t0_id" BIGINT,
           "future_table_5__t0_id" BIGINT
         );
+        -- and now the references --
         CREATE INDEX "idx_table_with_forwardref___future_table_1__t0_id" ON "table_with_forwardref" ("future_table_1__t0_id");
         CREATE INDEX "idx_table_with_forwardref___future_table_2__t0_id" ON "table_with_forwardref" ("future_table_2__t0_id");
         CREATE INDEX "idx_table_with_forwardref___future_table_3__t0_id" ON "table_with_forwardref" ("future_table_3__t0_id");
@@ -65,6 +66,8 @@ class OtherTable(FastORM):
           "id_part_2" TEXT NOT NULL,
           PRIMARY KEY ("id_part_1", "id_part_2")
         );
+        -- and now the references --
+        SELECT 1;
     """
     _table_name = 'other_table'
     _primary_keys = ['id_part_1', 'id_part_2']
@@ -82,6 +85,7 @@ class TheReferenceHasBeenDoubled(FastORM):
           "another_reference__id_part_2" TEXT NOT NULL,
           PRIMARY KEY ("another_reference__id_part_1", "another_reference__id_part_2")
         );
+        -- and now the references --
         CREATE INDEX "idx_double_reference___another_reference__id_part_1" ON "double_reference" ("another_reference__id_part_1");
         CREATE INDEX "idx_double_reference___another_reference__id_part_2" ON "double_reference" ("another_reference__id_part_2");
         ALTER TABLE "double_reference" ADD CONSTRAINT "fk_double_reference___another_reference__id_part_1" FOREIGN KEY ("another_reference__id_part_1") REFERENCES "other_table" ("id_part_1") ON DELETE CASCADE;
@@ -131,6 +135,7 @@ class SystemUnderTest(FastORM):
           "t9_1" BIGINT[] NOT NULL,
           "t9_2" JSONB NOT NULL
         );
+        -- and now the references --
         CREATE INDEX "idx_cool_table_yo___t7_1__id_part_1" ON "cool_table_yo" ("t7_1__id_part_1");
         CREATE INDEX "idx_cool_table_yo___t7_1__id_part_2" ON "cool_table_yo" ("t7_1__id_part_2");
         ALTER TABLE "cool_table_yo" ADD CONSTRAINT "fk_cool_table_yo___t7_1__id_part_1" FOREIGN KEY ("t7_1__id_part_1") REFERENCES "other_table" ("id_part_1") ON DELETE CASCADE;
@@ -294,6 +299,7 @@ class WrongStuff(BaseModel):
 # end class
 
 
+# noinspection DuplicatedCode
 class CreateTableTestCase(VerboseTestCase):
     def test_type_detection_typing(self):
         type_hints: Dict[str, any] = get_type_hints_with_annotations(SystemUnderTest)
@@ -338,26 +344,50 @@ class CreateTableTestCase(VerboseTestCase):
         # end for
     # end def
 
-    def test_sql_text(self):
+    def test_sql_text_create(self):
         self.maxDiff = None
         for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest,):
             with self.subTest(msg=f'class {table_cls.__name__}'):
-                expected_sql = extract_sql_from_docstring(table_cls)
+                expected_sql = extract_create_and_reference_sql_from_docstring(table_cls).create
                 actual_sql, *actual_params = table_cls.build_sql_create()
-                self.assertEqual(expected_sql, actual_sql)
-                self.assertListEqual([], actual_params)
+                self.assertEqual(expected_sql, actual_sql, msg="create")
+                self.assertListEqual([], actual_params, "create")
             # end with
         # end for
     # end def
 
-    def test_sql_text_forwardref(self):
+    def test_sql_text_references(self):
+        self.maxDiff = None
+        for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest,):
+            with self.subTest(msg=f'class {table_cls.__name__}'):
+                expected_sql = extract_create_and_reference_sql_from_docstring(table_cls).references
+                actual_sql, *actual_params = table_cls.build_sql_references()
+                self.assertEqual(expected_sql, actual_sql, msg="references")
+                self.assertListEqual([], actual_params, "references")
+            # end with
+        # end for
+    # end def
+
+    def test_sql_text_forwardref_create(self):
         self.maxDiff = None
         for table_cls in (TableWithForwardRef,):
             with self.subTest(msg=f'class {table_cls.__name__}'):
-                expected_sql = extract_sql_from_docstring(table_cls)
+                expected_sql = extract_create_and_reference_sql_from_docstring(table_cls).create
                 actual_sql, *actual_params = table_cls.build_sql_create()
-                self.assertEqual(expected_sql, actual_sql)
-                self.assertListEqual([], actual_params)
+                self.assertEqual(expected_sql, actual_sql, msg="create")
+                self.assertListEqual([], actual_params, "create")
+            # end with
+        # end for
+    # end def
+
+    def test_sql_text_forwardref_references(self):
+        self.maxDiff = None
+        for table_cls in (TableWithForwardRef,):
+            with self.subTest(msg=f'class {table_cls.__name__}'):
+                expected_sql = extract_create_and_reference_sql_from_docstring(table_cls).references
+                actual_sql, *actual_params = table_cls.build_sql_references()
+                self.assertEqual(expected_sql, actual_sql, msg="references")
+                self.assertListEqual([], actual_params, "references")
             # end with
         # end for
     # end def

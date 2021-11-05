@@ -6,7 +6,7 @@ from typing import get_type_hints
 from typing import Optional, Union, Any, Type, List, Tuple, Dict
 
 from fastorm import FastORM
-from tests.tools_for_the_tests_of_fastorm import extract_sql_from_docstring
+from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring
 
 
 class Table1(FastORM):
@@ -15,6 +15,8 @@ class Table1(FastORM):
          VALUES ($1,$2)
          RETURNING "id"
         ;
+        -- and now the references --
+        SELECT 1;
     """
     _table_name = 'table1'
     _automatic_fields = ['id']
@@ -31,7 +33,7 @@ class Table1(FastORM):
 
 class InsertRowTestCase(unittest.TestCase):
     def test_insert(self):
-        expected_sql = extract_sql_from_docstring(Table1)
+        expected_sql = extract_create_and_reference_sql_from_docstring(Table1).create
         expected_params = ["Sample Text", 123]
         row = Table1(
             name=expected_params[0],
