@@ -7,6 +7,7 @@
 
 # v0.0.9
 - 🆕 Added caching for get_fields_typehints and get_fields_references.
+- 🔨 Fixed error if you used a `ForwardRef`
 
 # v0.0.8
 - 🆕 added `get_connection_pool(…)` to get a connection pool ready to use.
