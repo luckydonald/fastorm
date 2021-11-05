@@ -1116,7 +1116,27 @@ class FastORM(BaseModel):
             # end if
 
             is_optional, sql_type = cls.match_type(type_hint=type_hint, is_automatic_field=is_automatic_field, key=key)
+            if type_hint.allow_none:
+                is_optional = True
+            # end if
+
+            if (
+                any(
+                    not sub_hint.type_.required and
+                    # using sub_hint.field_info.* instead of sub_hint.* as there a non set default will actually be `pydantic.Undefined` and thus can't be confused with None.
+                    # now either the default is already None. Alternatively it doesn't has a default and .allow_none is set to true.
+                    (sub_hint.type_.field_info.default is None or (isinstance(sub_hint.type_.field_info.default, UndefinedType) and sub_hint.type_.allow_none)) and
+                    # also there shouldn't be a default factory. But we allow some special cases which have no actual default "value" meaning and can be treated as no default factory.
+                    sub_hint.type_.field_info.default_factory is None or isinstance(sub_hint.type_.field_info.default_factory, (AutoincrementType,))
+
+                    for sub_hint in type_hint_info.types
+                )
+            ):
+                is_optional = True
+            # end if
+
             if is_automatic_field:
+                # if it is an automatic field, the optional must have been so it can be left empty when creating a new object.
                 is_optional = False
             # end if
 
