@@ -1264,7 +1264,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    async def reference_table(
+    async def create_table_references(
         cls,
         conn: Connection,
     ):
