@@ -1061,8 +1061,8 @@ class FastORM(BaseModel):
         """
         create_params = cls.build_sql_create(if_not_exists=if_not_exists, psycopg2_conn=psycopg2_conn if psycopg2_conn else conn)
         logger.debug(f'CREATE query for {cls.__name__}: {create_params!r}')
-        crate_status = await conn.execute(*create_params)
-        logger.debug(f'CREATEed {cls.__name__}: {crate_status}')
+        create_status = await conn.execute(*create_params)
+        logger.debug(f'CREATEed {cls.__name__}: {create_status}')
     # end if
 
     @classmethod
