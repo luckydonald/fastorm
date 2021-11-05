@@ -5,6 +5,9 @@
 >   **Workaround**: Change the type of the field after creation in python versions if you must use both 3.10 and the `create_table(…)` (or `build_sql_create(…)`) function
 > - That's all we know of
 
+# v0.0.9
+- 🆕 Added caching for get_fields_typehints and get_fields_references.
+
 # v0.0.8
 - 🆕 added `get_connection_pool(…)` to get a connection pool ready to use.
 - ⚠️ renamed `get_connection(…)` to `create_connection(…)`. To fit the naming of `get_connection_pool(…)`.

@@ -47,6 +47,8 @@ class FastORM(BaseModel):
     _primary_keys: List[str]  # this is how we identify ourself.
     _database_cache: Dict[str, JSONType] = PrivateAttr()  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
     __selectable_fields: List[str] = PrivateAttr()  # cache for `cls.get_sql_fields()`
+    __fields_typehints: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
+    __fields_references: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
 
     def __init__(self, **data: Any):
         super().__init__(**data)
@@ -113,6 +115,17 @@ class FastORM(BaseModel):
             {'cool_reference__id_part_1': FieldInfo(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type=int, required=True))]), 'cool_reference__id_part_2': FieldInfo(is_primary_key=True, types=[FieldItem(field='cool_reference', type_=ModelField(name='cool_reference', type=OtherTable, required=True)), FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type=str, required=True))])}
 
         """
+        # first look if we have this cached. That would be way faster.
+        cache_key = f'_{cls.__name__!s}__fields_typehints'
+        cached_value = getattr(cls, cache_key, {})
+        # it is a dict, where the boolean key is the `flatten_table_references` parameter.
+        if cached_value.get(flatten_table_references) is not None:
+            return cached_value[flatten_table_references]
+        # end if
+
+        # we don't have a cached value and need to calculate it all.
+        # that's fair, let's do it.
+
         _ignored_fields = cls.get_ignored_fields()
         references = cls.get_fields_references(recursive=flatten_table_references)
 
@@ -153,6 +166,8 @@ class FastORM(BaseModel):
             # end for
             result_hints[long_key] = final_hint
         # end for
+        cached_value[flatten_table_references] = result_hints
+        setattr(cls, cache_key, cached_value)
         return result_hints
     # end def
 
@@ -220,6 +235,17 @@ class FastORM(BaseModel):
             {'id': FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=<class 'int'>)]), 'reference_to_other_table__id_part_1': FieldInfo(is_primary_key=False, types=[FieldItem(field='reference_to_other_table', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_1', type_=<class 'int'>)]), 'reference_to_other_table__id_part_2': FieldInfo(is_primary_key=False, types=[FieldItem(field='reference_to_other_table', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_2', type_=<class 'str'>)]), 'reference_to_actual_table__cool_reference__id_part_1': FieldInfo(is_primary_key=False, types=[FieldItem(field='reference_to_actual_table', type_=<class 'fastorm.ActualTable'>), FieldItem(field='cool_reference', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_1', type_=<class 'int'>)]), 'reference_to_actual_table__cool_reference__id_part_2': FieldInfo(is_primary_key=False, types=[FieldItem(field='reference_to_actual_table', type_=<class 'fastorm.ActualTable'>), FieldItem(field='cool_reference', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_2', type_=<class 'str'>)])}
 
         """
+        # first look if we have this cached. That would be way faster.
+        cache_key = f'_{cls.__name__!s}__fields_references'
+        cached_value = getattr(cls, cache_key, {})
+        # it is a dict, where the boolean key is the `recursive` parameter.
+        if cached_value.get(recursive) is not None:
+            return cached_value[recursive]
+        # end if
+
+        # we don't have a cached value and need to calculate it all.
+        # that's fair, let's do it.
+
         _ignored_fields = cls.get_ignored_fields()
         _primary_keys = cls.get_primary_keys_keys()
         # copy the type hints as we might add more type hints for the primary key fields of referenced models, and we wanna filter.
@@ -340,6 +366,8 @@ class FastORM(BaseModel):
                 # end if
             # end for
         # end for
+        cached_value[recursive] = return_val
+        setattr(cls, cache_key, cached_value)
         return return_val
     # end def
 
@@ -375,7 +403,11 @@ class FastORM(BaseModel):
             '_primary_keys',
             '_database_cache',
             '__selectable_fields',
+            '__fields_typehints',
+            '__fields_references',
             f'_{cls.__name__!s}__selectable_fields',
+            f'_{cls.__name__!s}__fields_typehints',
+            f'_{cls.__name__!s}____fields_references',
             '__slots__'
         ]
         return _ignored_fields
