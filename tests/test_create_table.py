@@ -340,7 +340,19 @@ class CreateTableTestCase(VerboseTestCase):
 
     def test_sql_text(self):
         self.maxDiff = None
-        for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest, TableWithForwardRef):
+        for table_cls in (OtherTable, TheReferenceHasBeenDoubled, SystemUnderTest,):
+            with self.subTest(msg=f'class {table_cls.__name__}'):
+                expected_sql = extract_sql_from_docstring(table_cls)
+                actual_sql, *actual_params = table_cls.build_sql_create()
+                self.assertEqual(expected_sql, actual_sql)
+                self.assertListEqual([], actual_params)
+            # end with
+        # end for
+    # end def
+
+    def test_sql_text_forwardref(self):
+        self.maxDiff = None
+        for table_cls in (TableWithForwardRef,):
             with self.subTest(msg=f'class {table_cls.__name__}'):
                 expected_sql = extract_sql_from_docstring(table_cls)
                 actual_sql, *actual_params = table_cls.build_sql_create()
