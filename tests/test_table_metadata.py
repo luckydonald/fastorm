@@ -45,16 +45,16 @@ class TableMetadataTestCase(VerboseTestCase):
     # end def
 
     def test_ignored_fields(self):
-        standard_ignored_fields = [
+        standard_ignored_fields = lambda cls: [
             '_table_name', '_ignored_fields', '_automatic_fields', '_primary_keys', '_database_cache',
             '__selectable_fields', '__fields_typehints', '__fields_references',
-            f'_{SystemUnderTest.__name__!s}__selectable_fields', f'_{SystemUnderTest.__name__!s}__fields_typehints', f'_{SystemUnderTest.__name__!s}__fields_references',
+            f'_{cls.__name__!s}__selectable_fields', f'_{cls.__name__!s}__fields_typehints', f'_{cls.__name__!s}__fields_references',
             '__slots__'
         ]
         tables = {
-            SystemUnderTest: [] + standard_ignored_fields + [],
-            OtherTable: [] + standard_ignored_fields + [],
-            TheReferenceHasBeenDoubled: [] + standard_ignored_fields + [],
+            SystemUnderTest: [] + standard_ignored_fields(SystemUnderTest) + [],
+            OtherTable: [] + standard_ignored_fields(OtherTable) + [],
+            TheReferenceHasBeenDoubled: [] + standard_ignored_fields(TheReferenceHasBeenDoubled) + [],
         }
         for table, expected_name in tables.items():
             with self.subTest(msg=table.__name__):
