@@ -1125,7 +1125,7 @@ class FastORM(BaseModel):
                     # now either the default is already None. Alternatively it doesn't has a default and .allow_none is set to true.
                     (sub_hint.type_.field_info.default is None or (isinstance(sub_hint.type_.field_info.default, UndefinedType) and sub_hint.type_.allow_none)) and
                     # also there shouldn't be a default factory. But we allow some special cases which have no actual default "value" meaning and can be treated as no default factory.
-                    sub_hint.type_.field_info.default_factory is None or isinstance(sub_hint.type_.field_info.default_factory, (AutoincrementType,))
+                    (sub_hint.type_.field_info.default_factory is None or isinstance(sub_hint.type_.field_info.default_factory, (AutoincrementType,)))
 
                     for sub_hint in type_hint_info.types
                 )
