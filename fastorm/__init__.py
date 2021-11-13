@@ -632,7 +632,7 @@ class FastORM(BaseModel):
 
             # check that it's an allowed key
             if key not in non_ignored_fields:
-                raise ValueError(f'key {key!r} is not a non-ignored field!')
+                raise ValueError(f'key {key!r} is not a (non-ignored) field!')
             # end if
 
             assert not isinstance(value, FastORM)
