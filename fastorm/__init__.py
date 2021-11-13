@@ -612,9 +612,8 @@ class FastORM(BaseModel):
     def build_sql_select(cls, **kwargs):
         _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
-        long_fields_to_short_fields_map = {long_name: typehint.unflattened_field for long_name, typehint in typehints.items()}
-        short_fields_to_long_fields_map = {short_name: long_name for long_name, short_name in long_fields_to_short_fields_map.items()}
-        non_ignored_fields = [long_name for long_name, short_name in long_fields_to_short_fields_map.items() if short_name not in _ignored_fields]
+        short_fields_to_long_fields_map = {typehint.unflattened_field: long_name for long_name, typehint in typehints.items()}
+        non_ignored_fields = [long_name for short_name, long_name in short_fields_to_long_fields_map.items() if short_name not in _ignored_fields]
         fields = ','.join([
             f'"{field}"'
             for field in non_ignored_fields
