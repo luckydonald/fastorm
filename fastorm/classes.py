@@ -59,6 +59,14 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     # end def
 
     @property
+    def unflattened_field(self) -> str:
+        """
+        The first key, i.e. the unflattened one of the current class
+        """
+        return self.types[0].field
+    # end def
+
+    @property
     def referenced_type(self) -> FIELD_REFERENCE_TYPE:
         """
         The first type in the type resolving list.

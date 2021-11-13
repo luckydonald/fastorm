@@ -611,8 +611,10 @@ class FastORM(BaseModel):
     @classmethod
     def build_sql_select(cls, **kwargs):
         _ignored_fields = cls.get_ignored_fields()
-        typehints: Dict[str, Any] = get_type_hints(cls)
-        non_ignored_fields = [field for field in cls.get_fields() if field not in _ignored_fields]
+        typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
+        long_fields_to_short_fields_map = {long_name: typehint.unflattened_field for long_name, typehint in typehints.items()}
+        short_fields_to_long_fields_map = {short_name: long_name for long_name, short_name in long_fields_to_short_fields_map.items()}
+        non_ignored_fields = [long_name for long_name, short_name in long_fields_to_short_fields_map.items() if short_name not in _ignored_fields]
         fields = ','.join([
             f'"{field}"'
             for field in non_ignored_fields
@@ -624,9 +626,16 @@ class FastORM(BaseModel):
         # noinspection PyUnusedLocal
         where_wolf = None
         for key, value in kwargs.items():
+            # map it to the long database name
+            if key in short_fields_to_long_fields_map:
+                key = short_fields_to_long_fields_map[key]
+            # end if
+
+            # check that it's an allowed key
             if key not in non_ignored_fields:
                 raise ValueError(f'key {key!r} is not a non-ignored field!')
             # end if
+
             assert not isinstance(value, FastORM)
             # if isinstance(value, HelpfulDataclassDatabaseMixin):
             #     # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
