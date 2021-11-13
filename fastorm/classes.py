@@ -48,6 +48,11 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     types: typing.List[FieldItem[FIELD_REFERENCE_TYPE]]
 
     @property
+    def is_reference(self) -> bool:
+        return len(self.types) > 1
+    # end def
+
+    @property
     def resulting_type(self) -> FIELD_REFERENCE_TYPE:
         """
         The last type in the type resolving list.

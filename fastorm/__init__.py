@@ -609,6 +609,64 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
+    def _prepare_kwargs(cls, **kwargs: Dict[str: Any]):
+        _ignored_fields = cls.get_ignored_fields()
+        typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
+        unprocessed_kwargs = set(kwargs.keys())
+        sql_value_map = {}
+        for long_key, typehint in typehints.items():
+            # map it to the long database name
+            short_key = typehint.unflattened_field
+            if short_key in kwargs:
+                kwargs_key = short_key
+            elif long_key in kwargs:
+                kwargs_key = long_key
+            else:
+                # we don't have that typehint in our given keys
+                continue
+            # end if
+
+            value = kwargs[kwargs_key]
+            unprocessed_kwargs.remove(kwargs_key)
+
+            # check that it's an allowed key
+            if short_key in _ignored_fields:
+                raise ValueError(f'key {short_key!r} is a (non-ignored) field!')
+            # end if
+
+            if not typehint.is_reference:
+                # it is not a reference
+                sql_value_map[long_key] = value
+                continue  # easy, done
+            # end if
+
+            # now the more complex handling of references
+
+            for type_info in typehint.types:
+
+                if isinstance(value, tuple):
+                    # get it by keywords position
+                    pass
+                    pass
+                    continue
+                # end if
+
+                assert isinstance(value, FastORM)
+                value = getattr(value, type_info.field)
+            # end for
+            sql_value_map[long_key] = value
+        # end for
+        unprocessed_kwargs: List[str] = list(unprocessed_kwargs)
+        unprocessed_kwargs: List[str] = [f'{kwarg!s}={kwargs[kwarg]!r}' for kwarg in unprocessed_kwargs[0]]
+        if len(unprocessed_kwargs) == 1:
+            raise ValueError(f'Unknown parameter: {unprocessed_kwargs[0]!s}')
+        elif len(unprocessed_kwargs) > 1:
+            raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
+        # end if
+        return sql_value_map
+    # end def
+
+    @classmethod
     def build_sql_select(cls, **kwargs):
         _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
