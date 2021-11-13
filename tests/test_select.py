@@ -35,7 +35,7 @@ class PrimaryKeyReferenceTo(FastORM):
 class NormalTableTestCase(unittest.TestCase):
     def test_sql_text_create(self):
         self.maxDiff = None
-        # noinspection SqlNoDataSourceInspection
+        # noinspection SqlNoDataSourceInspection,SqlResolve
         expected_sql = dedent(
             """
             CREATE TABLE "simple_table" (
@@ -51,7 +51,7 @@ class NormalTableTestCase(unittest.TestCase):
 
     def test_sql_text_references(self):
         self.maxDiff = None
-        # noinspection SqlNoDataSourceInspection
+        # noinspection SqlNoDataSourceInspection,SqlResolve
         expected_sql = "SELECT 1;"
         actual_sql, *actual_params = SimpleTable.build_sql_references()
         self.assertEqual(expected_sql, actual_sql, msg="references")
@@ -90,7 +90,7 @@ class NormalTableTestCase(unittest.TestCase):
 class NonPrimaryKeyReferenceTableTestCase(unittest.TestCase):
     def test_sql_text_create(self):
         self.maxDiff = None
-        # noinspection SqlNoDataSourceInspection
+        # noinspection SqlNoDataSourceInspection,SqlResolve
         expected_sql = dedent(
             """
             CREATE TABLE "non_pk_reference_to" (
@@ -106,7 +106,7 @@ class NonPrimaryKeyReferenceTableTestCase(unittest.TestCase):
 
     def test_sql_text_references(self):
         self.maxDiff = None
-        # noinspection SqlNoDataSourceInspection
+        # noinspection SqlNoDataSourceInspection,SqlResolve
         expected_sql = dedent(
             """
             CREATE INDEX "idx_non_pk_reference_to___simple_table_ref__id" ON "non_pk_reference_to" ("simple_table_ref__id");
@@ -150,7 +150,7 @@ class NonPrimaryKeyReferenceTableTestCase(unittest.TestCase):
 class PrimaryKeyReferenceTableTestCase(unittest.TestCase):
     def test_sql_text_create(self):
         self.maxDiff = None
-        # noinspection SqlNoDataSourceInspection
+        # noinspection SqlNoDataSourceInspection,SqlResolve
         expected_sql = dedent(
             """
             CREATE TABLE "pk_reference_to" (
@@ -166,7 +166,7 @@ class PrimaryKeyReferenceTableTestCase(unittest.TestCase):
 
     def test_sql_text_references(self):
         self.maxDiff = None
-        # noinspection SqlNoDataSourceInspection
+        # noinspection SqlNoDataSourceInspection,SqlResolve
         expected_sql = dedent(
             """
             CREATE INDEX "idx_pk_reference_to___pk_is_simple_table__id" ON "pk_reference_to" ("pk_is_simple_table__id");
