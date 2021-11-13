@@ -179,27 +179,27 @@ class PrimaryKeyReferenceTableTestCase(unittest.TestCase):
     # end def
 
     def test_non_pk_reference_select_single_field_pk(self):
-        actual = PrimaryKeyReferenceTo.build_sql_select(id=69)
+        actual = PrimaryKeyReferenceTo.build_sql_select(some_number=69.42)
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        expected = 'SELECT "id","simple_table_ref__id" FROM "pk_reference_to" WHERE "id" = $1', 69
+        expected = 'SELECT "pk_is_simple_table__id","some_number" FROM "pk_reference_to" WHERE "some_number" = $1', 69.42
 
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
     def test_non_pk_reference_select_single_field_non_pk(self):
-        actual = PrimaryKeyReferenceTo.build_sql_select(simple_table_ref="foobar")
+        actual = PrimaryKeyReferenceTo.build_sql_select(pk_is_simple_table=4458)
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        expected = 'SELECT "id","simple_table_ref__id" FROM "pk_reference_to" WHERE "simple_table_ref__id" = $1', "foobar"
+        expected = 'SELECT "pk_is_simple_table__id","some_number" FROM "pk_reference_to" WHERE "pk_is_simple_table__id" = $1', 4458
 
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
     def test_non_pk_reference_select_multi_field(self):
-        actual = PrimaryKeyReferenceTo.build_sql_select(id=4458, simple_table_ref="littlepip")
+        actual = PrimaryKeyReferenceTo.build_sql_select(pk_is_simple_table=4458, some_number=42.69)
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        expected = 'SELECT "id","simple_table_ref__id" FROM "pk_reference_to" WHERE "id" = $1 AND "simple_table_ref__id" = $2', 4458, "littlepip"
+        expected = 'SELECT "pk_is_simple_table__id","some_number" FROM "pk_reference_to" WHERE "pk_is_simple_table__id" = $1 AND "some_number" = $2', 4458, 42.69
 
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
