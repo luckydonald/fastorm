@@ -6,7 +6,7 @@
 > - That's all we know of
 
 # v0.0.10
-- 🔨 Fixed SELECT syntax for table references
+- 🔨 Fixed `SELECT` syntax for table references
 - 🔨 Fixed `from_row(…)` if you used namespaces (those from `get_select_fields(namespace="…")`) 
 
 
