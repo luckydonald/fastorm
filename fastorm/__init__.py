@@ -885,7 +885,8 @@ class FastORM(BaseModel):
     @classmethod
     def from_row(cls, row):
         # noinspection PyArgumentList
-        instance = cls(**row)
+        row_data = {key.rsplit(" ")[-1]: value for key, value in dict(row).items()}  # handles the namespaces like "namespace_name field_name"
+        instance = cls(**row_data)
         instance._database_cache_overwrite_with_current()
         return instance
     # end def
