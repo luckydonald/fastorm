@@ -15,7 +15,7 @@ import typing
 import types
 import uuid
 import re
-from typing import List, Dict, Any, Optional, Tuple, Type, get_type_hints, Union, TypeVar, Callable
+from typing import List, Dict, Any, Optional, Tuple, Type, Union, TypeVar, Callable, Set
 from asyncpg import Connection, Pool
 
 try:
@@ -609,10 +609,10 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def _prepare_kwargs(cls, **kwargs: Dict[str: Any]):
+    def _prepare_kwargs(cls, **kwargs: Dict[str, Any]):
         _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
-        unprocessed_kwargs = set(kwargs.keys())
+        unprocessed_kwargs: Set[str] = set(kwargs.keys())
         sql_value_map = {}
         for long_key, typehint in typehints.items():
             # map it to the long database name
@@ -657,7 +657,7 @@ class FastORM(BaseModel):
             sql_value_map[long_key] = value
         # end for
         unprocessed_kwargs: List[str] = list(unprocessed_kwargs)
-        unprocessed_kwargs: List[str] = [f'{kwarg!s}={kwargs[kwarg]!r}' for kwarg in unprocessed_kwargs[0]]
+        unprocessed_kwargs: List[str] = [f'{kwarg!s}={kwargs[kwarg]!r}' for kwarg in unprocessed_kwargs]
         if len(unprocessed_kwargs) == 1:
             raise ValueError(f'Unknown parameter: {unprocessed_kwargs[0]!s}')
         elif len(unprocessed_kwargs) > 1:
@@ -668,61 +668,44 @@ class FastORM(BaseModel):
 
     @classmethod
     def build_sql_select(cls, **kwargs):
-        _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
-        short_fields_to_long_fields_map = {typehint.unflattened_field: long_name for long_name, typehint in typehints.items()}
-        non_ignored_fields = [long_name for short_name, long_name in short_fields_to_long_fields_map.items() if short_name not in _ignored_fields]
+        non_ignored_long_names = [long_name for long_name, typehint in typehints.items() if typehint.unflattened_field not in cls.get_ignored_fields()]
         fields = ','.join([
             f'"{field}"'
-            for field in non_ignored_fields
+            for field in non_ignored_long_names
             if not field.startswith('_')
         ])
+        sql_where = cls._prepare_kwargs(**kwargs)
         where_index = 0
         where_parts = []
         where_values = []
         # noinspection PyUnusedLocal
         where_wolf = None
-        for key, value in kwargs.items():
-            # map it to the long database name
-            if key in short_fields_to_long_fields_map:
-                key = short_fields_to_long_fields_map[key]
-            # end if
-
-            # check that it's an allowed key
-            if key not in non_ignored_fields:
-                raise ValueError(f'key {key!r} is not a (non-ignored) field!')
-            # end if
-
-            assert not isinstance(value, FastORM)
-            # if isinstance(value, HelpfulDataclassDatabaseMixin):
-            #     # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
-            #     # if you got more than one of those PKs, simply specify them twice for both fields.
-            #     value = value.get_primary_keys_values()[primary_key_index]
-            #     primary_key_index += 1
+        for long_key, value in sql_where.items():
+            # # TODO FIX ME for working with _prepare_kwargs()
+            is_in_list_clause = False  # TODO
+            # is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key])
+            # if is_in_list_clause:
+            #     assert isinstance(value, (list, tuple))
+            #     assert len(value) >= 1
+            #     if len(value) == 1:
+            #         # single element list -> normal where is fine -> so we go that route with it.
+            #         value = value[0]
+            #         is_in_list_clause = False
+            #     # end if
             # # end if
-            where_index += 1
-            is_in_list_clause = cls._param_is_list_of_multiple_values(key, value, typehints[key])
-            if is_in_list_clause:
-                assert isinstance(value, (list, tuple))
-                assert len(value) >= 1
-                if len(value) == 1:
-                    # single element list -> normal where is fine -> so we go that route with it.
-                    value = value[0]
-                    is_in_list_clause = False
-                # end if
-            # end if
             if not is_in_list_clause:  # no else-if as is_in_list_clause could be set False again.
-                where_parts.append(f'"{key}" = ${where_index}')
+                where_index += 1
+                where_parts.append(f'"{long_key}" = ${where_index}')
                 where_values.append(value)
             else:  # is_in_list_clause is True
                 where_part = ''
                 for actual_value in value:
+                    where_index += 1
                     where_part += f'${where_index},'
                     where_values.append(actual_value)
-                    where_index += 1
                 # end for
-                where_index -= 1  # we end up with incrementing once too much
-                where_parts.append(f'"{key}" IN ({where_part.rstrip(",")})')
+                where_parts.append(f'"{long_key}" IN ({where_part.rstrip(",")})')
             # end if
         # end if
         where_sql = "" if not where_parts else f' WHERE {" AND ".join(where_parts)}'
@@ -1584,7 +1567,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def _param_is_list_of_multiple_values(cls, key: str, value: Any, typehint: Any):
+    def _param_is_list_of_multiple_values(cls, key: str, value: Any, typehint: FieldInfo[ModelField]):
         """
         If a value is multiple times of what was defined.
         :param key:
