@@ -678,6 +678,7 @@ class FastORM(BaseModel):
         Builds a `SELECT` query.
 
         It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
+        Also you can specify a list of multiple values to have it generate a `field IN (…)` clause.
         :param kwargs:
         :return:
         """
@@ -699,7 +700,7 @@ class FastORM(BaseModel):
             is_in_list_clause = False  # TODO
             # is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key])
             # if is_in_list_clause:
-            #     assert isinstance(value, (list, tuple))
+            #     assert isinstance(value, list)
             #     assert len(value) >= 1
             #     if len(value) == 1:
             #         # single element list -> normal where is fine -> so we go that route with it.
@@ -1588,7 +1589,7 @@ class FastORM(BaseModel):
         :param typehint:
         :return: True if the `value` is a list of tuple of arguments satisfying the `typehint`.
         """
-        if not isinstance(value, (list, tuple)):
+        if not isinstance(value, list):
             # we don't have a list -> can't be multiple values
             # this is a cheap check preventing most of the values.
             return False
