@@ -610,6 +610,12 @@ class FastORM(BaseModel):
 
     @classmethod
     def _prepare_kwargs(cls, **kwargs: Dict[str, Any]):
+        """
+        Will parse the current classes parameters into SQL field names.
+        It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
+        :param kwargs:
+        :return:
+        """
         _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
         unprocessed_kwargs: Set[str] = set(kwargs.keys())
@@ -668,6 +674,13 @@ class FastORM(BaseModel):
 
     @classmethod
     def build_sql_select(cls, **kwargs):
+        """
+        Builds a `SELECT` query.
+
+        It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
+        :param kwargs:
+        :return:
+        """
         typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
         non_ignored_long_names = [long_name for long_name, typehint in typehints.items() if typehint.unflattened_field not in cls.get_ignored_fields()]
         fields = ','.join([
