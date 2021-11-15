@@ -342,7 +342,7 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
     def test_non_pk_reference_select_single_field_pk_with_ref_object(self):
         actual = ReferencingDoubleKey.build_sql_select(id_ref_part=DoublePrimaryKeyTable(id_part_1=12, id_part_2=34.56))
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE "id_ref__id_part_1" = $1 AND "id_ref__id_part_2" = $2', 12, 34.56
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE "id_ref_part__id_part_1" = $1 AND "id_ref_part__id_part_2" = $2', 12, 34.56
 
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
@@ -351,7 +351,7 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
     def test_non_pk_reference_select_single_field_pk_with_ref_tuple(self):
         actual = ReferencingDoubleKey.build_sql_select(id_ref_part=(12, 34.56))
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE "id_ref__id_part_1" = $1 AND "id_ref__id_part_2" = $2', 12, 34.56
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE "id_ref_part__id_part_1" = $1 AND "id_ref_part__id_part_2" = $2', 12, 34.56
 
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
