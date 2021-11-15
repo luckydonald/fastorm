@@ -623,17 +623,22 @@ class FastORM(BaseModel):
         for long_key, typehint in typehints.items():
             # map it to the long database name
             short_key = typehint.unflattened_field
-            if short_key in kwargs:
-                kwargs_key = short_key
-            elif long_key in kwargs:
+            if long_key in kwargs:
                 kwargs_key = long_key
+                unprocessed_kwargs.remove(long_key)
+            elif short_key in kwargs:
+                kwargs_key = short_key
+                if short_key in unprocessed_kwargs:
+                    # due to multiple long ones for a single short one, there might already have been deletion.
+                    # as we check existence in kwargs above we're safe.
+                    unprocessed_kwargs.remove(short_key)
+                # end if
             else:
                 # we don't have that typehint in our given keys
                 continue
             # end if
 
-            value = kwargs[kwargs_key]
-            unprocessed_kwargs.remove(kwargs_key)
+            value: Any = kwargs[kwargs_key]
 
             # check that it's an allowed key
             if short_key in _ignored_fields:
@@ -648,24 +653,27 @@ class FastORM(BaseModel):
 
             # now the more complex handling of references
 
-            for type_info in typehint.types:
+            for i, type_info in enumerate(typehint.types[1:]):
                 if isinstance(value, tuple):
                     value: Tuple[Any, ...]
                     # get it by keywords position
+                    current_type = type_info.type_
                     current_field = type_info.field
-                    primary_keys: List[str] = typing.cast(Type[FastORM], value.__class__).get_primary_keys_keys()
+                    primary_keys: List[str] = typing.cast(Type[FastORM], current_type).get_primary_keys_keys()
                     primary_key_position = primary_keys.index(current_field)
-                    value = value[primary_key_position]  # this should be the tuple position, because the tuple should be the primary keys.
+                    value: Any = value[primary_key_position]  # this should be the tuple position, because the tuple should be the primary keys.
                     continue
                 # end if
 
                 if isinstance(value, FastORM):
+                    value: FastORM
                     # get it by primary key fields
-                    value = getattr(value, type_info.field)  # easy actually. Just grab it.
+                    value: Any = getattr(value, type_info.field)  # easy actually. Just grab it.
                     continue
                 # end if
 
                 # So now we know it must be a native value, e.g. the primary key's actual value.
+                value: Any
                 break  # so no further processing needs to be done.
             # end for
 
