@@ -366,7 +366,6 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
-    @unittest.skip
     def test_in_clause_non_pk_single(self):
         actual = ReferencingDoubleKey.build_sql_select(id_part_3=["littlepip is best pony"])
         # noinspection SqlResolve,SqlNoDataSourceInspection
