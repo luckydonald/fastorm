@@ -670,7 +670,12 @@ class FastORM(BaseModel):
         return sql_value_map
 
     @classmethod
-    def _resolve_referencing_kwargs(cls, typehint, value):
+    def _resolve_referencing_kwargs(cls, typehint, value) -> List[Any]:
+        if isinstance(value, In):
+            # so you used Union[variable_a, variable_b]
+            # we wanna resolve both variables.
+            return [cls._resolve_referencing_kwargs(typehint, variable) for variable in value]
+        # end if
         for i, type_info in enumerate(typehint.types[1:]):
             if isinstance(value, tuple):
                 value: Tuple[Any, ...]
@@ -697,7 +702,7 @@ class FastORM(BaseModel):
             value: Any
             break  # so no further processing needs to be done.
         # end for
-        return value
+        return [value]
 
     # end def
 
