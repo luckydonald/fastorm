@@ -365,6 +365,69 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
+
+    def test_in_clause_non_pk_single(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_part_3=["littlepip is best pony"])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE "id_part_3" = $1', "littlepip is best pony"
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
+
+    def test_in_clause_non_pk_multiple(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_part_3=["littlepip is best pony", "littlepip is my waifu"])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE "id_part_3" IN ($1, $2)', "littlepip is best pony", "littlepip is my waifu"
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
+
+    def test_in_clause_non_pk_reference_tuple_multiple(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_ref_part=[(12, 34.56), (69, 4458.0)])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE ("id_ref_part__id_part_1", "id_ref_part__id_part_2") IN (($1, $2), ($3, $4))', 12, 34.56, 69, 4458.0
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
+
+    def test_in_clause_non_pk_reference_tuple_single(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_ref_part=[(69, 4458.0)])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE ("id_ref_part__id_part_1", "id_ref_part__id_part_2") = ($1, $2)', 69, 4458.0
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
+
+    def test_in_clause_non_pk_reference_FastORM_multiple(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_ref_part=[DoublePrimaryKeyTable(id_part_1=123456, id_part_2=456.789), DoublePrimaryKeyTable(id_part_1=69, id_part_2=4458.69)])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE ("id_ref_part__id_part_1", "id_ref_part__id_part_2") IN (($1, $2), ($3, $4))', 123456, 456.789, 69, 4458.69
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
+
+    def test_in_clause_non_pk_reference_FastORM_single(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_ref_part=[DoublePrimaryKeyTable(id_part_1=69, id_part_2=4458.69)])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE ("id_ref_part__id_part_1", "id_ref_part__id_part_2") = ($1, $2)', 69, 4458.69
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
+
+    def test_in_clause_non_pk_reference_mixed_multiple(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_ref_part=[DoublePrimaryKeyTable(id_part_1=123456, id_part_2=543.21), (4458, 987.654)])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE ("id_ref_part__id_part_1", "id_ref_part__id_part_2") IN (($1, $2), ($3, $4))', 123456, 543.21, 4458, 987.654
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
 # end class
 
 
