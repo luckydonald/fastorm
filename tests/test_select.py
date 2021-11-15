@@ -375,7 +375,6 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
-    @unittest.skip
     def test_in_clause_non_pk_single(self):
         actual = ReferencingDoubleKey.build_sql_select(id_part_3=In["littlepip is best pony"])
         # noinspection SqlResolve,SqlNoDataSourceInspection
@@ -385,7 +384,6 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
-    @unittest.skip
     def test_in_clause_non_pk_multiple(self):
         actual = ReferencingDoubleKey.build_sql_select(id_part_3=In["littlepip is best pony", "littlepip is my waifu"])
         # noinspection SqlResolve,SqlNoDataSourceInspection
@@ -395,7 +393,6 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
-    @unittest.skip
     def test_in_clause_non_pk_reference_tuple_multiple(self):
         actual = ReferencingDoubleKey.build_sql_select(id_ref_part=In[(12, 34.56), (69, 4458.0)])
         # noinspection SqlResolve,SqlNoDataSourceInspection
@@ -405,7 +402,6 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
-    @unittest.skip
     def test_in_clause_non_pk_reference_tuple_single(self):
         actual = ReferencingDoubleKey.build_sql_select(id_ref_part=In[(69, 4458.0)])
         # noinspection SqlResolve,SqlNoDataSourceInspection
@@ -415,7 +411,6 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
-    @unittest.skip
     def test_in_clause_non_pk_reference_FastORM_multiple(self):
         actual = ReferencingDoubleKey.build_sql_select(id_ref_part=In[DoublePrimaryKeyTable(id_part_1=123456, id_part_2=456.789), DoublePrimaryKeyTable(id_part_1=69, id_part_2=4458.69)])
         # noinspection SqlResolve,SqlNoDataSourceInspection
@@ -425,7 +420,6 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
-    @unittest.skip
     def test_in_clause_non_pk_reference_FastORM_single(self):
         actual = ReferencingDoubleKey.build_sql_select(id_ref_part=In[DoublePrimaryKeyTable(id_part_1=69, id_part_2=4458.69)])
         # noinspection SqlResolve,SqlNoDataSourceInspection
