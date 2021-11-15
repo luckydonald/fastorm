@@ -617,7 +617,7 @@ class FastORM(BaseModel):
         :return:
         """
         _ignored_fields = cls.get_ignored_fields()
-        typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
+        typehints: Dict[str, FieldInfo[Union[Type, Type[FastORM]]]] = cls.get_fields_references(recursive=True)
         unprocessed_kwargs: Set[str] = set(kwargs.keys())
         sql_value_map = {}
         for long_key, typehint in typehints.items():
@@ -649,17 +649,26 @@ class FastORM(BaseModel):
             # now the more complex handling of references
 
             for type_info in typehint.types:
-
                 if isinstance(value, tuple):
+                    value: Tuple[Any, ...]
                     # get it by keywords position
-                    pass
-                    pass
+                    current_field = type_info.field
+                    primary_keys: List[str] = typing.cast(Type[FastORM], value.__class__).get_primary_keys_keys()
+                    primary_key_position = primary_keys.index(current_field)
+                    value = value[primary_key_position]  # this should be the tuple position, because the tuple should be the primary keys.
                     continue
                 # end if
 
-                assert isinstance(value, FastORM)
-                value = getattr(value, type_info.field)
+                if isinstance(value, FastORM):
+                    # get it by primary key fields
+                    value = getattr(value, type_info.field)  # easy actually. Just grab it.
+                    continue
+                # end if
+
+                # So now we know it must be a native value, e.g. the primary key's actual value.
+                break  # so no further processing needs to be done.
             # end for
+
             sql_value_map[long_key] = value
         # end for
         unprocessed_kwargs: List[str] = list(unprocessed_kwargs)
