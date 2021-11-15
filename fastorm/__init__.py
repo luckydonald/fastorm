@@ -652,14 +652,16 @@ class FastORM(BaseModel):
             # end if
 
             # now the more complex handling of references
-
             for i, type_info in enumerate(typehint.types[1:]):
                 if isinstance(value, tuple):
                     value: Tuple[Any, ...]
                     # get it by keywords position
-                    current_type = type_info.type_
+                    #
+                    # because we start counting at `i = 0` but list index starts with the second item, `[:1]`,
+                    # this `i` is effectively `index - 1`.
+                    last_type = typehint.types[i].type_
                     current_field = type_info.field
-                    primary_keys: List[str] = typing.cast(Type[FastORM], current_type).get_primary_keys_keys()
+                    primary_keys: List[str] = typing.cast(Type[FastORM], last_type).get_primary_keys_keys()
                     primary_key_position = primary_keys.index(current_field)
                     value: Any = value[primary_key_position]  # this should be the tuple position, because the tuple should be the primary keys.
                     continue
