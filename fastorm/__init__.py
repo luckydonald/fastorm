@@ -4,7 +4,7 @@
 """FastORM framework, easy to learn, fast to code"""
 __author__ = 'luckydonald'
 __version__ = "0.0.9"
-__all__ = ['__author__', '__version__', 'FastORM', 'Autoincrement']
+__all__ = ['__author__', '__version__', 'FastORM', 'Autoincrement', 'query']
 
 import ipaddress
 import builtins
@@ -38,6 +38,9 @@ from typeguard import check_type
 from .classes import FieldInfo, FieldItem
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 from .compat import Annotated, NoneType
+from .query import *
+from .query import __all__ as __query__all__
+__all__.extend(__query__all__)
 
 
 VERBOSE_SQL_LOG = True
