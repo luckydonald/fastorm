@@ -674,25 +674,19 @@ class FastORM(BaseModel):
         # end if
         return_array: List[Union[Dict[str, Any], In[Dict[str, Any]]]] = []
         for short_name, mapping in sql_value_map.items():
-            array_objects: List[Dict[str, Union[In, Any]]] = []
-            for i in range(max(len(x) for x in mapping)):
-                long_key = mapping[1][i]
-                value = mapping[0][0]
-                length = 1
-                if isinstance(value, In):
-                    length = max(length, len(value))
-                # end if
-                for i2 in range(0, length - len(array_objects), 1):
-                    # add array objects as still needed by the Ins.
-                    array_objects.append({})
+            max_union = max(len(u) for u in mapping[0])
+            for i in range(max_union):
+                array_object = {}
+                for key_i, long_key in enumerate(mapping[1]):
+                    value = mapping[0][key_i]
+                    if isinstance(value, In):
+                        array_object[long_key] = typing.cast(In, value).as_list()[i]
+                    else:
+                        array_object[long_key] = value
+                    # end for
+                    return_array.append(array_object)
                 # end for
-
-                array_objects[i][long_key] = value
             # end for
-            if len(array_objects) > 1:
-                return_array.append(In(*array_objects))
-            # end if
-            return_array.append(array_objects[0])
         # end for
         return return_array
     # end def
