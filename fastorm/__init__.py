@@ -656,32 +656,7 @@ class FastORM(BaseModel):
             # end if
 
             # now the more complex handling of references
-            for i, type_info in enumerate(typehint.types[1:]):
-                if isinstance(value, tuple):
-                    value: Tuple[Any, ...]
-                    # get it by keywords position
-                    #
-                    # because we start counting at `i = 0` but list index starts with the second item, `[:1]`,
-                    # this `i` is effectively `index - 1`.
-                    last_type = typehint.types[i].type_
-                    current_field = type_info.field
-                    primary_keys: List[str] = typing.cast(Type[FastORM], last_type).get_primary_keys_keys()
-                    primary_key_position = primary_keys.index(current_field)
-                    value: Any = value[primary_key_position]  # this should be the tuple position, because the tuple should be the primary keys.
-                    continue
-                # end if
-
-                if isinstance(value, FastORM):
-                    value: FastORM
-                    # get it by primary key fields
-                    value: Any = getattr(value, type_info.field)  # easy actually. Just grab it.
-                    continue
-                # end if
-
-                # So now we know it must be a native value, e.g. the primary key's actual value.
-                value: Any
-                break  # so no further processing needs to be done.
-            # end for
+            value = cls._resolve_referencing_kwargs(typehint, value)
 
             sql_value_map[long_key] = value
         # end for
@@ -693,6 +668,37 @@ class FastORM(BaseModel):
             raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
         # end if
         return sql_value_map
+
+    @classmethod
+    def _resolve_referencing_kwargs(cls, typehint, value):
+        for i, type_info in enumerate(typehint.types[1:]):
+            if isinstance(value, tuple):
+                value: Tuple[Any, ...]
+                # get it by keywords position
+                #
+                # because we start counting at `i = 0` but list index starts with the second item, `[:1]`,
+                # this `i` is effectively `index - 1`.
+                last_type = typehint.types[i].type_
+                current_field = type_info.field
+                primary_keys: List[str] = typing.cast(Type[FastORM], last_type).get_primary_keys_keys()
+                primary_key_position = primary_keys.index(current_field)
+                value: Any = value[primary_key_position]  # this should be the tuple position, because the tuple should be the primary keys.
+                continue
+            # end if
+
+            if isinstance(value, FastORM):
+                value: FastORM
+                # get it by primary key fields
+                value: Any = getattr(value, type_info.field)  # easy actually. Just grab it.
+                continue
+            # end if
+
+            # So now we know it must be a native value, e.g. the primary key's actual value.
+            value: Any
+            break  # so no further processing needs to be done.
+        # end for
+        return value
+
     # end def
 
     @classmethod
