@@ -623,7 +623,7 @@ class FastORM(BaseModel):
         _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[Union[Type, Type[FastORM]]]] = cls.get_fields_references(recursive=True)
         unprocessed_kwargs: Set[str] = set(kwargs.keys())
-        sql_value_map = {}
+        sql_value_map: Dict[str, Union[Tuple[Tuple[Any, ...], Tuple[str, ...]], Tuple[List[Any], List[str]]]] = {}  # key is the kwarg. Value is a tuple of the actual value (tuple) and the long_key(s) this needs.
         for long_key, typehint in typehints.items():
             # map it to the long database name
             short_key = typehint.unflattened_field
@@ -651,14 +651,19 @@ class FastORM(BaseModel):
 
             if not typehint.is_reference:
                 # it is not a reference
-                sql_value_map[long_key] = value
+                assert short_key not in sql_value_map
+                sql_value_map[short_key] = (value,), (long_key,)
                 continue  # easy, done
             # end if
 
             # now the more complex handling of references
             value = cls._resolve_referencing_kwargs(typehint, value)
 
-            sql_value_map[long_key] = value
+            if short_key not in sql_value_map:
+                sql_value_map[short_key] = [], []
+            # end if
+            sql_value_map[short_key][0].append(value)
+            sql_value_map[short_key][1].append(long_key)
         # end for
         unprocessed_kwargs: List[str] = list(unprocessed_kwargs)
         unprocessed_kwargs: List[str] = [f'{kwarg!s}={kwargs[kwarg]!r}' for kwarg in unprocessed_kwargs]
@@ -667,14 +672,37 @@ class FastORM(BaseModel):
         elif len(unprocessed_kwargs) > 1:
             raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
         # end if
-        return sql_value_map
+        return_array: List[Union[Dict[str, Any], In[Dict[str, Any]]]] = []
+        for short_name, mapping in sql_value_map.items():
+            array_objects: List[Dict[str, Union[In, Any]]] = []
+            for i in range(max(len(x) for x in mapping)):
+                long_key = mapping[1][i]
+                value = mapping[0][0]
+                length = 1
+                if isinstance(value, In):
+                    length = max(length, len(value))
+                # end if
+                for i2 in range(0, length - len(array_objects), 1):
+                    # add array objects as still needed by the Ins.
+                    array_objects.append({})
+                # end for
+
+                array_objects[i][long_key] = value
+            # end for
+            if len(array_objects) > 1:
+                return_array.append(In(*array_objects))
+            # end if
+            return_array.append(array_objects[0])
+        # end for
+        return return_array
+    # end def
 
     @classmethod
-    def _resolve_referencing_kwargs(cls, typehint, value) -> List[Any]:
+    def _resolve_referencing_kwargs(cls, typehint, value) -> Union[Any, In]:
         if isinstance(value, In):
             # so you used Union[variable_a, variable_b]
             # we wanna resolve both variables.
-            return [cls._resolve_referencing_kwargs(typehint, variable) for variable in value]
+            return In(*(cls._resolve_referencing_kwargs(typehint, variable) for variable in value))
         # end if
         for i, type_info in enumerate(typehint.types[1:]):
             if isinstance(value, tuple):
@@ -702,7 +730,7 @@ class FastORM(BaseModel):
             value: Any
             break  # so no further processing needs to be done.
         # end for
-        return [value]
+        return value
 
     # end def
 
