@@ -16,7 +16,6 @@ import types
 import uuid
 import re
 from typing import List, Dict, Any, Optional, Tuple, Type, Union, TypeVar, Callable, Set
-from asyncpg import Connection, Pool
 
 try:
     import psycopg2
@@ -34,6 +33,8 @@ from pydantic import BaseModel
 from pydantic.fields import ModelField, UndefinedType, Undefined, Field, PrivateAttr
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
+
+from asyncpg import Connection, Pool
 
 from .classes import FieldInfo, FieldItem
 from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
