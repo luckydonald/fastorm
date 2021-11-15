@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from typing import List, Any
+import inspect
+from typing import List, Any, TypeVar, Generic
 
 from luckydonaldUtils.logger import logging
+
+from .compat import check_is_annotated_type, check_is_union_type, check_is_generic_alias
 
 __author__ = 'luckydonald'
 
@@ -13,11 +16,14 @@ if __name__ == '__main__':
 
 __all__ = ['In']
 
+VARIABLE_TYPE = TypeVar("VARIABLE_TYPE", bound=Any)
 
-class In(object):
+
+
+class In(Generic[VARIABLE_TYPE]):
     __slots__ = ['variables', '_flattened_cache']
 
-    variables: List[Any]
+    variables: List[VARIABLE_TYPE]
 
     def __init__(self, *variables):
         self.variables = [v for v in variables]
@@ -33,6 +39,15 @@ class In(object):
     # end def
 
     def __class_getitem__(cls, variables):
+        if (
+            inspect.isclass(variables) or
+            check_is_annotated_type(variables) or
+            check_is_union_type(variables) or
+            check_is_generic_alias(variables)
+        ):
+            # keep type hint support
+            return super().__class_getitem__(variables)
+        # end if
         if not isinstance(variables, tuple):
             variables = (variables,)
         # end if
@@ -45,17 +60,37 @@ class In(object):
 
         So in other words:
 
-          >>> var = In[1, In[2, 3], 4, In[In[In[5], 6], 7]]
-          >>> list(var)
+          >>> var1 = In[1, In[2, 3], 4, In[In[In[5], 6], 7]]
+          >>> list(var1)
           [1, 2, 3, 4, 5, 6, 7]
 
-          >>> var = In(1, In(2, 3), 4, In(In[In[5), 6), 7)
-          >>> list(var)
+          >>> var2 = In(1, In(2, 3), 4, In(In(In(5), 6), 7))
+          >>> list(var2)
           [1, 2, 3, 4, 5, 6, 7]
 
-          >>> var = In[In(), In()]
-          >>> list(var)
+          >>> var1 == var1
+          True
+
+          >>> var1 == var2
+          True
+
+          >>> var3 = In[In(), In()]
+          >>> list(var3)
           []
+
+          >>> In[In(), In()] == []
+          True
+          >>> In[In(), In()] == In(1, In(2, 3), 4, In(In(In(5), 6), 7))
+          False
+
+          >>> In[int]
+          fastorm.query.In[int]
+
+          >>> class InGeneric(Generic[VARIABLE_TYPE]):
+          ...   pass
+
+          >>> InGeneric[int]
+          fastorm.query.InGeneric[int]
 
         :return:
         """
@@ -70,7 +105,7 @@ class In(object):
 
     def as_list(self) -> List[Any]:
         if self._flattened_cache is None:
-            self._flattened_cache = list(self)
+            self._flattened_cache = list(var for var in self)
         # end if
         return self._flattened_cache
     # end def
