@@ -701,7 +701,7 @@ class FastORM(BaseModel):
         :param kwargs:
         :return:
         """
-        typehints: Dict[str, FieldInfo[ModelField]] = cls.get_fields_typehints(flatten_table_references=True)
+        typehints: Dict[str, FieldInfo[Type]] = cls.get_fields_references(recursive=True)
         non_ignored_long_names = [long_name for long_name, typehint in typehints.items() if typehint.unflattened_field not in cls.get_ignored_fields()]
         fields = ','.join([
             f'"{field}"'
@@ -715,18 +715,16 @@ class FastORM(BaseModel):
         # noinspection PyUnusedLocal
         where_wolf = None
         for long_key, value in sql_where.items():
-            # # TODO FIX ME for working with _prepare_kwargs()
-            is_in_list_clause = False  # TODO
-            # is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key])
-            # if is_in_list_clause:
-            #     assert isinstance(value, list)
-            #     assert len(value) >= 1
-            #     if len(value) == 1:
-            #         # single element list -> normal where is fine -> so we go that route with it.
-            #         value = value[0]
-            #         is_in_list_clause = False
-            #     # end if
-            # # end if
+            is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key].resulting_type)
+            if is_in_list_clause:
+                assert isinstance(value, list)
+                assert len(value) >= 1
+                if len(value) == 1:
+                    # single element list -> normal where is fine -> so we go that route with it.
+                    value = value[0]
+                    is_in_list_clause = False
+                # end if
+            # end if
             if not is_in_list_clause:  # no else-if as is_in_list_clause could be set False again.
                 where_index += 1
                 where_parts.append(f'"{long_key}" = ${where_index}')
@@ -1600,7 +1598,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def _param_is_list_of_multiple_values(cls, key: str, value: Any, typehint: FieldInfo[ModelField]):
+    def _param_is_list_of_multiple_values(cls, key: str, value: Any, typehint: Type):
         """
         If a value is multiple times of what was defined.
         :param key:
