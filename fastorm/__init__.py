@@ -674,12 +674,12 @@ class FastORM(BaseModel):
             raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
         # end if
         return_array: List[Dict[str, Any]] = []
-        for short_name, mapping in sql_value_map.items():
-            max_union = max(len(u) if isinstance(u, In) else 1 for u in mapping[0])
+        for short_name, (values, keys) in sql_value_map.items():
+            max_union = max(len(u) if isinstance(u, In) else 1 for u in values)
             for i in range(max_union):
                 array_object = {}
-                for key_i, long_key in enumerate(mapping[1]):
-                    value = mapping[0][key_i]
+                for key_i, long_key in enumerate(keys):
+                    value = values[key_i]
                     if isinstance(value, In):
                         array_object[long_key] = typing.cast(In, value).as_list()[i]
                     else:
