@@ -5,6 +5,7 @@ import unittest
 
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(module=fastorm))
+    tests.addTests(doctest.DocTestSuite(module=fastorm.query))
     return tests
 # end def
 
