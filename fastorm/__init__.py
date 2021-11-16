@@ -673,7 +673,7 @@ class FastORM(BaseModel):
         elif len(unprocessed_kwargs) > 1:
             raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
         # end if
-        return_arraaa: Dict[Tuple[str], In[Dict[str, Any]]] = {}
+        return_values: Dict[Tuple[str], In[Dict[str, Any]]] = {}
         for short_name, (values, keys) in sql_value_map.items():
             max_union = max(len(u) if isinstance(u, In) else 1 for u in values)
             for i in range(max_union):
@@ -687,18 +687,18 @@ class FastORM(BaseModel):
                     # end for
                 # end for
                 hashable_keys = tuple(keys)
-                if hashable_keys in return_arraaa:
-                    if isinstance(return_arraaa[hashable_keys], In):
-                        return_arraaa[hashable_keys].variables.append(array_object)
+                if hashable_keys in return_values:
+                    if isinstance(return_values[hashable_keys], In):
+                        return_values[hashable_keys].variables.append(array_object)
                     else:
-                        return_arraaa[hashable_keys] = In(return_arraaa[hashable_keys], array_object)
+                        return_values[hashable_keys] = In(return_values[hashable_keys], array_object)
                     # end if
                 else:
-                    return_arraaa[hashable_keys] = array_object
+                    return_values[hashable_keys] = array_object
                 # end if
             # end for
         # end for
-        return list(return_arraaa.values())
+        return list(return_values.values())
     # end def
 
     @classmethod
