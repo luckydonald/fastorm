@@ -613,10 +613,11 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def _prepare_kwargs(cls, **kwargs: Dict[str, Any]):
+    def _prepare_kwargs(cls, **kwargs: Any) -> List[Dict[str, Any]]:
         """
         Will parse the current classes parameters into SQL field names.
         It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
+        Will return a list of single elements.
         :param kwargs:
         :return:
         """
@@ -672,9 +673,9 @@ class FastORM(BaseModel):
         elif len(unprocessed_kwargs) > 1:
             raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
         # end if
-        return_array: List[Union[Dict[str, Any], In[Dict[str, Any]]]] = []
+        return_array: List[Dict[str, Any]] = []
         for short_name, mapping in sql_value_map.items():
-            max_union = max(len(u) for u in mapping[0])
+            max_union = max(len(u) if isinstance(u, In) else 1 for u in mapping[0])
             for i in range(max_union):
                 array_object = {}
                 for key_i, long_key in enumerate(mapping[1]):
@@ -684,10 +685,12 @@ class FastORM(BaseModel):
                     else:
                         array_object[long_key] = value
                     # end for
-                    return_array.append(array_object)
                 # end for
+                return_array.append(array_object)
             # end for
         # end for
+
+        # return_array: In[Dict[str, Any]] = In(*return_array)
         return return_array
     # end def
 
