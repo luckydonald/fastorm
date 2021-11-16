@@ -613,7 +613,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def _prepare_kwargs(cls, **kwargs: Any) -> List[Dict[str, Any]]:
+    def _prepare_kwargs(cls, **kwargs: Any) -> List[Union[In[Dict[str, Any]], Dict[str, Any]]]:
         """
         Will parse the current classes parameters into SQL field names.
         It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
@@ -673,7 +673,7 @@ class FastORM(BaseModel):
         elif len(unprocessed_kwargs) > 1:
             raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
         # end if
-        return_array: List[Dict[str, Any]] = []
+        return_arraaa: Dict[Tuple[str], In[Dict[str, Any]]] = {}
         for short_name, (values, keys) in sql_value_map.items():
             max_union = max(len(u) if isinstance(u, In) else 1 for u in values)
             for i in range(max_union):
@@ -686,12 +686,19 @@ class FastORM(BaseModel):
                         array_object[long_key] = value
                     # end for
                 # end for
-                return_array.append(array_object)
+                hashable_keys = tuple(keys)
+                if hashable_keys in return_arraaa:
+                    if isinstance(return_arraaa[hashable_keys], In):
+                        return_arraaa[hashable_keys].variables.append(array_object)
+                    else:
+                        return_arraaa[hashable_keys] = In(return_arraaa[hashable_keys], array_object)
+                    # end if
+                else:
+                    return_arraaa[hashable_keys] = array_object
+                # end if
             # end for
         # end for
-
-        # return_array: In[Dict[str, Any]] = In(*return_array)
-        return return_array
+        return list(return_arraaa.values())
     # end def
 
     @classmethod
