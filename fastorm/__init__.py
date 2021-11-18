@@ -39,6 +39,7 @@ from asyncpg import Connection, Pool
 
 from .classes import FieldInfo, FieldItem
 from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
+from .compat import IS_PYTHON_3_9
 from .compat import Annotated, NoneType
 from .query import *
 from .query import __all__ as __query__all__
@@ -135,6 +136,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
         else:
             annotation_args = mcs.upgrade_annotation(annotation)
         # end if
+        annotation_args = mcs.deduplicate_types(annotation_args)  # especially tuple vs typing.Tuple
         return annotation_args
     # end def
 
@@ -194,6 +196,45 @@ class ModelMetaclassFastORM(ModelMetaclass):
         return retrofitted_fields
     # end def
 
+    @classmethod
+    def deduplicate_types(mcs, annotations: List[TYPEHINT_TYPE]) -> List[TYPEHINT_TYPE]:
+        # first barebones deduplication
+        annotations = set(annotations)
+
+        if not IS_PYTHON_3_9:
+            # we're done already, they don't have the problematic stuff yet.
+            return list(annotations)
+        # end def
+
+        all_params = set()
+        generic_aliases = set()
+
+        for param in annotations:
+            if param in all_params:
+                continue
+            # end if
+            if check_is_generic_alias(param):
+                # check if we have a different type with similar stuff.
+                # so tuple[] instead of Tuple[] and so on.
+                assert hasattr(param, '__args__')
+                assert hasattr(param, '__origin__')
+
+                # Tuple[int, str] == tuple[int, str]  # False
+                # but:
+                # Tuple[int, str] == Tuple[int, str]  # True
+                # tuple[int, str] == tuple[int, str]  # True
+                # Tuple[int, str].__args__ ==  tuple[int, str].__args__ == (int, str)  # True
+                # Tuple[int, str].__origin__ == tuple[int, str].__origin__ == tuple  # True
+                is_duplicate = any(param.__args__ == other_param.__args__ and param.__origin__ == other_param.__origin__ for other_param in generic_aliases)
+                if is_duplicate:
+                    continue
+                # end if
+                generic_aliases.add(param)
+            # end if
+            all_params.add(param)
+        # end for
+        return list(all_params)
+    # end def
 # end class
 
 

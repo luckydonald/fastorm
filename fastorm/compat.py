@@ -10,6 +10,7 @@ from pydantic.fields import ModelField
 TYPEHINT_TYPE = Union[Type, ModelField]
 
 IS_PYTHON_3_7 = sys.version_info[:3] >= (3, 7, 0)
+IS_PYTHON_3_9 = sys.version_info[:3] >= (3, 9, 0)
 IS_PYTHON_3_10 = sys.version_info[:3] >= (3, 10, 0)
 
 
