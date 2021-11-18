@@ -111,7 +111,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
     def upgrade_annotation(mcs, annotation: TYPEHINT_TYPE) -> List[TYPEHINT_TYPE]:
         annotations = [annotation]
         try:
-            if issubclass(annotation, FastORM):
+            if issubclass(annotation, _BaseFastORM):
                 annotations.extend(annotation.get_primary_keys_type_annotations().values())
             # end if
         except TypeError as e:
@@ -123,7 +123,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
 # end class
 
 
-class FastORM(BaseModel, metaclass=ModelMetaclassFastORM):
+class _BaseFastORM(BaseModel):
     _table_name: str  # database table name we run queries against
     _ignored_fields: List[str]  # fields which never are intended for the database and will be excluded in every operation. (So are all fields starting with an underscore)
     _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
@@ -1897,6 +1897,11 @@ class FastORM(BaseModel, metaclass=ModelMetaclassFastORM):
         )
         return await cls.create_connection(database_url=database_url)
     # end def
+# end class
+
+
+class FastORM(_BaseFastORM, metaclass=ModelMetaclassFastORM):
+    pass
 # end class
 
 
