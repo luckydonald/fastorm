@@ -110,9 +110,14 @@ class ModelMetaclassFastORM(ModelMetaclass):
     @classmethod
     def upgrade_annotation(mcs, annotation: TYPEHINT_TYPE) -> List[TYPEHINT_TYPE]:
         annotations = [annotation]
-        if issubclass(annotation, FastORM):
-            annotations.extend(annotation.get_primary_keys_type_annotations().values())
-        # end if
+        try:
+            if issubclass(annotation, FastORM):
+                annotations.extend(annotation.get_primary_keys_type_annotations().values())
+            # end if
+        except TypeError as e:
+            # TypeError: issubclass() arg 1 must be a class
+            print(annotation, e)
+            pass
         return annotations
     # end def
 # end class
