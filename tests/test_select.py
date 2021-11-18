@@ -390,6 +390,11 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
 
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
+
+        # test that order is not relevant
+        actual = ReferencingDoubleKey.build_sql_select(id_part_3="littlepip is best pony", id_ref_part=DoublePrimaryKeyTable(id_part_1=123, id_part_2=456.789))
+        self.assertEqual(expected[0], actual[0], 'sql (should ignore order)')
+        self.assertEqual(expected[1:], actual[1:], 'variables (should ignore order)')
     # end def
 
     def test_in_clause_non_pk_single_old_list_syntax(self):
