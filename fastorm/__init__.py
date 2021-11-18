@@ -764,29 +764,55 @@ class FastORM(BaseModel):
         where_values = []
         # noinspection PyUnusedLocal
         where_wolf = None
-        for long_key, value in sql_where.items():
-            is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key].resulting_type)
-            if is_in_list_clause:
-                assert isinstance(value, list)
-                assert len(value) >= 1
-                if len(value) == 1:
+
+        def dicts_to_variables(sql_variable_dict: Dict[str, Any], placeholder_index: int):
+            assert isinstance(sql_variable_dict, dict)  # Not In!
+            if len(sql_variable_dict) == 1:
+                placeholder_index += 1
+                long_key, value = list(sql_variable_dict.items())[0]
+                key_string = f'"{long_key}"'
+                placeholder_string = f'${placeholder_index}'
+                values_list = [value]
+            else:  # is_in_list_clause is True
+                key_string = ", ".join(f'"{long_key}"' for long_key in sql_variable_dict.keys()).join("()")
+                last_index = placeholder_index + 1 + len(sql_variable_dict)
+                placeholder_string = ", ".join(f'${i}' for i in range(placeholder_index + 1, last_index)).join("()")
+                values_list = list(sql_variable_dict.items())
+            # end if
+            return key_string, placeholder_string, values_list, placeholder_index
+        # end def
+
+        for sql_wheres in sql_where:
+            sql_wheres: Union[In[Dict[str, Any]], Dict[str, Any]]
+            # is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key].resulting_type)
+
+            # Flatten single element In's
+            if isinstance(sql_wheres, In):
+                assert len(sql_wheres) >= 1
+                if len(sql_wheres) == 1:
                     # single element list -> normal where is fine -> so we go that route with it.
-                    value = value[0]
-                    is_in_list_clause = False
+                    sql_wheres = sql_wheres.variables[0]
                 # end if
             # end if
-            if not is_in_list_clause:  # no else-if as is_in_list_clause could be set False again.
-                where_index += 1
-                where_parts.append(f'"{long_key}" = ${where_index}')
-                where_values.append(value)
-            else:  # is_in_list_clause is True
-                where_part = ''
-                for actual_value in value:
-                    where_index += 1
-                    where_part += f'${where_index},'
-                    where_values.append(actual_value)
+
+            if not sql_wheres:  # it's empty
+                continue
+            # end if
+
+            if not isinstance(sql_wheres, In):
+                key_string, placeholder_string, values_list, where_index = dicts_to_variables(sql_variable_dict=sql_wheres, placeholder_index=where_index)
+                where_values.extend(values_list)
+                where_parts.append(f'{key_string} = {placeholder_string}')
+            else:
+                key_string = None
+                placeholder_strings = []
+                for actual_wheres in sql_wheres.variables:
+                    key_string_new, placeholder_string, values_list, where_index = dicts_to_variables(sql_variable_dict=actual_wheres, placeholder_index=where_index)
+                    where_values.extend(values_list)
+                    assert key_string is None or key_string_new == key_string  # make sure once more it's consistently the same
+                    placeholder_strings.append(placeholder_string)
                 # end for
-                where_parts.append(f'"{long_key}" IN ({where_part.rstrip(",")})')
+                where_parts.append(f'{key_string} IN ({", ".join(placeholder_strings)})')
             # end if
         # end if
         where_sql = "" if not where_parts else f' WHERE {" AND ".join(where_parts)}'
@@ -1656,7 +1682,7 @@ class FastORM(BaseModel):
         :param typehint:
         :return: True if the `value` is a list of tuple of arguments satisfying the `typehint`.
         """
-        if not isinstance(value, list):
+        if not isinstance(value, (list, tuple)):
             # we don't have a list -> can't be multiple values
             # this is a cheap check preventing most of the values.
             return False
