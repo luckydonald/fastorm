@@ -72,16 +72,26 @@ class ModelMetaclassFastORM(ModelMetaclass):
         print(f'kwargs: {kwargs!r}')
         print(f'namespace (old): {namespace!r}')
         if '__annotations__' in namespace:
-            _automatic_keys = namespace.get('_automatic_keys', [])
-            annotations = {}
-            for field_name, annotation in namespace['__annotations__'].items():
-
-            # end for
             namespace['__original__annotations__'] = namespace['__annotations__']
-            namespace['__annotations__'] = annotations
+            del namespace['__annotations__']  # so those two fields are inserted after each other
+            automatic_fields = namespace.get('_automatic_fields', [])
+            namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__annotations__'])
         # end if
         print(f'namespace (new): {namespace!r}')
         return super().__new__(mcs, name, bases, namespace, **kwargs)
+
+    @classmethod
+    def process_annotation(mcs, automatic_fields: List[str], annotations: Dict[str, TYPEHINT_TYPE]):
+        new_annotations = {}
+        for field_name, annotation in annotations.items():
+            annotation_args = mcs.recursive_check(annotation)
+            if field_name in automatic_fields:
+                annotation_args.append(None)
+            # end if
+            new_annotations[field_name] = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
+        # end for
+        return new_annotations
+    # end def
 
     @classmethod
     def recursive_check(cls, _automatic_keys, annotation, annotations, field_name, mcs):
