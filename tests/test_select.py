@@ -442,6 +442,18 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
+    def test__prepare_kwargs_in_clause_non_pk_reference_tuple_single(self):
+        actual = ReferencingDoubleKey._prepare_kwargs(id_ref_part=In[(69, 4458.0)], _allow_in=True)
+        expected = [{"id_ref_part__id_part_1": 69, "id_ref_part__id_part_2": 4458.0}]
+        self.assertListEqual(expected, actual)
+    # end def
+
+    def test_list_in(self):
+        actual = list(In[(69, 4458.0)])
+        expected = [(69, 4458.0),]
+        self.assertListEqual(expected, actual)
+    # end def
+
     def test_in_clause_non_pk_reference_FastORM_multiple(self):
         actual = ReferencingDoubleKey.build_sql_select(id_ref_part=In[DoublePrimaryKeyTable(id_part_1=123456, id_part_2=456.789), DoublePrimaryKeyTable(id_part_1=69, id_part_2=4458.69)])
         # noinspection SqlResolve,SqlNoDataSourceInspection
