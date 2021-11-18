@@ -75,30 +75,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             _automatic_keys = namespace.get('_automatic_keys', [])
             annotations = {}
             for field_name, annotation in namespace['__annotations__'].items():
-                # is a Union[…]
-                is_union = check_is_typing_union_type(annotation) or check_is_new_union_type(annotation)
 
-                # is a List[…], Dict[…], ...
-                is_complex = check_is_generic_alias(annotation)
-                if is_union or is_complex:
-                    assert hasattr(annotation, '__args__')
-                    annotation_args = []
-                    for arg in annotation.__args__:
-                        annotation_args.extend(mcs.upgrade_annotation(arg))
-                    # end for
-                    if is_complex:
-                        # stuff = […] -> Dict[*stuff] -> [Dict[…]]
-                        annotation_args = tuple(annotation_args)
-                        annotation_args = annotation.__origin__[annotation_args]
-                        annotation_args = [annotation_args]
-                else:
-                    annotation_args = mcs.upgrade_annotation(annotation)
-                # end if
-                if field_name in _automatic_keys:
-                    annotation_args.append(None)
-                # end if
-
-                annotations[field_name] = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
             # end for
             namespace['__original__annotations__'] = namespace['__annotations__']
             namespace['__annotations__'] = annotations
@@ -108,7 +85,30 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @classmethod
     def recursive_check(cls, _automatic_keys, annotation, annotations, field_name, mcs):
-        pass
+        # is a Union[…]
+        is_union = check_is_typing_union_type(annotation) or check_is_new_union_type(annotation)
+        # is a List[…], Dict[…], ...
+        is_complex = check_is_generic_alias(annotation)
+
+        if is_union or is_complex:
+            assert hasattr(annotation, '__args__')
+            annotation_args = []
+            for arg in annotation.__args__:
+                annotation_args.extend(mcs.upgrade_annotation(arg))
+            # end for
+            if is_complex:
+                # stuff = […] -> Dict[*stuff] -> [Dict[…]]
+                annotation_args = tuple(annotation_args)
+                annotation_args = annotation.__origin__[annotation_args]
+                annotation_args = [annotation_args]
+        else:
+            annotation_args = mcs.upgrade_annotation(annotation)
+        # end if
+        if field_name in _automatic_keys:
+            annotation_args.append(None)
+        # end if
+
+        annotations[field_name] = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
     # end def
 
     @classmethod
