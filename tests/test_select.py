@@ -60,19 +60,19 @@ class NormalTableTestCase(unittest.TestCase):
 
     def test__prepare_kwargs_single(self):
         expected = [{'id': 12}]
-        actual = SimpleTable._prepare_kwargs(id=12)
+        actual = SimpleTable._prepare_kwargs(id=12, _allow_in=True)
         self.assertEqual(expected, actual)
     # end def
 
     def test__prepare_kwargs_double(self):
         expected = [{'id': 42}, {'text': 'sample text'}]
-        actual = SimpleTable._prepare_kwargs(id=42, text="sample text")
+        actual = SimpleTable._prepare_kwargs(id=42, text="sample text", _allow_in=True)
         self.assertEqual(expected, actual)
     # end def
 
     def test__prepare_kwargs_double_with_union(self):
         expected = [In[{'id': 42}, {'id': 69}], {'text': 'sample text'}]
-        actual = SimpleTable._prepare_kwargs(id=In[42, 69], text="sample text")
+        actual = SimpleTable._prepare_kwargs(id=In[42, 69], text="sample text", _allow_in=True)
         self.assertEqual(expected, actual)
     # end def
 
@@ -342,7 +342,7 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
 
     def test__prepare_kwargs_double_with_union_of_object_and_tuple(self):
         expected = [In[{'id_ref_part__id_part_1': 101, 'id_ref_part__id_part_2': 1.11}, {'id_ref_part__id_part_1': 202, 'id_ref_part__id_part_2': 2.22}], {'other_field': 'sample text'}]
-        actual = ReferencingDoubleKey._prepare_kwargs(id_ref_part=In[DoublePrimaryKeyTable(id_part_1=101, id_part_2=1.11), (202, 2.22)], other_field="sample text")
+        actual = ReferencingDoubleKey._prepare_kwargs(id_ref_part=In[DoublePrimaryKeyTable(id_part_1=101, id_part_2=1.11), (202, 2.22)], other_field="sample text", _allow_in=True)
         self.assertEqual(expected, actual)
     # end def
 

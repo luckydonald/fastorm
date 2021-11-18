@@ -613,7 +613,7 @@ class FastORM(BaseModel):
     # end def
 
     @classmethod
-    def _prepare_kwargs(cls, **kwargs: Any) -> List[Union[In[Dict[str, Any]], Dict[str, Any]]]:
+    def _prepare_kwargs(cls, _allow_in: bool, **kwargs: Any) -> List[Union[In[Dict[str, Any]], Dict[str, Any]]]:
         """
         Will parse the current classes parameters into SQL field names.
         It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
@@ -648,6 +648,9 @@ class FastORM(BaseModel):
             # check that it's an allowed key
             if short_key in _ignored_fields:
                 raise ValueError(f'key {short_key!r} is a (non-ignored) field!')
+            # end if
+            if not _allow_in and isinstance(value, In):
+                raise TypeError('In[…] is not allowed in this type of query.')
             # end if
 
             if not typehint.is_reference:
@@ -755,7 +758,7 @@ class FastORM(BaseModel):
             for field in non_ignored_long_names
             if not field.startswith('_')
         ])
-        sql_where = cls._prepare_kwargs(**kwargs)
+        sql_where = cls._prepare_kwargs(**kwargs, _allow_in=True)
         where_index = 0
         where_parts = []
         where_values = []
