@@ -129,7 +129,6 @@ class In(Generic[VARIABLE_TYPE]):
         if len(self.as_list()) == 1:
             return self.as_list()[0] == other
         # end if
-
-        raise TypeError(f'Could not compare with {type(other)}: {other!r}')
+        return False
     # end def
 # end class
