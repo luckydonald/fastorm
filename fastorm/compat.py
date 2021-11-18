@@ -19,6 +19,11 @@ def check_is_new_union_type(variable: Any) -> bool:
     return False
 # end def
 
+def check_is_typing_union_type(variable: Any) -> bool:
+    # as there's no UnionType, we can't have an instance of it.
+    return False
+# end def
+
 
 def check_is_generic_alias(variable: Any) -> bool:
     # as there's no GenericAlias, we can't have an instance of it.
@@ -33,6 +38,19 @@ def check_is_annotated_type(variable: Any) -> bool:
 
 
 try:
+    from typing import _UnionGenericAlias as TypingUnionType
+
+    def check_is_typing_union_type(variable: Any) -> bool:
+        return isinstance(variable, TypingUnionType)
+    # end def
+
+    TYPEHINT_TYPE = Union[TYPEHINT_TYPE, TypingUnionType]
+except ImportError:
+    pass
+# end try
+
+
+try:
     from types import UnionType
 
     def check_is_new_union_type(variable: Any) -> bool:
@@ -43,7 +61,6 @@ try:
 except ImportError:
     pass
 # end try
-
 
 try:
     from types import GenericAlias
