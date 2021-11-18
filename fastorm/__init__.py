@@ -1102,6 +1102,20 @@ class FastORM(BaseModel, metaclass=ModelMetaclassFastORM):
     # end def
 
     @classmethod
+    def get_primary_keys_typehints(cls) -> Dict[str, FieldInfo[ModelField]]:
+        _primary_keys = cls.get_primary_keys_keys()
+        type_hints = cls.get_fields_typehints(flatten_table_references=False)
+        return {key: hint for key, hint in type_hints.items() if key in _primary_keys}
+    # end def
+
+    @classmethod
+    def get_primary_keys_type_annotations(cls) -> Dict[str, FieldInfo[ModelField]]:
+        _primary_keys = cls.get_primary_keys_keys()
+        _annotations = getattr(cls, '_annotations', {})
+        return {key: hint for key, hint in _annotations.items() if key in _primary_keys}
+    # end def
+
+    @classmethod
     def from_row(cls, row):
         # noinspection PyArgumentList
         row_data = {key.rsplit(" ")[-1]: value for key, value in dict(row).items()}  # handles the namespaces like "namespace_name field_name"
