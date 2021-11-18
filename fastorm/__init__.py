@@ -768,18 +768,18 @@ class FastORM(BaseModel):
         def dicts_to_variables(sql_variable_dict: Dict[str, Any], placeholder_index: int):
             assert isinstance(sql_variable_dict, dict)  # Not In!
             if len(sql_variable_dict) == 1:
-                placeholder_index += 1
+                placeholder_index_after = placeholder_index + 1
                 long_key, value = list(sql_variable_dict.items())[0]
                 key_string = f'"{long_key}"'
                 placeholder_string = f'${placeholder_index}'
                 values_list = [value]
             else:  # is_in_list_clause is True
                 key_string = ", ".join(f'"{long_key}"' for long_key in sql_variable_dict.keys()).join("()")
-                last_index = placeholder_index + 1 + len(sql_variable_dict)
-                placeholder_string = ", ".join(f'${i}' for i in range(placeholder_index + 1, last_index)).join("()")
-                values_list = list(sql_variable_dict.items())
+                placeholder_index_after = placeholder_index + len(sql_variable_dict)
+                placeholder_string = ", ".join(f'${i}' for i in range(placeholder_index + 1, placeholder_index_after + 1)).join("()")
+                values_list = list(sql_variable_dict.values())
             # end if
-            return key_string, placeholder_string, values_list, placeholder_index
+            return key_string, placeholder_string, values_list, placeholder_index_after
         # end def
 
         for sql_wheres in sql_where:
@@ -810,6 +810,7 @@ class FastORM(BaseModel):
                     key_string_new, placeholder_string, values_list, where_index = dicts_to_variables(sql_variable_dict=actual_wheres, placeholder_index=where_index)
                     where_values.extend(values_list)
                     assert key_string is None or key_string_new == key_string  # make sure once more it's consistently the same
+                    key_string = key_string_new
                     placeholder_strings.append(placeholder_string)
                 # end for
                 where_parts.append(f'{key_string} IN ({", ".join(placeholder_strings)})')
