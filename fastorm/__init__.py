@@ -75,10 +75,11 @@ class ModelMetaclassFastORM(ModelMetaclass):
             namespace['__original__annotations__'] = namespace['__annotations__']
             del namespace['__annotations__']  # so those two fields are inserted after each other
             automatic_fields = namespace.get('_automatic_fields', [])
-            namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__annotations__'])
+            namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
         # end if
         print(f'namespace (new): {namespace!r}')
         return super().__new__(mcs, name, bases, namespace, **kwargs)
+    # end def
 
     @classmethod
     def process_annotation(mcs, automatic_fields: List[str], annotations: Dict[str, TYPEHINT_TYPE]):
