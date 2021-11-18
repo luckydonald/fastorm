@@ -72,6 +72,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
         print(f'kwargs: {kwargs!r}')
         print(f'namespace (old): {namespace!r}')
         if '__annotations__' in namespace:
+            _automatic_keys = namespace.get('_automatic_keys', [])
             annotations = {}
             for field_name, annotation in namespace['__annotations__'].items():
                 # noinspection PyUnresolvedReferences
@@ -84,7 +85,11 @@ class ModelMetaclassFastORM(ModelMetaclass):
                 else:
                     annotation_args = mcs.upgrade_annotation(annotation)
                 # end if
-                annotations[field_name] = Union.__getitem__(*annotation_args)  # calls Union[…]
+                if field_name in _automatic_keys:
+                    annotation_args.append(None)
+                # end if
+
+                annotations[field_name] = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
             # end for
             namespace['__original__annotations__'] = namespace['__annotations__']
             namespace['__annotations__'] = annotations
