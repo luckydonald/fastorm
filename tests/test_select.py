@@ -434,7 +434,7 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
     # end def
 
     def test_in_clause_non_pk_reference_tuple_single(self):
-        actual = ReferencingDoubleKey.build_sql_select(id_ref_part=In[(69, 4458.0)])
+        actual = ReferencingDoubleKey.build_sql_select(id_ref_part=In[(69, 4458.0),])
         # noinspection SqlResolve,SqlNoDataSourceInspection
         expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE ("id_ref_part__id_part_1", "id_ref_part__id_part_2") = ($1, $2)', 69, 4458.0
 
@@ -443,14 +443,14 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
     # end def
 
     def test__prepare_kwargs_in_clause_non_pk_reference_tuple_single(self):
-        actual = ReferencingDoubleKey._prepare_kwargs(id_ref_part=In[(69, 4458.0)], _allow_in=True)
+        actual = ReferencingDoubleKey._prepare_kwargs(id_ref_part=In[(69, 4458.0),], _allow_in=True)
         expected = [{"id_ref_part__id_part_1": 69, "id_ref_part__id_part_2": 4458.0}]
         self.assertListEqual(expected, actual)
     # end def
 
     def test_list_in(self):
-        actual = list(In[(69, 4458.0)])
-        expected = [(69, 4458.0),]
+        actual = list(In[(69, 4458.0),])
+        expected = [(69, 4458.0)]
         self.assertListEqual(expected, actual)
     # end def
 

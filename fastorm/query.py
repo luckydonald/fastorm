@@ -21,6 +21,12 @@ VARIABLE_TYPE = TypeVar("VARIABLE_TYPE", bound=Any)
 
 
 class In(Generic[VARIABLE_TYPE]):
+    """
+    > ⚠️ Note, due to a glitch in python, a single tuple parameter as getitem parameter is the same as having it not wrapped in a tuple at all:
+    > `In[(1,2,3)]` is the same as `In[1,2,3]`.
+    > If you really want to use a single tuple as the ONLY parameter,
+    > use a trailing comma `In[(1,2,3),]`, or the class constructor `In((1,2,3))`.
+    """
     __slots__ = ['variables', '_flattened_cache']
 
     variables: List[VARIABLE_TYPE]
