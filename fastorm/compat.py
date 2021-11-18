@@ -76,11 +76,13 @@ try:
 
 
     def check_is_annotated_type(variable: Any) -> bool:
-        # as there's no Annotated, we can't have an instance of it.
         return isinstance(variable, AnnotatedType)
     # end def
 except ImportError:
-    pass
+    def check_is_annotated_type(variable: Any) -> bool:
+        # as there's no Annotated, we can't have an instance of it.
+        return False
+    # end def
 # end try
 
 try:
