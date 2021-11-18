@@ -466,6 +466,167 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
 # end class
 
 
+class TableWithWayTooManyReferences(FastORM):
+    _table_name = 'too_many_refs'
+    _automatic_fields = ['id_01']
+    _primary_keys = ['id_01', 'id_02', 'id_03', 'id_04', 'id_05', 'id_06', 'id_07', 'id_08', 'id_09', 'id_10']
+
+    id_01: Optional[int]
+    id_02: int
+    id_03: Optional[int]
+    id_04: float
+    id_05: str
+    id_06: dict
+    id_07: List[int]
+    id_08: Optional[List[int]]
+    id_09: List
+    id_10: List
+
+
+# end class
+
+
+class UhOhReferencingTableWithWayTooManyReferences(FastORM):
+    _table_name = 'uh_oh'
+    _primary_keys = ['ref_1']
+
+    ref_1: Optional[TableWithWayTooManyReferences]
+    ref_2: TableWithWayTooManyReferences
+
+
+# end class
+
+
+class TableWithWayTooManyReferencesTestCase(unittest.TestCase):
+    def test_sql_text_create_a(self):
+        self.maxDiff = None
+        # noinspection SqlNoDataSourceInspection,SqlResolve
+        expected_sql = dedent(
+            """
+            CREATE TABLE "too_many_refs" (
+              "id_01" BIGSERIAL NOT NULL,
+              "id_02" BIGINT NOT NULL,
+              "id_03" BIGINT,
+              "id_04" DOUBLE PRECISION NOT NULL,
+              "id_05" TEXT NOT NULL,
+              "id_06" JSONB NOT NULL,
+              "id_07" BIGINT[] NOT NULL,
+              "id_08" BIGINT[],
+              "id_09" JSONB NOT NULL,
+              "id_10" JSONB NOT NULL,
+              PRIMARY KEY ("id_01", "id_02", "id_03", "id_04", "id_05", "id_06", "id_07", "id_08", "id_09", "id_10")
+            );
+            """
+        ).strip()
+        actual_sql, *actual_params = TableWithWayTooManyReferences.build_sql_create()
+        self.assertEqual(expected_sql, actual_sql, msg="create")
+        self.assertListEqual([], actual_params, "create")
+
+    # end def
+
+    def test_sql_text_create_b(self):
+        self.maxDiff = None
+        # noinspection SqlNoDataSourceInspection,SqlResolve
+        expected_sql = dedent(
+            """
+            CREATE TABLE "uh_oh" (
+              "ref_1__id_01" BIGINT,
+              "ref_1__id_02" BIGINT,
+              "ref_1__id_03" BIGINT,
+              "ref_1__id_04" DOUBLE PRECISION,
+              "ref_1__id_05" TEXT,
+              "ref_1__id_06" JSONB,
+              "ref_1__id_07" BIGINT[],
+              "ref_1__id_08" BIGINT[],
+              "ref_1__id_09" JSONB,
+              "ref_1__id_10" JSONB,
+              "ref_2__id_01" BIGINT,"""
+            # "ref_2__id_01" BIGINT NOT NULL  # TODO
+            """
+              "ref_2__id_02" BIGINT NOT NULL,
+              "ref_2__id_03" BIGINT,
+              "ref_2__id_04" DOUBLE PRECISION NOT NULL,
+              "ref_2__id_05" TEXT NOT NULL,
+              "ref_2__id_06" JSONB NOT NULL,
+              "ref_2__id_07" BIGINT[] NOT NULL,
+              "ref_2__id_08" BIGINT[],
+              "ref_2__id_09" JSONB NOT NULL,
+              "ref_2__id_10" JSONB NOT NULL,
+              PRIMARY KEY ("ref_1__id_01", "ref_1__id_02", "ref_1__id_03", "ref_1__id_04", "ref_1__id_05", "ref_1__id_06", "ref_1__id_07", "ref_1__id_08", "ref_1__id_09", "ref_1__id_10")
+            );
+            """
+        ).strip()
+        actual_sql, *actual_params = UhOhReferencingTableWithWayTooManyReferences.build_sql_create()
+        self.assertEqual(expected_sql, actual_sql, msg="create")
+        self.assertListEqual([], actual_params, "create")
+
+    # end def
+
+    def test_sql_text_references_a(self):
+        self.maxDiff = None
+        # noinspection SqlNoDataSourceInspection,SqlResolve
+        expected_sql = dedent(
+            """
+            SELECT 1;
+            """
+        ).strip()
+        actual_sql, *actual_params = TableWithWayTooManyReferences.build_sql_references()
+        self.assertEqual(expected_sql, actual_sql, msg="references")
+        self.assertListEqual([], actual_params, "references")
+    # end def
+
+    def test_sql_text_references_b(self):
+        self.maxDiff = None
+        # noinspection SqlNoDataSourceInspection,SqlResolve
+        expected_sql = dedent(
+            """
+            CREATE INDEX "idx_too_many_refs___ref_1__id_01" ON "too_many_refs" ("ref_1__id_01");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_02" ON "too_many_refs" ("ref_1__id_02");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_03" ON "too_many_refs" ("ref_1__id_03");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_04" ON "too_many_refs" ("ref_1__id_04");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_05" ON "too_many_refs" ("ref_1__id_05");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_06" ON "too_many_refs" ("ref_1__id_06");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_07" ON "too_many_refs" ("ref_1__id_07");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_08" ON "too_many_refs" ("ref_1__id_08");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_09" ON "too_many_refs" ("ref_1__id_09");
+            CREATE INDEX "idx_too_many_refs___ref_1__id_10" ON "too_many_refs" ("ref_1__id_10");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_01" ON "too_many_refs" ("ref_2__id_01");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_02" ON "too_many_refs" ("ref_2__id_02");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_03" ON "too_many_refs" ("ref_2__id_03");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_04" ON "too_many_refs" ("ref_2__id_04");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_05" ON "too_many_refs" ("ref_2__id_05");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_06" ON "too_many_refs" ("ref_2__id_06");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_07" ON "too_many_refs" ("ref_2__id_07");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_08" ON "too_many_refs" ("ref_2__id_08");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_09" ON "too_many_refs" ("ref_2__id_09");
+            CREATE INDEX "idx_too_many_refs___ref_2__id_10" ON "too_many_refs" ("ref_2__id_10");
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_01" FOREIGN KEY ("ref_1__id_01") REFERENCES "too_many_refs" ("id_01") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_02" FOREIGN KEY ("ref_1__id_02") REFERENCES "too_many_refs" ("id_02") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_03" FOREIGN KEY ("ref_1__id_03") REFERENCES "too_many_refs" ("id_03") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_04" FOREIGN KEY ("ref_1__id_04") REFERENCES "too_many_refs" ("id_04") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_05" FOREIGN KEY ("ref_1__id_05") REFERENCES "too_many_refs" ("id_05") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_06" FOREIGN KEY ("ref_1__id_06") REFERENCES "too_many_refs" ("id_06") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_07" FOREIGN KEY ("ref_1__id_07") REFERENCES "too_many_refs" ("id_07") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_08" FOREIGN KEY ("ref_1__id_08") REFERENCES "too_many_refs" ("id_08") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_09" FOREIGN KEY ("ref_1__id_09") REFERENCES "too_many_refs" ("id_09") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_1__id_10" FOREIGN KEY ("ref_1__id_10") REFERENCES "too_many_refs" ("id_10") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_01" FOREIGN KEY ("ref_2__id_01") REFERENCES "too_many_refs" ("id_01") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_02" FOREIGN KEY ("ref_2__id_02") REFERENCES "too_many_refs" ("id_02") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_03" FOREIGN KEY ("ref_2__id_03") REFERENCES "too_many_refs" ("id_03") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_04" FOREIGN KEY ("ref_2__id_04") REFERENCES "too_many_refs" ("id_04") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_05" FOREIGN KEY ("ref_2__id_05") REFERENCES "too_many_refs" ("id_05") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_06" FOREIGN KEY ("ref_2__id_06") REFERENCES "too_many_refs" ("id_06") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_07" FOREIGN KEY ("ref_2__id_07") REFERENCES "too_many_refs" ("id_07") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_08" FOREIGN KEY ("ref_2__id_08") REFERENCES "too_many_refs" ("id_08") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_09" FOREIGN KEY ("ref_2__id_09") REFERENCES "too_many_refs" ("id_09") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_tuh_oh___ref_2__id_10" FOREIGN KEY ("ref_2__id_10") REFERENCES "too_many_refs" ("id_10") ON DELETE CASCADE;
+            """
+        ).strip()
+        actual_sql, *actual_params = UhOhReferencingTableWithWayTooManyReferences.build_sql_references()
+        self.assertEqual(expected_sql, actual_sql, msg="references")
+        self.assertListEqual([], actual_params, "references")
+    # end def
+# end class
 
 
 if __name__ == '__main__':
