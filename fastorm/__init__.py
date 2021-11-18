@@ -30,6 +30,7 @@ from luckydonaldUtils.logger import logging
 from luckydonaldUtils.typing import JSONType
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 from pydantic.fields import ModelField, UndefinedType, Undefined, Field, PrivateAttr
 from pydantic.typing import NoArgAnyCallable
 from typeguard import check_type
@@ -37,7 +38,7 @@ from typeguard import check_type
 from asyncpg import Connection, Pool
 
 from .classes import FieldInfo, FieldItem
-from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
+from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
 from .compat import Annotated, NoneType
 from .query import *
 from .query import __all__ as __query__all__
@@ -54,6 +55,53 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__':
     logging.add_colored_handler(level=logging.DEBUG)
 # end if
+
+
+class ModelMetaclassFastORM(ModelMetaclass):
+    """
+    Extend the normal pydantic Metaclass with some processing of other types.
+    If we have references to other classes, we can additionally allow the Tuple form of their primary keys.
+
+    so
+    - `field: SomeTable` with primary key of `SomeTable` being `id: int` would become `field: Union[SomeTable, int]`
+    - `field: SomeTable` with primary key of `SomeTable` being `id_a: int, id_b: float` would become `field: Union[SomeTable, Tuple[int, float]`
+    """
+    def __new__(mcs, name, bases, namespace, **kwargs):  # noqa C901
+        print(f'name: {name!r}')
+        print(f'bases: {bases!r}')
+        print(f'kwargs: {kwargs!r}')
+        print(f'namespace (old): {namespace!r}')
+        if '__annotations__' in namespace:
+            annotations = {}
+            for field_name, annotation in namespace['__annotations__'].items():
+                # noinspection PyUnresolvedReferences
+                if check_is_typing_union_type(annotation) or check_is_new_union_type(annotation):
+                    assert hasattr(annotation, '__args__')
+                    annotation_args = []
+                    for arg in annotation.__args__:
+                        annotation_args.extend(mcs.upgrade_annotation(arg))
+                    # end for
+                else:
+                    annotation_args = mcs.upgrade_annotation(annotation)
+                # end if
+                annotations[field_name] = Union.__getitem__(*annotation_args)  # calls Union[…]
+            # end for
+            namespace['__original__annotations__'] = namespace['__annotations__']
+            namespace['__annotations__'] = annotations
+        # end if
+        print(f'namespace (new): {namespace!r}')
+        return super().__new__(mcs, name, bases, namespace, **kwargs)
+    # end def
+
+    @classmethod
+    def upgrade_annotation(mcs, annotation: TYPEHINT_TYPE) -> List[TYPEHINT_TYPE]:
+        annotations = [annotation]
+        if issubclass(annotation, FastORM):
+            annotations.extend(annotation.get_primary_keys_type_annotations().values())
+        # end if
+        return annotations
+    # end def
+# end class
 
 
 class FastORM(BaseModel):
