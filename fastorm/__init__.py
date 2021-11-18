@@ -136,7 +136,13 @@ class ModelMetaclassFastORM(ModelMetaclass):
         annotations = [annotation]
         try:
             if issubclass(annotation, _BaseFastORM):
-                annotations.extend(annotation.get_primary_keys_type_annotations().values())
+                pk_annotations = tuple(annotation.get_primary_keys_type_annotations().values())
+                if len(pk_annotations) == 1:
+                    pk_annotations = pk_annotations[0]
+                else:
+                    pk_annotations = Tuple.__getitem__(pk_annotations)
+                # end if
+                annotations.append(pk_annotations)
             # end if
         except TypeError as e:
             # TypeError: issubclass() arg 1 must be a class
@@ -354,7 +360,7 @@ class _BaseFastORM(BaseModel):
             ...     _table_name = 'mayhem_group_tables'
             ...     _primary_keys = ['id', 'reference']
             ...     _automatic_fields = ['id']
-            ...     reference: OtherTable
+            ...     reference: Union[OtherTable, Tuple]
             ...
 
 
@@ -610,6 +616,7 @@ class _BaseFastORM(BaseModel):
         own_keys = self.get_fields()
         _ignored_fields = self.get_ignored_fields()
         _automatic_fields = self.get_automatic_fields()
+        sql_fields = self._prepare_kwargs(**self.dict(), _allow_in=False)
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
         assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
 
@@ -1140,7 +1147,7 @@ class _BaseFastORM(BaseModel):
     @classmethod
     def get_primary_keys_type_annotations(cls) -> Dict[str, FieldInfo[ModelField]]:
         _primary_keys = cls.get_primary_keys_keys()
-        _annotations = getattr(cls, '_annotations', {})
+        _annotations = getattr(cls, '__annotations__', {})
         return {key: hint for key, hint in _annotations.items() if key in _primary_keys}
     # end def
 
@@ -1933,7 +1940,7 @@ class FastORM(_BaseFastORM, metaclass=ModelMetaclassFastORM):
     __selectable_fields: List[str] = PrivateAttr()  # cache for `cls.get_sql_fields()`
     __fields_typehints: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
     __fields_references: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
-    __old__annotations__: Dict[str, Any]
+    __original__annotations__: Dict[str, Any]
 # end class
 
 
