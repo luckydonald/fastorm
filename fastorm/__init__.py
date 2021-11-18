@@ -1901,7 +1901,15 @@ class _BaseFastORM(BaseModel):
 
 
 class FastORM(_BaseFastORM, metaclass=ModelMetaclassFastORM):
-    pass
+    _table_name: str  # database table name we run queries against
+    _ignored_fields: List[str]  # fields which never are intended for the database and will be excluded in every operation. (So are all fields starting with an underscore)
+    _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
+    _primary_keys: List[str]  # this is how we identify ourself.
+    _database_cache: Dict[str, JSONType] = PrivateAttr()  # stores the last known retrieval, so we can run UPDATES after you changed parameters.
+    __selectable_fields: List[str] = PrivateAttr()  # cache for `cls.get_sql_fields()`
+    __fields_typehints: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
+    __fields_references: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
+    __old__annotations__: Dict[str, Any]
 # end class
 
 
