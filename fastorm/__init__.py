@@ -94,7 +94,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
     # end def
 
     @classmethod
-    def recursive_check(cls, _automatic_keys, annotation, annotations, field_name, mcs):
+    def recursive_check(mcs, annotation):
         # is a Union[…]
         is_union = check_is_typing_union_type(annotation) or check_is_new_union_type(annotation)
         # is a List[…], Dict[…], ...
@@ -103,22 +103,31 @@ class ModelMetaclassFastORM(ModelMetaclass):
         if is_union or is_complex:
             assert hasattr(annotation, '__args__')
             annotation_args = []
-            for arg in annotation.__args__:
-                annotation_args.extend(mcs.upgrade_annotation(arg))
-            # end for
-            if is_complex:
+            if is_union:
+                for arg in annotation.__args__:
+                    annotation_args.extend(mcs.recursive_check(arg))
+                # end for
+            else:
+                assert is_complex
                 # stuff = […] -> Dict[*stuff] -> [Dict[…]]
+                for arg in annotation.__args__:
+                    param = mcs.recursive_check(arg)
+                    if len(param) == 1:
+                        param = param[0]
+                    else:
+                        # Dict[str, Table] -> Dict[str, Union[str, table_pks]]
+                        param = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
+                    # end if
+                    annotation_args.append(param)
+                # end for
                 annotation_args = tuple(annotation_args)
-                annotation_args = annotation.__origin__[annotation_args]
+                annotation_args = annotation.__origin__[annotation_args]  # calls List[…]
                 annotation_args = [annotation_args]
+            # end if
         else:
             annotation_args = mcs.upgrade_annotation(annotation)
         # end if
-        if field_name in _automatic_keys:
-            annotation_args.append(None)
-        # end if
-
-        annotations[field_name] = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
+        return annotation_args
     # end def
 
     @classmethod
