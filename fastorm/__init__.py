@@ -738,8 +738,25 @@ class FastORM(BaseModel):
             break  # so no further processing needs to be done.
         # end for
         return value
-
     # end def
+
+    @classmethod
+    def _prepared_dict_to_sql(cls, sql_variable_dict: Dict[str, Any], placeholder_index: int):
+            assert isinstance(sql_variable_dict, dict)  # Not In!
+            if len(sql_variable_dict) == 1:
+                placeholder_index_after = placeholder_index + 1
+                long_key, value = list(sql_variable_dict.items())[0]
+                key_string = f'"{long_key}"'
+                placeholder_string = f'${placeholder_index}'
+                values_list = [value]
+            else:  # is_in_list_clause is True
+                key_string = ", ".join(f'"{long_key}"' for long_key in sql_variable_dict.keys()).join("()")
+                placeholder_index_after = placeholder_index + len(sql_variable_dict)
+                placeholder_string = ", ".join(f'${i}' for i in range(placeholder_index + 1, placeholder_index_after + 1)).join("()")
+                values_list = list(sql_variable_dict.values())
+            # end if
+            return key_string, placeholder_string, values_list, placeholder_index_after
+        # end def
 
     @classmethod
     def build_sql_select(cls, **kwargs):
@@ -765,23 +782,6 @@ class FastORM(BaseModel):
         # noinspection PyUnusedLocal
         where_wolf = None
 
-        def dicts_to_variables(sql_variable_dict: Dict[str, Any], placeholder_index: int):
-            assert isinstance(sql_variable_dict, dict)  # Not In!
-            if len(sql_variable_dict) == 1:
-                placeholder_index_after = placeholder_index + 1
-                long_key, value = list(sql_variable_dict.items())[0]
-                key_string = f'"{long_key}"'
-                placeholder_string = f'${placeholder_index}'
-                values_list = [value]
-            else:  # is_in_list_clause is True
-                key_string = ", ".join(f'"{long_key}"' for long_key in sql_variable_dict.keys()).join("()")
-                placeholder_index_after = placeholder_index + len(sql_variable_dict)
-                placeholder_string = ", ".join(f'${i}' for i in range(placeholder_index + 1, placeholder_index_after + 1)).join("()")
-                values_list = list(sql_variable_dict.values())
-            # end if
-            return key_string, placeholder_string, values_list, placeholder_index_after
-        # end def
-
         for sql_wheres in sql_where:
             sql_wheres: Union[In[Dict[str, Any]], Dict[str, Any]]
             # is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key].resulting_type)
@@ -800,14 +800,14 @@ class FastORM(BaseModel):
             # end if
 
             if not isinstance(sql_wheres, In):
-                key_string, placeholder_string, values_list, where_index = dicts_to_variables(sql_variable_dict=sql_wheres, placeholder_index=where_index)
+                key_string, placeholder_string, values_list, where_index = cls._prepared_dict_to_sql(sql_variable_dict=sql_wheres, placeholder_index=where_index)
                 where_values.extend(values_list)
                 where_parts.append(f'{key_string} = {placeholder_string}')
             else:
                 key_string = None
                 placeholder_strings = []
                 for actual_wheres in sql_wheres.variables:
-                    key_string_new, placeholder_string, values_list, where_index = dicts_to_variables(sql_variable_dict=actual_wheres, placeholder_index=where_index)
+                    key_string_new, placeholder_string, values_list, where_index = cls._prepared_dict_to_sql(sql_variable_dict=actual_wheres, placeholder_index=where_index)
                     where_values.extend(values_list)
                     assert key_string is None or key_string_new == key_string  # make sure once more it's consistently the same
                     key_string = key_string_new
