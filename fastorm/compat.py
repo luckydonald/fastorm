@@ -79,10 +79,7 @@ try:
         return isinstance(variable, AnnotatedType)
     # end def
 except ImportError:
-    def check_is_annotated_type(variable: Any) -> bool:
-        # as there's no Annotated, we can't have an instance of it.
-        return False
-    # end def
+    pass  # default method is already above
 # end try
 
 try:
