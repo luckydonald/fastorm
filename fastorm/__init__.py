@@ -32,7 +32,7 @@ from luckydonaldUtils.typing import JSONType
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 from pydantic.fields import ModelField, UndefinedType, Undefined, Field, PrivateAttr
-from pydantic.typing import NoArgAnyCallable
+from pydantic.typing import NoArgAnyCallable, resolve_annotations
 from typeguard import check_type
 
 from asyncpg import Connection, Pool
@@ -78,7 +78,14 @@ class ModelMetaclassFastORM(ModelMetaclass):
             namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
         # end if
         print(f'namespace (new): {namespace!r}')
-        return super().__new__(mcs, name, bases, namespace, **kwargs)
+        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
+        cls.__original__fields__ = mcs.process_fields(
+            generated_new_fields=cls.__fields__,
+            new_annotations=namespace.get('__annotations__', []),
+            original_annotations=namespace.get('__original__annotations__', []),
+            namespace=namespace,
+        )
+        return cls
     # end def
 
     @classmethod
@@ -150,6 +157,43 @@ class ModelMetaclassFastORM(ModelMetaclass):
             pass
         return annotations
     # end def
+
+    @classmethod
+    def process_fields(
+        cls,
+        generated_new_fields: Dict[str, ModelField],
+        new_annotations: Dict[str, TYPEHINT_TYPE],
+        original_annotations: Dict[str, TYPEHINT_TYPE],
+        namespace: Dict
+    ) -> Dict[str, ModelField]:
+        retrofitted_fields: Dict[str, ModelField] = {}
+        annotations = None  # basically a cache, we don't wanna resolve anotations over and over again
+        for key in generated_new_fields.keys():
+            if new_annotations[key] == original_annotations[key]:
+                # we have no change in types, so we can easily skip and just use the same as the generated one.
+                retrofitted_fields[key] = generated_new_fields[key]
+                continue
+            # end if
+
+            # now the tough part, mimicking pydantic's processing
+            if annotations is None:
+                annotations = resolve_annotations(original_annotations, namespace.get('__module__', None))
+            # end if
+
+            # annotation only fields need to come first in fields (???)
+            value = namespace.get(key, Undefined)
+            ann_type = annotations[key]
+            retrofitted_fields[key] = ModelField.infer(
+                name=key,
+                value=value,
+                annotation=ann_type,
+                class_validators=generated_new_fields[key].class_validators,  # TODO? vg.get_validators(ann_name) ?
+                config=generated_new_fields[key].model_config,
+            )
+        # end for
+        return retrofitted_fields
+    # end def
+
 # end class
 
 
@@ -162,6 +206,8 @@ class _BaseFastORM(BaseModel):
     __selectable_fields: List[str] = PrivateAttr()  # cache for `cls.get_sql_fields()`
     __fields_typehints: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
     __fields_references: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
+    __original__annotations__: Dict[str, Any]  # filled by the metaclass, before we do modify the __annotations__
+    __original__fields__: Dict[str, ModelField]  # filled by the metaclass, before we do modify the __fields__
 
     def __init__(self, **data: Any):
         super().__init__(**data)
@@ -389,7 +435,7 @@ class _BaseFastORM(BaseModel):
         _primary_keys = cls.get_primary_keys_keys()
         # copy the type hints as we might add more type hints for the primary key fields of referenced models, and we wanna filter.
         type_hints = {
-            key: value for key, value in cls.__fields__.items()
+            key: value for key, value in cls.__original__fields__.items()
             if (
                 not key.startswith('_')
                 and not key.isupper()
@@ -1940,7 +1986,8 @@ class FastORM(_BaseFastORM, metaclass=ModelMetaclassFastORM):
     __selectable_fields: List[str] = PrivateAttr()  # cache for `cls.get_sql_fields()`
     __fields_typehints: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
     __fields_references: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
-    __original__annotations__: Dict[str, Any]
+    __original__annotations__: Dict[str, Any]  # filled by the metaclass, before we do modify the __annotations__
+    __original__fields__: Dict[str, ModelField]  # filled by the metaclass, before we do modify the __fields__
 # end class
 
 
