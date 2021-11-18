@@ -747,7 +747,7 @@ class FastORM(BaseModel):
                 placeholder_index_after = placeholder_index + 1
                 long_key, value = list(sql_variable_dict.items())[0]
                 key_string = f'"{long_key}"'
-                placeholder_string = f'${placeholder_index}'
+                placeholder_string = f'${placeholder_index_after}'
                 values_list = [value]
             else:  # is_in_list_clause is True
                 key_string = ", ".join(f'"{long_key}"' for long_key in sql_variable_dict.keys()).join("()")
