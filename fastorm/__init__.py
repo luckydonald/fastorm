@@ -105,6 +105,10 @@ class ModelMetaclassFastORM(ModelMetaclass):
         # end if
         print(f'namespace (new): {namespace!r}')
         return super().__new__(mcs, name, bases, namespace, **kwargs)
+
+    @classmethod
+    def recursive_check(cls, _automatic_keys, annotation, annotations, field_name, mcs):
+        pass
     # end def
 
     @classmethod
