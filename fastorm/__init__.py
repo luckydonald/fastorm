@@ -104,7 +104,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
 # end class
 
 
-class FastORM(BaseModel):
+class FastORM(BaseModel, metaclass=ModelMetaclassFastORM):
     _table_name: str  # database table name we run queries against
     _ignored_fields: List[str]  # fields which never are intended for the database and will be excluded in every operation. (So are all fields starting with an underscore)
     _automatic_fields: List[str]  # fields the database fills in, so we will ignore them on INSERT.
