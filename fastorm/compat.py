@@ -98,13 +98,12 @@ elif not IS_PYTHON_3_7:
     from typing import get_type_hints
 
     def get_type_hints_with_annotations(cls) -> Dict[str, any]:
-         return get_type_hints(cls, include_extras=True)
+        return get_type_hints(cls, include_extras=True)
     # end def
 else:  # pre 3.7
     from typing import get_type_hints
 
     def get_type_hints_with_annotations(cls) -> Dict[str, any]:
-         return get_type_hints(cls)
+        return get_type_hints(cls)
     # end def
 # end def
-
