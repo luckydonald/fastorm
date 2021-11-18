@@ -481,8 +481,6 @@ class TableWithWayTooManyReferences(FastORM):
     id_08: Optional[List[int]]
     id_09: List
     id_10: List
-
-
 # end class
 
 
@@ -492,8 +490,6 @@ class UhOhReferencingTableWithWayTooManyReferences(FastORM):
 
     ref_1: Optional[TableWithWayTooManyReferences]
     ref_2: TableWithWayTooManyReferences
-
-
 # end class
 
 
@@ -521,7 +517,6 @@ class TableWithWayTooManyReferencesTestCase(unittest.TestCase):
         actual_sql, *actual_params = TableWithWayTooManyReferences.build_sql_create()
         self.assertEqual(expected_sql, actual_sql, msg="create")
         self.assertListEqual([], actual_params, "create")
-
     # end def
 
     def test_sql_text_create_b(self):
@@ -559,7 +554,6 @@ class TableWithWayTooManyReferencesTestCase(unittest.TestCase):
         actual_sql, *actual_params = UhOhReferencingTableWithWayTooManyReferences.build_sql_create()
         self.assertEqual(expected_sql, actual_sql, msg="create")
         self.assertListEqual([], actual_params, "create")
-
     # end def
 
     def test_sql_text_references_a(self):
