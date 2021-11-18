@@ -37,7 +37,7 @@ from typeguard import check_type
 from asyncpg import Connection, Pool
 
 from .classes import FieldInfo, FieldItem
-from .compat import check_is_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
+from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type
 from .compat import Annotated, NoneType
 from .query import *
 from .query import __all__ as __query__all__
@@ -1509,7 +1509,7 @@ class FastORM(BaseModel):
             (True, 'BIGINT')
 
         """
-        is_union_type = check_is_union_type(type_hint)
+        is_union_type = check_is_new_union_type(type_hint)
         if isinstance(type_hint, typing.ForwardRef):
             if not type_hint.__forward_evaluated__:
                 raise ValueError(
@@ -1537,7 +1537,7 @@ class FastORM(BaseModel):
             # end if
 
             origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
-            is_union_type = check_is_union_type(origin)
+            is_union_type = check_is_new_union_type(origin)
             if is_union_type or origin in (typing.Optional, typing.Union):  # Optional is an special union, too
                 union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
                 if not isinstance(union_params, (list, tuple)):

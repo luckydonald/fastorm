@@ -14,7 +14,7 @@ IS_PYTHON_3_10 = sys.version_info[:3] >= (3, 10, 0)
 
 
 # noinspection PyUnusedLocal
-def check_is_union_type(variable: Any) -> bool:
+def check_is_new_union_type(variable: Any) -> bool:
     # as there's no UnionType, we can't have an instance of it.
     return False
 # end def
@@ -35,7 +35,7 @@ def check_is_annotated_type(variable: Any) -> bool:
 try:
     from types import UnionType
 
-    def check_is_union_type(variable: Any) -> bool:
+    def check_is_new_union_type(variable: Any) -> bool:
         return isinstance(variable, UnionType)
     # end def
 

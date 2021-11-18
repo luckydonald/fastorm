@@ -5,7 +5,7 @@ from typing import List, Any, TypeVar, Generic
 
 from luckydonaldUtils.logger import logging
 
-from .compat import check_is_annotated_type, check_is_union_type, check_is_generic_alias
+from .compat import check_is_annotated_type, check_is_new_union_type, check_is_generic_alias
 
 __author__ = 'luckydonald'
 
@@ -48,7 +48,7 @@ class In(Generic[VARIABLE_TYPE]):
         if (
             inspect.isclass(variables) or
             check_is_annotated_type(variables) or
-            check_is_union_type(variables) or
+            check_is_new_union_type(variables) or
             check_is_generic_alias(variables)
         ):
             # keep type hint support
