@@ -119,12 +119,17 @@ class In(Generic[VARIABLE_TYPE]):
     # end def
 
     def __eq__(self, other):
+
         if isinstance(other, In):
             other = other.as_list()
         # end if
         if isinstance(other, list):
             return self.as_list() == other
         # end if
+        if len(self.as_list()) == 1:
+            return self.as_list()[0] == other
+        # end if
+
         raise TypeError(f'Could not compare with {type(other)}: {other!r}')
     # end def
 # end class
