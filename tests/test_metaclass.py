@@ -12,13 +12,13 @@ class MyTestCase(unittest.TestCase):
             _automatic_fields = []
             _primary_keys = ['id_a', 'id_b']
 
-            id_a: Union[int, None]
+            id_a: int
             id_b: Union[int, None]
             name: str
             number: int
         # end class
 
-        expected_old_annotations = {'id_a': typing.Optional[int], 'id_b': typing.Optional[int], 'name': str, 'number': int}
+        expected_old_annotations = {'id_a': int, 'id_b': typing.Optional[int], 'name': str, 'number': int}
         expected_new_annotations = expected_old_annotations
 
         self.assertEqual(expected_old_annotations, TableDoubleKey.__original__annotations__)
