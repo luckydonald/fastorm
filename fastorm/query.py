@@ -135,6 +135,6 @@ class In(Generic[VARIABLE_TYPE]):
         if len(self.as_list()) == 1:
             return self.as_list()[0] == other
         # end if
-        return False
+        return NotImplemented
     # end def
 # end class
