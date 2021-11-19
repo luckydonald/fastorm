@@ -90,7 +90,7 @@ try:
         from typing_extensions import Annotated  # 3.7
     # end try
 
-    AnnotatedType = type(Annotated)
+    AnnotatedType = type(Annotated[int, 'spam'])
 
 
     def check_is_annotated_type(variable: Any) -> bool:
