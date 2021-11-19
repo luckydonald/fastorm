@@ -124,8 +124,9 @@ class ModelMetaclassFastORM(ModelMetaclass):
                     if len(param) == 1:
                         param = param[0]
                     else:
+                        assert len(param) > 0
                         # Dict[str, Table] -> Dict[str, Union[str, table_pks]]
-                        param = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
+                        param = Union.__getitem__(tuple(param))  # calls Union[…]
                     # end if
                     annotation_args.append(param)
                 # end for
