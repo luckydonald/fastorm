@@ -313,8 +313,8 @@ class CreateTableTestCase(VerboseTestCase):
                 print(key, ",", type_hint, ",", expected_result)
                 if isinstance(expected_result, ExpectedResult):
                     is_optional, sql_type = FastORM.match_type(type_hint=type_hint, key=key)
-                    self.assertEqual(expected_result.sql_type, sql_type)
-                    self.assertEqual(expected_result.is_optional, is_optional)
+                    self.assertEqual(expected_result.sql_type, sql_type, msg=f'sql_type of {key}')
+                    self.assertEqual(expected_result.is_optional, is_optional, msg=f'is_optional of {key}')
                 else:
                     with self.assertRaises(expected_result):
                         is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
