@@ -149,6 +149,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
                 if len(pk_annotations) == 1:
                     pk_annotations = pk_annotations[0]
                 else:
+                    # noinspection PyArgumentList
                     pk_annotations = Tuple.__getitem__(pk_annotations)
                 # end if
                 annotations.append(pk_annotations)
@@ -210,9 +211,6 @@ class ModelMetaclassFastORM(ModelMetaclass):
         generic_aliases = set()
 
         for param in annotations:
-            if param in all_params:
-                continue
-            # end if
             if check_is_generic_alias(param):
                 # check if we have a different type with similar stuff.
                 # so tuple[] instead of Tuple[] and so on.
