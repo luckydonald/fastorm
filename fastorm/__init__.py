@@ -41,6 +41,7 @@ from .classes import FieldInfo, FieldItem
 from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
 from .compat import IS_PYTHON_3_9
 from .compat import Annotated, NoneType
+from .utils import failsafe_issubclass
 from .query import *
 from .query import __all__ as __query__all__
 __all__.extend(__query__all__)
@@ -1878,11 +1879,59 @@ class _BaseFastORM(BaseModel):
                 f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
             )
         # end if
-        first_union_type = union_params[0]
-        if not all(first_union_type == x for x in union_params[1:]):
-            raise TypeError(
-                f'Union with more than one type at key {key}.', union_params,
+
+        # Check that we don't have Union[int] or something similar with just one element (remaining).
+        if len(union_params) == 1:
+            additional_is_optional, sql_type = cls.match_type(
+                union_params[0], is_automatic_field=is_automatic_field, is_outer_call=False
             )
+            if additional_is_optional:
+                is_optional = True
+            # end if
+            return is_optional, sql_type
+        # end if
+
+        special_union_types = [union_param for union_param in union_params if failsafe_issubclass(union_param, FastORM)]
+        if len(special_union_types) > 1:
+            raise TypeError(
+                f'Found more than one type of FastORM at key {key}.', type_hint.__args__,
+            )
+        # end if
+        if len(special_union_types) == 0:
+            raise TypeError(
+                f"Didn't find a FastORM type at key {key}.", type_hint.__args__,
+            )
+        first_union_type = special_union_types[0]
+        other_union_types = [union_param for union_param in union_params if union_param != first_union_type]
+        if all(first_union_type == x for x in other_union_types):
+            # that would happen if somehow not deduplicated properly
+            pass
+        else:
+            pk_type = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=False).values())
+            pk_type = pk_type[0] if len(pk_type) == 1 else Tuple.__getattribute__(pk_type)
+
+            remaining_params = other_union_types[:]
+            for remaining_param in remaining_params:
+                if ModelMetaclassFastORM.is_generic_alias_equal(pk_type, remaining_param):
+                    remaining_params.remove(remaining_param)
+                # end if
+            # end for
+            pk_type_ref = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=True).values())
+            pk_type_ref = pk_type_ref[0] if len(pk_type_ref) == 1 else Tuple.__getattribute__(pk_type)
+
+            if not ModelMetaclassFastORM.is_generic_alias_equal(pk_type, pk_type_ref):  # pk_type, pk_type_ref
+                # they are different
+                for remaining_param in remaining_params:
+                    if ModelMetaclassFastORM.is_generic_alias_equal(pk_type_ref, remaining_param):
+                        remaining_params.remove(remaining_param)
+                    # end if
+                # end for
+            # end if
+
+            if len(remaining_params) > 0:
+                raise TypeError(
+                    f'Union with more than one type at key {key}.', union_params,
+                )
         # end if
         additional_is_optional, sql_type = cls.match_type(
             first_union_type, is_automatic_field=is_automatic_field, is_outer_call=False
