@@ -224,7 +224,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
                 # tuple[int, str] == tuple[int, str]  # True
                 # Tuple[int, str].__args__ ==  tuple[int, str].__args__ == (int, str)  # True
                 # Tuple[int, str].__origin__ == tuple[int, str].__origin__ == tuple  # True
-                is_duplicate = any(param.__args__ == other_param.__args__ and param.__origin__ == other_param.__origin__ for other_param in generic_aliases)
+                is_duplicate = any(mcs.is_generic_alias_equal(param, other_param) for other_param in generic_aliases)
                 if is_duplicate:
                     continue
                 # end if
@@ -233,6 +233,10 @@ class ModelMetaclassFastORM(ModelMetaclass):
             all_params.add(param)
         # end for
         return list(all_params)
+
+    @classmethod
+    def is_generic_alias_equal(cls, param, other_param):
+        return param.__args__ == other_param.__args__ and param.__origin__ == other_param.__origin__
     # end def
 # end class
 
