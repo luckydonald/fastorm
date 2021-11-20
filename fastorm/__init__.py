@@ -885,7 +885,11 @@ class _BaseFastORM(BaseModel):
                 # end if
             # end for
         # end for
-        return list(return_values.values())
+        # Flatten single element In's
+        return [
+            val[0] if isinstance(val, In) and len(val) == 1 else val
+            for val in return_values.values()
+        ]
     # end def
 
     @classmethod
@@ -969,15 +973,6 @@ class _BaseFastORM(BaseModel):
         for sql_wheres in sql_where:
             sql_wheres: Union[In[Dict[str, Any]], Dict[str, Any]]
             # is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key].resulting_type)
-
-            # Flatten single element In's
-            if isinstance(sql_wheres, In):
-                assert len(sql_wheres) >= 1
-                if len(sql_wheres) == 1:
-                    # single element list -> normal where is fine -> so we go that route with it.
-                    sql_wheres = sql_wheres.variables[0]
-                # end if
-            # end if
 
             if not sql_wheres:  # it's empty
                 continue
