@@ -356,7 +356,7 @@ class _BaseFastORM(BaseModel):
             interesting_cls: Type[FastORM]
             assert issubclass(interesting_cls, FastORM)
             type_hints: Dict[str, ModelField] = {
-                key: value for key, value in interesting_cls.__fields__.items()
+                key: value for key, value in interesting_cls.__original__fields__.items()
                 if (
                     not key.startswith('_')
                     and not key.isupper()
