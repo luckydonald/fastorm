@@ -1753,35 +1753,7 @@ class _BaseFastORM(BaseModel):
             origin = type_hint.__origin__ if hasattr(type_hint, '__origin__') else type(type_hint)
             is_union_type = check_is_new_union_type(origin)
             if is_union_type or origin in (typing.Optional, typing.Union):  # Optional is an special union, too
-                union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
-                if not isinstance(union_params, (list, tuple)):
-                    raise TypeError(
-                        f'Union type for key {key} has unparsable params.', union_params,
-                    )
-                # end if
-                if NoneType in union_params:
-                    is_optional = True
-                    union_params = [param for param in union_params if not issubclass(param, NoneType)]
-                else:
-                    is_optional = False
-                # end if
-                if len(union_params) == 0:
-                    raise TypeError(
-                        f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
-                    )
-                # end if
-                first_union_type = union_params[0]
-                if not all(first_union_type == x for x in union_params[1:]):
-                    raise TypeError(
-                        f'Union with more than one type at key {key}.', union_params,
-                    )
-                # end if
-                additional_is_optional, sql_type = cls.match_type(
-                    first_union_type, is_automatic_field=is_automatic_field, is_outer_call=False
-                )
-                if additional_is_optional:
-                    is_optional = True
-                # end if
+                is_optional, sql_type = cls.process_unions(is_automatic_field, key, type_hint)
             elif isinstance(origin, typing.List) or issubclass(origin, list):
                 list_params = type_hint.__args__
                 if len(list_params) != 1:  # list has one type
@@ -1885,6 +1857,39 @@ class _BaseFastORM(BaseModel):
             is_optional = False
             sql_type = cls._match_type(type_hint, automatic=is_automatic_field)  # fails anyway if not in the list above
         # end case
+        return is_optional, sql_type
+
+    @classmethod
+    def process_unions(cls, is_automatic_field, key, type_hint):
+        union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
+        if not isinstance(union_params, (list, tuple)):
+            raise TypeError(
+                f'Union type for key {key} has unparsable params.', union_params,
+            )
+        # end if
+        if NoneType in union_params:
+            is_optional = True
+            union_params = [param for param in union_params if not issubclass(param, NoneType)]
+        else:
+            is_optional = False
+        # end if
+        if len(union_params) == 0:
+            raise TypeError(
+                f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
+            )
+        # end if
+        first_union_type = union_params[0]
+        if not all(first_union_type == x for x in union_params[1:]):
+            raise TypeError(
+                f'Union with more than one type at key {key}.', union_params,
+            )
+        # end if
+        additional_is_optional, sql_type = cls.match_type(
+            first_union_type, is_automatic_field=is_automatic_field, is_outer_call=False
+        )
+        if additional_is_optional:
+            is_optional = True
+        # end if
         return is_optional, sql_type
     # end def
 
