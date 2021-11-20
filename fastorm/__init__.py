@@ -532,9 +532,13 @@ class _BaseFastORM(BaseModel):
                     # the table ist the first entry and the actual field type is the second.
                     # Union[Table, int]
                     # Union[Table, Tuple[int, int]]
+                    expected_typehint = first_union_type.get_primary_keys_type_annotations()
                     if not len(union_params) == 2:
                         raise TypeError(
-                            f'Union with other table type must have it\'s primary key(s) as second argument: Union{union_params!r}'
+                            f'Union with other table type must have it\'s primary key(s) as second argument, and no more values:\n'
+                            f'Union{union_params!r}\n'
+                            f'Expected instead:\n'
+                            f'Union[{first_union_type}, {expected_typehint}]'
                         )
                     # end if
                     implied_other_class_pk_types = union_params[1]
@@ -815,8 +819,12 @@ class _BaseFastORM(BaseModel):
         Will parse the current classes parameters into SQL field names.
         It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
         Will return a list of single elements.
-        :param kwargs:
-        :return:
+        :param kwargs: Input fields, key being the python model.
+
+        :rtype: List[Union[In[Dict[str, Any]], Dict[str, Any]]]
+        :returns: List of field mappings (either a single dict or a In[…] clause with multiple dicts),
+                where `{sql_key: py_value, ...}`, where there can be multiple keys in there, if we have e.g. a double primary key.
+
         """
         _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[Union[Type, Type[FastORM]]]] = cls.get_fields_references(recursive=True)
