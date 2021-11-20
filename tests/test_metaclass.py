@@ -134,8 +134,10 @@ class MyTestCase(unittest.TestCase):
         expected_new_annotations = {'ref': typing.Union[Table, tuple_typehint_type[int, str]]}
         with self.subTest('old'):
             self.assertEqual(expected_old_annotations, Reference.__original__annotations__)
+        # end with
         with self.subTest('new'):
-        self.assertEqual(expected_new_annotations, Reference.__annotations__)
+            self.assertEqual(expected_new_annotations, Reference.__annotations__)
+        # end with
     # end def
 
     @unittest.skipIf(not IS_PYTHON_3_9, 'skip if low python version')
