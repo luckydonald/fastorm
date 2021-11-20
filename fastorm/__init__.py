@@ -236,6 +236,15 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @classmethod
     def is_generic_alias_equal(cls, param, other_param):
+        if param == other_param:
+            return True
+        # end def
+        if not check_is_generic_alias(param) or not hasattr(param, '__args__') or not hasattr(param, '__origin__'):
+            return False
+        # end def
+        if not check_is_generic_alias(other_param) or not hasattr(other_param, '__args__') or not hasattr(other_param, '__origin__'):
+            return False
+        # end def
         return param.__args__ == other_param.__args__ and param.__origin__ == other_param.__origin__
     # end def
 # end class
