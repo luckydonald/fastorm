@@ -952,21 +952,28 @@ class _BaseFastORM(BaseModel):
 
     @classmethod
     def _prepared_dict_to_sql(cls, sql_variable_dict: Dict[str, Any], placeholder_index: int):
-            assert isinstance(sql_variable_dict, dict)  # Not In!
-            if len(sql_variable_dict) == 1:
-                placeholder_index_after = placeholder_index + 1
-                long_key, value = list(sql_variable_dict.items())[0]
-                key_string = f'"{long_key}"'
-                placeholder_string = f'${placeholder_index_after}'
-                values_list = [value]
-            else:  # is_in_list_clause is True
-                key_string = ", ".join(f'"{long_key}"' for long_key in sql_variable_dict.keys()).join("()")
-                placeholder_index_after = placeholder_index + len(sql_variable_dict)
-                placeholder_string = ", ".join(f'${i}' for i in range(placeholder_index + 1, placeholder_index_after + 1)).join("()")
-                values_list = list(sql_variable_dict.values())
-            # end if
-            return key_string, placeholder_string, values_list, placeholder_index_after
-        # end def
+        """
+        Builds a query/insert sql string, based on the sql_variable dict (result of _prepare_kwargs())
+
+        :param sql_variable_dict:
+        :param placeholder_index:
+        :return: key_string, placeholder_string, values_list, placeholder_index_after
+        """
+        assert isinstance(sql_variable_dict, dict)  # Not In!
+        if len(sql_variable_dict) == 1:
+            placeholder_index_after = placeholder_index + 1
+            long_key, value = list(sql_variable_dict.items())[0]
+            key_string = f'"{long_key}"'
+            placeholder_string = f'${placeholder_index_after}'
+            values_list = [value]
+        else:  # is_in_list_clause is True
+            key_string = ", ".join(f'"{long_key}"' for long_key in sql_variable_dict.keys()).join("()")
+            placeholder_index_after = placeholder_index + len(sql_variable_dict)
+            placeholder_string = ", ".join(f'${i}' for i in range(placeholder_index + 1, placeholder_index_after + 1)).join("()")
+            values_list = list(sql_variable_dict.values())
+        # end if
+        return key_string, placeholder_string, values_list, placeholder_index_after
+    # end def
 
     @classmethod
     def build_sql_select(cls, **kwargs):
