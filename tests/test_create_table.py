@@ -151,7 +151,7 @@ class SystemUnderTest(FastORM):
     #
 
     t0_id: int = Field(default_factory=Autoincrement)
-    __result__t0_id = ExpectedResult(is_optional=False, sql_type="BIGINT", default=Undefined)
+    __result__t0_id = ExpectedResult(is_optional=True, sql_type="BIGINT", default=Undefined)
 
     t1_1: str
     __result__t1_1 = ExpectedResult(is_optional=False, sql_type="TEXT", default=Undefined)
@@ -314,7 +314,7 @@ class CreateTableTestCase(VerboseTestCase):
                 if isinstance(expected_result, ExpectedResult):
                     is_optional, sql_type = FastORM.match_type(type_hint=type_hint, key=key)
                     self.assertEqual(expected_result.sql_type, sql_type, msg=f'sql_type of {key}')
-                    self.assertEqual(expected_result.is_optional, is_optional, msg=f'is_optional of {key}')
+                    self.assertEqual(expected_result.is_optional, is_optional, msg=f'is_optional of {key}: {expected_result}')
                 else:
                     with self.assertRaises(expected_result):
                         is_optional, sql_type = FastORM.match_type(type_hint=type_hint)
@@ -333,8 +333,8 @@ class CreateTableTestCase(VerboseTestCase):
                 print(key, ",", type_hint, ",", expected_result)
                 if isinstance(expected_result, ExpectedResult):
                     is_optional, sql_type = FastORM.match_type(type_hint=type_hint.types[0].type_, key=key)
-                    self.assertEqual(expected_result.sql_type, sql_type, msg='sql_type')
-                    self.assertEqual(expected_result.is_optional, is_optional, msg='is_optional')
+                    self.assertEqual(expected_result.sql_type, sql_type, msg=f'{key} sql_type')
+                    self.assertEqual(expected_result.is_optional, is_optional, msg=f'{key} is_optional')
                 else:
                     with self.assertRaises(expected_result):
                         is_optional, sql_type = FastORM.match_type(type_hint=type_hint)

@@ -124,7 +124,7 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional(FastORM):
     _primary_keys = ['double_trouble']
     _automatic_fields = []
 
-    double_trouble: Union[DoublePrimaryKeyTable, Tuple[int, int]]
+    double_trouble: Union[DoublePrimaryKeyTable, Tuple[int, Optional[int]]]
 # end class
 
 
