@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import inspect
-from typing import List, Any, TypeVar, Generic
+from typing import List, Any, TypeVar, Generic, Union
 
 from luckydonaldUtils.logger import logging
+from pydantic.fields import Undefined, UndefinedType
 
 from .compat import check_is_annotated_type, check_is_new_union_type, check_is_generic_alias
 
@@ -109,7 +110,7 @@ class In(Generic[VARIABLE_TYPE]):
         # end for
     # end for
 
-    def as_list(self) -> List[Any]:
+    def as_list(self) -> List[VARIABLE_TYPE]:
         if self._flattened_cache is None:
             self._flattened_cache = list(var for var in self)
         # end if
@@ -122,6 +123,24 @@ class In(Generic[VARIABLE_TYPE]):
 
     def flatten(self) -> 'In':
         return In(*self.as_list())
+    # end def
+
+    def flattened_or_direct(
+        self, *, allow_undefined: bool = False
+    ) -> Union['In[VARIABLE_TYPE]', VARIABLE_TYPE, UndefinedType]:
+        flattened = self.as_list()
+        if len(flattened) == 0:
+            if not allow_undefined:
+                raise ValueError(
+                    "The In[…] type can't be flattened down to an empty list."
+                )
+            # end def
+            return Undefined
+        # end if
+        if len(flattened) == 1:
+            return flattened[0]
+        # end if
+        return In(*flattened)
     # end def
 
     def __eq__(self, other):

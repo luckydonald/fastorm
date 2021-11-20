@@ -900,7 +900,7 @@ class _BaseFastORM(BaseModel):
         # end for
         # Flatten single element In's
         return [
-            val[0] if isinstance(val, In) and len(val) == 1 else val
+            val.flattened_or_direct(allow_undefined=False) if isinstance(val, In) else val
             for val in return_values.values()
         ]
     # end def
