@@ -1248,9 +1248,9 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
-    def get_primary_keys_type_annotations(cls) -> Dict[str, FieldInfo[ModelField]]:
+    def get_primary_keys_type_annotations(cls, ref_as_union_with_pk: bool = False) -> Dict[str, FieldInfo[ModelField]]:
         _primary_keys = cls.get_primary_keys_keys()
-        _annotations = getattr(cls, '__annotations__', {})
+        _annotations = getattr(cls, '__annotations__' if ref_as_union_with_pk else '__original__annotations__', {})
         return {key: hint for key, hint in _annotations.items() if key in _primary_keys}
     # end def
 
