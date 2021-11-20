@@ -1096,24 +1096,18 @@ class _BaseFastORM(BaseModel):
 
         # SET ...
         update_values = self.get_changes()
+        prepared_sql_fields = self._prepare_kwargs(**update_values, _allow_in=False)
 
         # UPDATE ... SET ... WHERE ...
         placeholder_index = 0
         other_primary_key_index = 0
         values: List[Any] = []
         update_keys: List[str] = []  # "foo" = $1
-        for key, value in update_values.items():
-            value = getattr(self, key)
-            placeholder_index += 1
-            if isinstance(value, FastORM):
-                # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
-                # if you got more than one of those PKs, simply specify them twice for both fields.
-                value = value.get_primary_keys_values()[other_primary_key_index]
-                other_primary_key_index += 1
-            # end if
-
-            values.append(value)
-            update_keys.append(f'"{key}" = ${placeholder_index}')
+        for sql_fields in prepared_sql_fields:
+            sql_fields: Dict[str, Any]
+            key_string, placeholder_string, values_list, placeholder_index = self._prepared_dict_to_sql(sql_variable_dict=sql_fields, placeholder_index=placeholder_index)
+            values.extend(values_list)
+            update_keys.append(f'{key_string} = {placeholder_string}')
         # end if
 
         # WHERE pk...
