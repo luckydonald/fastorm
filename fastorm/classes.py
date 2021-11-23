@@ -96,3 +96,16 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     __getitem__ = __getitem__  # reuse, as it's the same function basically
     __iter__ = __iter__  # reuse, as it's the same function basically
 # end class
+
+
+SQL_FIELD_META_VALUE_TYPE = typing.TypeVar("SQL_FIELD_META_VALUE_TYPE")
+
+
+@dataclass
+class SqlFieldMeta(typing.Generic[SQL_FIELD_META_VALUE_TYPE]):
+    sql_name: str
+    field_name: str
+    typehint: typing.Any
+    value: SQL_FIELD_META_VALUE_TYPE
+# end class
+

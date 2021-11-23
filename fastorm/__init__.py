@@ -37,7 +37,7 @@ from typeguard import check_type
 
 from asyncpg import Connection, Pool
 
-from .classes import FieldInfo, FieldItem
+from .classes import FieldInfo, FieldItem, SqlFieldMeta
 from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
 from .compat import IS_PYTHON_3_9
 from .compat import Annotated, NoneType
@@ -815,7 +815,7 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
-    def _prepare_kwargs(cls, _allow_in: bool, **kwargs: Any) -> List[Union[In[Dict[str, Any]], Dict[str, Any]]]:
+    def _prepare_kwargs(cls, _allow_in: bool, **kwargs: Any) -> List[Union[In[Dict[str, SqlFieldMeta[Any]]], Dict[str, SqlFieldMeta[Any]]]]:
         """
         Will parse the current classes parameters into SQL field names.
         It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
@@ -830,7 +830,7 @@ class _BaseFastORM(BaseModel):
         _ignored_fields = cls.get_ignored_fields()
         typehints: Dict[str, FieldInfo[Union[Type, Type[FastORM]]]] = cls.get_fields_references(recursive=True)
         unprocessed_kwargs: Set[str] = set(kwargs.keys())
-        sql_value_map: Dict[str, Union[Tuple[Tuple[Any, ...], Tuple[str, ...]], Tuple[List[Any], List[str]]]] = {}  # key is the kwarg. Value is a tuple of the actual value (tuple) and the long_key(s) this needs.
+        sql_value_map: Dict[str, Union[Tuple[List[SqlFieldMeta[Any]], List[str]], Tuple[List[Any], List[str]]]] = {}  # key is the kwarg. Value is a tuple of the actual value (tuple) and the long_key(s) this needs.
         for long_key, typehint in typehints.items():
             # map it to the long database name
             short_key = typehint.unflattened_field
@@ -862,7 +862,7 @@ class _BaseFastORM(BaseModel):
             if not typehint.is_reference:
                 # it is not a reference
                 assert short_key not in sql_value_map
-                sql_value_map[short_key] = (value,), (long_key,)
+                sql_value_map[short_key] = [SqlFieldMeta(value=value, sql_name=long_key, field_name=short_key, typehint=typehint),], [long_key,]
                 continue  # easy, done
             # end if
 
@@ -872,7 +872,7 @@ class _BaseFastORM(BaseModel):
             if short_key not in sql_value_map:
                 sql_value_map[short_key] = [], []
             # end if
-            sql_value_map[short_key][0].append(value)
+            sql_value_map[short_key][0].append(SqlFieldMeta(value=value, sql_name=long_key, field_name=short_key, typehint=typehint))
             sql_value_map[short_key][1].append(long_key)
         # end for
         unprocessed_kwargs: List[str] = list(unprocessed_kwargs)
