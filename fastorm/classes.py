@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import dataclasses
+from dataclasses import dataclass
 import typing
 
 import pydantic.fields
 from luckydonaldUtils.logger import logging
 
 __author__ = 'luckydonald'
-
-from pydantic.dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 if __name__ == '__main__':
