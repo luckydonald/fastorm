@@ -105,7 +105,8 @@ SQL_FIELD_META_VALUE_TYPE = typing.TypeVar("SQL_FIELD_META_VALUE_TYPE")
 class SqlFieldMeta(typing.Generic[SQL_FIELD_META_VALUE_TYPE]):
     sql_name: str
     field_name: str
-    typehint: typing.Any
+    type_: FieldInfo[typing.Union[typing.Type]]
+    field: FieldInfo[pydantic.fields.ModelField]
     value: SQL_FIELD_META_VALUE_TYPE
 # end class
 
