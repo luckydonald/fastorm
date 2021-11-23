@@ -69,17 +69,17 @@ class ModelMetaclassFastORM(ModelMetaclass):
     - `field: SomeTable` with primary key of `SomeTable` being `id_a: int, id_b: float` would become `field: Union[SomeTable, Tuple[int, float]`
     """
     def __new__(mcs, name, bases, namespace, **kwargs):  # noqa C901
-        print(f'name: {name!r}')
-        print(f'bases: {bases!r}')
-        print(f'kwargs: {kwargs!r}')
-        print(f'namespace (old): {namespace!r}')
+        logger.debug(f'name: {name!r}')
+        logger.debug(f'bases: {bases!r}')
+        logger.debug(f'kwargs: {kwargs!r}')
+        logger.debug(f'namespace (old): {namespace!r}')
         if '__annotations__' in namespace:
             namespace['__original__annotations__'] = namespace['__annotations__']
             del namespace['__annotations__']  # so those two fields are inserted after each other
             automatic_fields = namespace.get('_automatic_fields', [])
             namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
         # end if
-        print(f'namespace (new): {namespace!r}')
+        logger.debug(f'namespace (new): {namespace!r}')
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
         cls.__original__fields__ = mcs.process_fields(
             generated_new_fields=cls.__fields__,
@@ -158,7 +158,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             # end if
         except TypeError as e:
             # TypeError: issubclass() arg 1 must be a class
-            print(annotation, e)
+            logger.debug(annotation, e)
             pass
         return annotations
     # end def
