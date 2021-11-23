@@ -1027,6 +1027,7 @@ class _BaseFastORM(BaseModel):
             # end if
         # end if
         where_sql = "" if not where_parts else f' WHERE {" AND ".join(where_parts)}'
+        where_values = [where_value.value for where_value in where_values]
 
         # noinspection SqlResolve,SqlNoDataSourceInspection
         sql = f'SELECT {fields} FROM "{cls._table_name}"{where_sql}'
