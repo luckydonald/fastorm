@@ -717,10 +717,21 @@ class _BaseFastORM(BaseModel):
         ignore_setting_automatic_fields: Optional[bool] = None,
         on_conflict_upsert_field_list: Optional[List[str]] = None,
     ) -> Tuple[str, Any]:
+        """
+        :param ignore_setting_automatic_fields:
+            Skip setting fields marked as automatic, even if you provided.
+            For example if the id field is marked automatic, as it's an autoincrement int.
+            If `True`, setting `id=123` (commonly `id=None`) would be ignored, and instead the database assigns that value.
+            If `False`, the value there will be written to the database.
+            If `None`, it will be ignored as long as the value actually is None, but set if it is non-None.
+            The default setting is `None`.
+        :param on_conflict_upsert_field_list: List of fields which are expected to cause an duplicate conflict, and thus will instead be overwritten.
+        :return: The sql and the placeholder parameters.
+        """
         own_keys = self.get_fields()
         _ignored_fields = self.get_ignored_fields()
         _automatic_fields = self.get_automatic_fields()
-        sql_fields = self._prepare_kwargs(**self.dict(), _allow_in=False)
+        sql_fields_data = self._prepare_kwargs(**self.dict(), _allow_in=False)
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
         assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
 
@@ -729,39 +740,35 @@ class _BaseFastORM(BaseModel):
         keys = []
         upsert_fields = {}  # key is field name, values is the matching placeholder_index.
         placeholder_index = 0
-        primary_key_index = 0
-        for key in own_keys:
-            if key in _ignored_fields:
+
+        merged_fields = {}
+        for sql_fields in sql_fields_data:
+            keys_in_ignored_fields = [key in _ignored_fields for key in sql_fields.keys()]
+            if all(keys_in_ignored_fields):
                 continue
             # end if
-            is_automatic_field = None
-
+            if any(keys_in_ignored_fields):
+                raise ValueError('Some of the keys are optinal?')
+            # end if
+            merged_fields.update(sql_fields)
+        # end for
+        for key, sql_meta in merged_fields.items():
+            sql_meta: SqlFieldMeta
             if ignore_setting_automatic_fields or on_conflict_upsert_field_list:
                 is_automatic_field = key in _automatic_fields
             if ignore_setting_automatic_fields and is_automatic_field:
                 continue
             # end if
-            value = getattr(self, key)
-            if ignore_setting_automatic_fields is None and value is None:
+            if ignore_setting_automatic_fields is None and sql_meta.value is None:
                 continue
             # end if
             placeholder_index += 1
-            placeholder.append(f'${placeholder_index}')
-            if isinstance(value, dict):
-                pass
-                # value = json.dumps(value)
-            # end if
-            if isinstance(value, FastORM):
-                # we have a different table in this table, so we probably want to go for it's `id` or whatever the primary key is.
-                # if you got more than one of those PKs, simply specify them twice for both fields.
-                value = value.get_primary_keys_values()[primary_key_index]
-                primary_key_index += 1
-            # end if
-
-            values.append(value)
             keys.append(f'"{key}"')
+            placeholder.append(f'${placeholder_index}')
+            values.append(sql_meta.value)
 
             if on_conflict_upsert_field_list and not is_automatic_field:
+                # for upsert we can recycle the already existing values, thus the same placeholder index.
                 upsert_fields[key] = placeholder_index
             # end if
         # end if
@@ -769,11 +776,13 @@ class _BaseFastORM(BaseModel):
         # noinspection SqlNoDataSourceInspection,SqlResolve
         sql = f'INSERT INTO {self.get_table()} ({",".join(keys)})\n VALUES ({",".join(placeholder)})'
         if on_conflict_upsert_field_list and upsert_fields:
+                # Build additional part for the on conflict overwriting with the given fields.
             upsert_sql = ', '.join([f'"{key}" = ${placeholder_index}' for key, placeholder_index in upsert_fields.items()])
             upsert_fields_sql = ', '.join([f'"{field}"' for field in on_conflict_upsert_field_list])
             sql += f'\n ON CONFLICT ({upsert_fields_sql}) DO UPDATE SET {upsert_sql}'
         # end if
         if _automatic_fields:
+            # Addition so we can retrieve the updated fields (e.g. autoincrement) from the Database.
             automatic_fields_sql = ', '.join([f'"{key}"' for key in _automatic_fields])
             sql += f'\n RETURNING {automatic_fields_sql}'
         # end if
