@@ -77,7 +77,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             namespace['__original__annotations__'] = namespace['__annotations__']
             del namespace['__annotations__']  # so those two fields are inserted after each other
             automatic_fields = namespace.get('_automatic_fields', [])
-            namespace['__annotations__'], namespace['__simple__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
+            namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
         # end if
         logger.debug(f'namespace (new): {namespace!r}')
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
@@ -93,19 +93,14 @@ class ModelMetaclassFastORM(ModelMetaclass):
     @classmethod
     def process_annotation(mcs, automatic_fields: List[str], annotations: Dict[str, TYPEHINT_TYPE]):
         new_annotations = {}
-        simple_annotations = {}
         for field_name, annotation in annotations.items():
             annotation_args = mcs.recursive_get_union_params_with_pk_types(annotation)
-            base_type = mcs.process_fastorm_pk_union(type_hint=annotation, key=field_name)
-            base_types = [base_type]
             if field_name in automatic_fields:
                 annotation_args.append(None)
-                base_types.append(None)
             # end if
             new_annotations[field_name] = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
-            simple_annotations[field_name] = Union.__getitem__(tuple(base_types))  # calls Union[…]
         # end for
-        return new_annotations, simple_annotations
+        return new_annotations
     # end def
 
     @classmethod
@@ -258,87 +253,6 @@ class ModelMetaclassFastORM(ModelMetaclass):
             return False
         # end def
         return param.__args__ == other_param.__args__ and param.__origin__ == other_param.__origin__
-    # end def
-
-    @classmethod
-    def process_fastorm_pk_union(
-        mcs,
-        key: str,
-        type_hint: TYPEHINT_TYPE,
-    ) -> Tuple[TYPEHINT_TYPE, TYPEHINT_TYPE, Optional[bool]]:
-        is_optional = None
-        if not (check_is_typing_union_type(type_hint) or check_is_new_union_type(type_hint)):
-            # not a Union, so return the type unchanged.
-            return type_hint
-        # end if
-        union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
-        if not isinstance(union_params, (list, tuple)):
-            raise TypeError(
-                f'Union type for key {key} has unparsable params.', union_params,
-            )
-        # end if
-        union_params = [evaluate_forward_ref(union_param, key=key, cls_name="?") for union_param in union_params]
-        if NoneType in union_params:
-            union_params = [param for param in union_params if not issubclass(param, NoneType)]
-            is_optional = True
-        # end if
-        if len(union_params) == 0:
-            raise TypeError(
-                f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
-            )
-        # end if
-
-        # Check that we don't have Union[int] or something similar with just one element (remaining).
-        if len(union_params) == 1:
-            return union_params[0]
-        # end if
-
-        special_union_types = [union_param for union_param in union_params if failsafe_issubclass(union_param, FastORM)]
-        if len(special_union_types) > 1:
-            raise TypeError(
-                f'Found more than one type of FastORM at key {key}.', type_hint.__args__,
-            )
-        # end if
-        if len(special_union_types) == 0:
-            raise TypeError(
-                f"Didn't find a FastORM type at key {key}.", type_hint.__args__,
-            )
-        first_union_type = special_union_types[0]
-        other_union_types = [union_param for union_param in union_params if union_param != first_union_type]
-        if all(first_union_type == x for x in other_union_types):
-            # that would happen if somehow not deduplicated properly
-            # basically every element is the same
-            return first_union_type
-        else:
-            pk_type = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=False).values())
-            pk_type = pk_type[0] if len(pk_type) == 1 else typing.Tuple.__getitem__(pk_type)
-
-            remaining_params = other_union_types[:]
-            for remaining_param in remaining_params:
-                if ModelMetaclassFastORM.is_generic_alias_equal(pk_type, remaining_param):
-                    remaining_params.remove(remaining_param)
-                # end if
-            # end for
-
-            pk_type_ref = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=True).values())
-            pk_type_ref = pk_type_ref[0] if len(pk_type_ref) == 1 else typing.Tuple.__getitem__(pk_type)
-
-            if not ModelMetaclassFastORM.is_generic_alias_equal(pk_type, pk_type_ref):  # pk_type, pk_type_ref
-                # they are different
-                for remaining_param in remaining_params:
-                    if ModelMetaclassFastORM.is_generic_alias_equal(pk_type_ref, remaining_param):
-                        remaining_params.remove(remaining_param)
-                    # end if
-                # end for
-            # end if
-
-            if len(remaining_params) > 0:
-                raise TypeError(
-                    f'Union with more than one type at key {key}.', union_params,
-                )
-            # end if
-        # end if
-        return first_union_type
     # end def
 # end class
 
@@ -2197,7 +2111,6 @@ class FastORM(_BaseFastORM, metaclass=ModelMetaclassFastORM):
     __fields_typehints: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
     __fields_references: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
     __original__annotations__: Dict[str, Any]  # filled by the metaclass, before we do modify the __annotations__
-    __simple__annotations__: Dict[str, Any]  # filled by the metaclass, before we do modify the __annotations__
     __original__fields__: Dict[str, ModelField]  # filled by the metaclass, before we do modify the __fields__
 # end class
 
