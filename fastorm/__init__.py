@@ -241,8 +241,8 @@ class ModelMetaclassFastORM(ModelMetaclass):
         return list(all_params)
     # end def
 
-    @classmethod
-    def is_generic_alias_equal(cls, param, other_param):
+    @staticmethod
+    def is_generic_alias_equal(param, other_param):
         if param == other_param:
             return True
         # end def
