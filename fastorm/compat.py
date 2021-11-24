@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'luckydonald'
 
+import inspect
 import sys
 from typing import Any, Union, Dict, Type
 from pydantic.fields import ModelField
@@ -91,6 +92,16 @@ except ImportError:
 
     TYPEHINT_TYPE = Union[TYPEHINT_TYPE, GenericAliasOld]
 # end try
+
+
+def is_typehint(variable):
+    return (
+        inspect.isclass(variable) or
+        check_is_annotated_type(variable) or
+        check_is_new_union_type(variable) or
+        check_is_generic_alias(variable)
+    )
+# end if
 
 
 try:

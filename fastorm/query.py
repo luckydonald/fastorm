@@ -6,7 +6,7 @@ from typing import List, Any, TypeVar, Generic, Union
 from luckydonaldUtils.logger import logging
 from pydantic.fields import Undefined, UndefinedType
 
-from .compat import check_is_annotated_type, check_is_new_union_type, check_is_generic_alias
+from .compat import is_typehint
 
 __author__ = 'luckydonald'
 
@@ -48,10 +48,7 @@ class In(Generic[VARIABLE_TYPE]):
     def __class_getitem__(cls, variables):
         # check if typing stuff, e.g. In[str] or In[FastORM]
         if (
-            inspect.isclass(variables) or
-            check_is_annotated_type(variables) or
-            check_is_new_union_type(variables) or
-            check_is_generic_alias(variables)
+            is_typehint(variables)
         ):
             # keep type hint support
             return super().__class_getitem__(variables)
