@@ -1103,7 +1103,6 @@ class _BaseFastORM(BaseModel):
 
         # UPDATE ... SET ... WHERE ...
         placeholder_index = 0
-        other_primary_key_index = 0
         values: List[Any] = []
         update_keys: List[str] = []  # "foo" = $1
         for sql_fields in prepared_sql_fields:
@@ -1467,10 +1466,9 @@ class _BaseFastORM(BaseModel):
         :return:
         """
         assert issubclass(cls, BaseModel)  # because we no longer use typing.get_type_hints, but pydantic's `cls.__fields__`
-        _table_name = getattr(cls, '_table_name')
+        _table_name = cls.get_name()
         _automatic_fields = cls.get_automatic_fields()
         assert_type_or_raise(_table_name, str, parameter_name='cls._table_name')
-        assert_type_or_raise(_automatic_fields, list, parameter_name='cls._automatic_fields')
         _ignored_fields = cls.get_ignored_fields()
 
         type_hints = cls.get_fields_typehints(flatten_table_references=True)
