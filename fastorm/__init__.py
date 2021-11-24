@@ -894,16 +894,18 @@ class _BaseFastORM(BaseModel):
             raise ValueError(f'Unknown parameters: {", ".join(unprocessed_kwargs)!s}')
         # end if
         return_values: Dict[Tuple[str], In[Dict[str, Any]]] = {}
-        for short_name, (values, keys) in sql_value_map.items():
-            max_union = max(len(u) if isinstance(u, In) else 1 for u in values)
+        for short_name, (sql_metas, keys) in sql_value_map.items():
+            max_union = max(len(m.value) if isinstance(m.value, In) else 1 for m in sql_metas)
             for i in range(max_union):
                 array_object = {}
                 for key_i, long_key in enumerate(keys):
-                    value = values[key_i]
+                    sql_meta = sql_metas[key_i]
+                    value = sql_meta.value
                     if isinstance(value, In):
-                        array_object[long_key] = typing.cast(In, value).as_list()[i]
+                        actual_value = typing.cast(In, value).as_list()[i]
+                        array_object[long_key] = SqlFieldMeta(value=actual_value, sql_name=sql_meta.sql_name, field_name=sql_meta.field_name, type_=sql_meta.type_, field=sql_meta.field)
                     else:
-                        array_object[long_key] = value
+                        array_object[long_key] = sql_meta
                     # end for
                 # end for
                 hashable_keys = tuple(keys)
