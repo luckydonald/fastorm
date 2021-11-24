@@ -254,6 +254,83 @@ class ModelMetaclassFastORM(ModelMetaclass):
         # end def
         return param.__args__ == other_param.__args__ and param.__origin__ == other_param.__origin__
     # end def
+
+    @classmethod
+    def process_fastorm_pk_union(cls):
+        union_params = type_hint.__args__[:]  # this was __union_params__ in python3.5, but __args__ in 3.6+
+        if not isinstance(union_params, (list, tuple)):
+            raise TypeError(
+                f'Union type for key {key} has unparsable params.', union_params,
+            )
+        # end if
+        if NoneType in union_params:
+            is_optional = True
+            union_params = [param for param in union_params if not issubclass(param, NoneType)]
+        else:
+            is_optional = False
+        # end if
+        if len(union_params) == 0:
+            raise TypeError(
+                f'Union with no (non-None) type(s) at key {key}.', type_hint.__args__,
+            )
+        # end if
+
+        # Check that we don't have Union[int] or something similar with just one element (remaining).
+        if len(union_params) == 1:
+            additional_is_optional, sql_type = cls.match_type(
+                union_params[0], is_automatic_field=is_automatic_field, is_outer_call=False
+            )
+            if additional_is_optional:
+                is_optional = True
+            # end if
+            return is_optional, sql_type
+        # end if
+
+        special_union_types = [union_param for union_param in union_params if failsafe_issubclass(union_param, FastORM)]
+        if len(special_union_types) > 1:
+            raise TypeError(
+                f'Found more than one type of FastORM at key {key}.', type_hint.__args__,
+            )
+        # end if
+        if len(special_union_types) == 0:
+            raise TypeError(
+                f"Didn't find a FastORM type at key {key}.", type_hint.__args__,
+            )
+        first_union_type = special_union_types[0]
+        other_union_types = [union_param for union_param in union_params if union_param != first_union_type]
+        if all(first_union_type == x for x in other_union_types):
+            # that would happen if somehow not deduplicated properly
+            pass
+        else:
+            pk_type = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=False).values())
+            pk_type = pk_type[0] if len(pk_type) == 1 else typing.Tuple.__getitem__(pk_type)
+
+            remaining_params = other_union_types[:]
+            for remaining_param in remaining_params:
+                if ModelMetaclassFastORM.is_generic_alias_equal(pk_type, remaining_param):
+                    remaining_params.remove(remaining_param)
+                # end if
+            # end for
+            pk_type_ref = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=True).values())
+            pk_type_ref = pk_type_ref[0] if len(pk_type_ref) == 1 else typing.Tuple.__getitem__(pk_type)
+
+            if not ModelMetaclassFastORM.is_generic_alias_equal(pk_type, pk_type_ref):  # pk_type, pk_type_ref
+                # they are different
+                for remaining_param in remaining_params:
+                    if ModelMetaclassFastORM.is_generic_alias_equal(pk_type_ref, remaining_param):
+                        remaining_params.remove(remaining_param)
+                    # end if
+                # end for
+            # end if
+
+            if len(remaining_params) > 0:
+                raise TypeError(
+                    f'Union with more than one type at key {key}.', union_params,
+                )
+            # end if
+        # end if
+        return first_union_type
+    # end def
 # end class
 
 
