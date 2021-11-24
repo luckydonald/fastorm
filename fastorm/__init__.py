@@ -1142,6 +1142,8 @@ class _BaseFastORM(BaseModel):
         sql += f' SET {",".join(update_keys)}\n'
         sql += f' WHERE {" AND ".join(primary_key_where)}\n'
         sql += ';'
+        values = [value.value for value in values]
+
         # noinspection PyRedundantParentheses
         return (sql, *values)
     # end def
