@@ -110,8 +110,8 @@ class NormalTableTestCase(unittest.TestCase):
 
     def test__prepare_kwargs_double_with_union(self):
         actual = SimpleTable._prepare_kwargs(id=In[42, 69], text="sample text", _allow_in=True)
-        id_field = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=int)])
-        id_type = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators=[], model_config=BaseConfig))])
+        id_type = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=int)])
+        id_field = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators=[], model_config=BaseConfig))])
         expected = [
             In[
                 {
@@ -135,8 +135,8 @@ class NormalTableTestCase(unittest.TestCase):
                 'text': SqlFieldMeta(
                     value='sample text',
                     sql_name='text', field_name='text',
-                    field=FieldInfo(is_primary_key=True, types=[FieldItem(field='text', type_=str)]),
-                    type_=FieldInfo(is_primary_key=True, types=[FieldItem(field='text', type_=ModelField(name='text', type_=str, required=True, class_validators=[], model_config=BaseConfig))]),
+                    field=FieldInfo(is_primary_key=False, types=[FieldItem(field='text', type_=ModelField(name='text', type_=str, required=True, class_validators=[], model_config=BaseConfig))]),
+                    type_=FieldInfo(is_primary_key=False, types=[FieldItem(field='text', type_=str)]),
                 ),
             }
         ]
