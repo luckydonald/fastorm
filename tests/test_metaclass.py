@@ -159,6 +159,7 @@ class MyTestCase(unittest.TestCase):
                 self.assertEqual(1, len(result), msg=key)
             # end with
         # end for
+    # end def
 # end class
 
 if __name__ == '__main__':
