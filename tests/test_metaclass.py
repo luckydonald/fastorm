@@ -129,9 +129,8 @@ class MyTestCase(unittest.TestCase):
             ref: Union[Table, typing.Tuple[int,str]]
         # end class
 
-        tuple_typehint_type = typing.Tuple if not IS_PYTHON_3_9 else tuple
-        expected_old_annotations = {'ref': typing.Union[Table, tuple_typehint_type[int, str]]}
-        expected_new_annotations = {'ref': typing.Union[Table, tuple_typehint_type[int, str]]}
+        expected_old_annotations = {'ref': typing.Union[Table, typing.Tuple[int, str]]}
+        expected_new_annotations = {'ref': typing.Union[Table, typing.Tuple[int, str]]}
         with self.subTest('old'):
             self.assertEqual(expected_old_annotations, Reference.__original__annotations__)
         # end with
