@@ -202,9 +202,14 @@ class ModelMetaclassFastORM(ModelMetaclass):
     @classmethod
     def deduplicate_types(mcs, annotations: List[TYPEHINT_TYPE]) -> List[TYPEHINT_TYPE]:
         # first barebones deduplication
-        params_set = set(annotations)
-        if len(params_set) == len(annotations) and not IS_PYTHON_3_9:
-            return annotations
+        if not IS_PYTHON_3_9:
+            # old python version: we don't have `tuple[…]` which we would need to distinguish from `typing.Tuple[…]`,
+            # so we can optimize with letting set do the deduplication, and only run the list based compare if that
+            # resulting set is shorter.
+            params_set = set(annotations)
+            if len(params_set) == len(annotations) and not IS_PYTHON_3_9:
+                return annotations
+            # end if
         # end if
 
         # this either did yield a shorter list (which we now need to reproduce while keeping element order),
