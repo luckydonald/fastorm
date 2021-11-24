@@ -2,7 +2,10 @@ import unittest
 from textwrap import dedent
 from typing import Optional, List
 
-from fastorm import FastORM, In, SqlFieldMeta, FieldInfo
+from pydantic import BaseConfig
+from pydantic.fields import ModelField
+
+from fastorm import FastORM, In, SqlFieldMeta, FieldInfo, FieldItem
 
 
 class SimpleTable(FastORM):
@@ -59,9 +62,25 @@ class NormalTableTestCase(unittest.TestCase):
     # end def
 
     def test__prepare_kwargs_single(self):
-        expected = [{'id': 12}]
         actual = SimpleTable._prepare_kwargs(id=12, _allow_in=True)
-        self.assertEqual(expected, actual)
+        expected = [{'id': SqlFieldMeta(
+            value=12,
+            field_name='id', sql_name='id',
+            type_=FieldInfo(
+                is_primary_key=True,
+                types=[
+                    FieldItem(field='id', type_=int),
+                ],
+            ),
+            field=FieldInfo(
+                is_primary_key=True,
+                types=[
+                    FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators=[], model_config=BaseConfig)),
+                ],
+            )
+        )}]
+
+        self.assertEqual(str(expected), str(actual))
     # end def
 
     def test__prepare_kwargs_double(self):
@@ -91,20 +110,44 @@ class NormalTableTestCase(unittest.TestCase):
 
     def test__prepare_kwargs_double_with_union(self):
         actual = SimpleTable._prepare_kwargs(id=In[42, 69], text="sample text", _allow_in=True)
+        id_field = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=int)])
+        id_type = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators=[], model_config=BaseConfig))])
         expected = [
             In[
                 {
-                    'id': SqlFieldMeta(value=42, sql_name='id', field_name='id', field=None, type_=None),
+                    'id': SqlFieldMeta(
+                        value=42,
+                        sql_name='id', field_name='id',
+                        field=id_field,
+                        type_=id_type,
+                    ),
                 },
                 {
-                    'id': SqlFieldMeta(value=69, sql_name='id', field_name='id', field=None, type_=None),
+                    'id': SqlFieldMeta(
+                        value=69,
+                        sql_name='id', field_name='id',
+                        field=id_field,
+                        type_=id_type
+                    ),
                 }
             ],
             {
-                'text': SqlFieldMeta(value='sample text', sql_name='text', field_name='text', field=None, type_=None),
+                'text': SqlFieldMeta(
+                    value='sample text',
+                    sql_name='text', field_name='text',
+                    field=FieldInfo(is_primary_key=True, types=[FieldItem(field='text', type_=str)]),
+                    type_=FieldInfo(is_primary_key=True, types=[FieldItem(field='text', type_=ModelField(name='text', type_=str, required=True, class_validators=[], model_config=BaseConfig))]),
+                ),
             }
         ]
         self.assertEqual(str(expected), str(actual))
+    # end def
+
+    def test_in_to_string(self):
+        actual = In[int, 'foo', 123]
+        expected = "In[<class 'int'>, 'foo', 123]"
+
+        self.assertEqual(expected, str(actual))
     # end def
 
     def test_normal_select_single_field_pk(self):
