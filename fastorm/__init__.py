@@ -94,7 +94,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
     def process_annotation(mcs, automatic_fields: List[str], annotations: Dict[str, TYPEHINT_TYPE]):
         new_annotations = {}
         for field_name, annotation in annotations.items():
-            annotation_args = mcs.recursive_check(annotation)
+            annotation_args = mcs.recursive_get_union_params_with_pk_types(annotation)
             if field_name in automatic_fields:
                 annotation_args.append(None)
             # end if
@@ -104,7 +104,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
     # end def
 
     @classmethod
-    def recursive_check(mcs, annotation):
+    def recursive_get_union_params_with_pk_types(mcs, annotation):
         # is a Union[…]
         is_union = check_is_typing_union_type(annotation) or check_is_new_union_type(annotation)
         # is a List[…], Dict[…], ...
@@ -115,13 +115,13 @@ class ModelMetaclassFastORM(ModelMetaclass):
             annotation_args = []
             if is_union:
                 for arg in annotation.__args__:
-                    annotation_args.extend(mcs.recursive_check(arg))
+                    annotation_args.extend(mcs.recursive_get_union_params_with_pk_types(arg))
                 # end for
             else:
                 assert is_complex
                 # stuff = […] -> Dict[*stuff] -> [Dict[…]]
                 for arg in annotation.__args__:
-                    param = mcs.recursive_check(arg)
+                    param = mcs.recursive_get_union_params_with_pk_types(arg)
                     if len(param) == 1:
                         param = param[0]
                     else:
@@ -1952,6 +1952,7 @@ class _BaseFastORM(BaseModel):
                 raise TypeError(
                     f'Union with more than one type at key {key}.', union_params,
                 )
+            # end if
         # end if
         additional_is_optional, sql_type = cls.match_type(
             first_union_type, is_automatic_field=is_automatic_field, is_outer_call=False
