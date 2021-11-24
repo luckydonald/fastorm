@@ -1049,7 +1049,7 @@ class _BaseFastORM(BaseModel):
         ignore_setting_automatic_fields: Optional[bool] = None,
         on_conflict_upsert_field_list: Optional[List[str]] = None,
         write_back_automatic_fields: bool = True,
-    ):
+    ) -> 'FastORM':
         """
         :param conn: Database connection to run at.
         :param ignore_setting_automatic_fields:
@@ -1062,7 +1062,7 @@ class _BaseFastORM(BaseModel):
         :param on_conflict_upsert_field_list: List of fields which are expected to cause an duplicate conflict, and thus will instead be overwritten.
         :param write_back_automatic_fields: Apply the automatic fields back to this object.
                                             Ignored if `ignore_setting_automatic_fields` is False.
-        :return:
+        :return: self
         """
         fetch_params = self.build_sql_insert(
             ignore_setting_automatic_fields=ignore_setting_automatic_fields,
@@ -1087,6 +1087,7 @@ class _BaseFastORM(BaseModel):
                 self._database_cache[field] = updated_automatic_values[field]
             # end for
         # end if
+        return self
     # end def
 
     def build_sql_update(self):
