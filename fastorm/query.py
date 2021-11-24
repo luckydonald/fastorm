@@ -46,6 +46,7 @@ class In(Generic[VARIABLE_TYPE]):
     # end def
 
     def __class_getitem__(cls, variables):
+        # check if typing stuff, e.g. In[str] or In[FastORM]
         if (
             inspect.isclass(variables) or
             check_is_annotated_type(variables) or
