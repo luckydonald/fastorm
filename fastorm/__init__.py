@@ -201,19 +201,11 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @classmethod
     def deduplicate_types(mcs, annotations: List[TYPEHINT_TYPE]) -> List[TYPEHINT_TYPE]:
-        # first barebones deduplication
-        annotations = set(annotations)
-
-        if not IS_PYTHON_3_9:
-            # we're done already, they don't have the problematic stuff yet.
-            return list(annotations)
-        # end def
-
-        all_params = set()
+        all_params = list()
         generic_aliases = set()
 
         for param in annotations:
-            if check_is_generic_alias(param):
+            if IS_PYTHON_3_9 and check_is_generic_alias(param):
                 # check if we have a different type with similar stuff.
                 # so tuple[] instead of Tuple[] and so on.
                 assert hasattr(param, '__args__')
@@ -234,6 +226,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             all_params.add(param)
         # end for
         return list(all_params)
+    # end def
 
     @classmethod
     def is_generic_alias_equal(cls, param, other_param):
