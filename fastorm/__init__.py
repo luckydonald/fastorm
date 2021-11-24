@@ -1912,7 +1912,7 @@ class _BaseFastORM(BaseModel):
             pass
         else:
             pk_type = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=False).values())
-            pk_type = pk_type[0] if len(pk_type) == 1 else Tuple.__getattribute__(pk_type)
+            pk_type = pk_type[0] if len(pk_type) == 1 else typing.Tuple.__getitem__(pk_type)
 
             remaining_params = other_union_types[:]
             for remaining_param in remaining_params:
@@ -1921,7 +1921,7 @@ class _BaseFastORM(BaseModel):
                 # end if
             # end for
             pk_type_ref = tuple(first_union_type.get_primary_keys_type_annotations(ref_as_union_with_pk=True).values())
-            pk_type_ref = pk_type_ref[0] if len(pk_type_ref) == 1 else Tuple.__getattribute__(pk_type)
+            pk_type_ref = pk_type_ref[0] if len(pk_type_ref) == 1 else typing.Tuple.__getitem__(pk_type)
 
             if not ModelMetaclassFastORM.is_generic_alias_equal(pk_type, pk_type_ref):  # pk_type, pk_type_ref
                 # they are different
