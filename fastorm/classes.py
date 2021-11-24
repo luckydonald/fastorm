@@ -106,5 +106,16 @@ class SqlFieldMeta(typing.Generic[SQL_FIELD_META_VALUE_TYPE]):
     type_: FieldInfo[typing.Union[typing.Type]]
     field: FieldInfo[pydantic.fields.ModelField]
     value: SQL_FIELD_META_VALUE_TYPE
+
+    def __str__(self):
+        return (
+            f'{self.__class__.__name__}('
+            f'value={self.value!r}, '
+            f'sql_name={self.sql_name!r}, '
+            f'field_name={self.field_name!r}, '
+            f'type_={self.type_!r}, '
+            # f'field={self.field!r}'
+            r')'
+        )
 # end class
 
