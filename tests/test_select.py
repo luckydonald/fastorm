@@ -6,7 +6,7 @@ from pydantic import BaseConfig
 from pydantic.fields import ModelField
 
 from fastorm import FastORM, In, SqlFieldMeta, FieldInfo, FieldItem
-
+from tools_for_the_tests_of_fastorm import VerboseTestCase
 
 class SimpleTable(FastORM):
     _table_name = 'simple_table'
@@ -378,7 +378,7 @@ class ReferencingDoubleKey(FastORM):
 # end class
 
 
-class ReferencingDoubleKeyTestCase(unittest.TestCase):
+class ReferencingDoubleKeyTestCase(VerboseTestCase):
     def test_sql_text_create(self):
         self.maxDiff = None
         # noinspection SqlNoDataSourceInspection,SqlResolve
@@ -415,9 +415,115 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
     # end def
 
     def test__prepare_kwargs_double_with_union_of_object_and_tuple(self):
-        expected = [In[{'id_ref_part__id_part_1': 101, 'id_ref_part__id_part_2': 1.11}, {'id_ref_part__id_part_1': 202, 'id_ref_part__id_part_2': 2.22}], {'other_field': 'sample text'}]
+        expected = [
+            In[
+                {
+                    'id_ref_part__id_part_1': SqlFieldMeta(
+                        value=101,
+                        field_name='id_ref_part', sql_name='id_ref_part__id_part_1',
+                        type_=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part', type_=DoublePrimaryKeyTable),
+                                FieldItem(field='id_part_1', type_=int),
+                            ],
+                        ),
+                        field=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
+                                FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type_=int, required=True, class_validators=[], model_config=BaseConfig)),
+                            ],
+                        ),
+                    ),
+                    'id_ref_part__id_part_2': SqlFieldMeta(
+                        value=1.11,
+                        field_name='id_ref_part', sql_name='id_ref_part__id_part_2',
+                        type_=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part', type_=DoublePrimaryKeyTable),
+                                FieldItem(field='id_part_2', type_=float),
+                            ],
+                        ),
+                        field=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
+                                FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type_=float, required=True, class_validators=[], model_config=BaseConfig)),
+                            ],
+                        ),
+                    ),
+                },
+                {
+                    'id_ref_part__id_part_1': SqlFieldMeta(
+                        value=202,
+                        field_name='id_ref_part', sql_name='id_ref_part__id_part_1',
+                        type_=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part', type_=DoublePrimaryKeyTable),
+                                FieldItem(field='id_part_1', type_=int),
+                            ],
+                        ),
+                        field=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part',
+                                          type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable,
+                                                           required=True, class_validators=[],
+                                                           model_config=BaseConfig)),
+                                FieldItem(field='id_part_1',
+                                          type_=ModelField(name='id_part_1', type_=int, required=True,
+                                                           class_validators=[], model_config=BaseConfig)),
+                            ],
+                        ),
+                    ),
+                    'id_ref_part__id_part_2': SqlFieldMeta(
+                        value=2.22,
+                        field_name='id_ref_part', sql_name='id_ref_part__id_part_2',
+                        type_=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part', type_=DoublePrimaryKeyTable),
+                                FieldItem(field='id_part_2', type_=float),
+                            ],
+                        ),
+                        field=FieldInfo(
+                            is_primary_key=True,
+                            types=[
+                                FieldItem(field='id_ref_part',
+                                          type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable,
+                                                           required=True, class_validators=[],
+                                                           model_config=BaseConfig)),
+                                FieldItem(field='id_part_2',
+                                          type_=ModelField(name='id_part_2', type_=float, required=True,
+                                                           class_validators=[], model_config=BaseConfig)),
+                            ],
+                        ),
+                    ),
+                },
+            ],
+            {
+                'other_field': SqlFieldMeta(
+                        value='sample text',
+                        field_name='other_field', sql_name='other_field',
+                        type_=FieldInfo(
+                            is_primary_key=False,
+                            types=[
+                                FieldItem(field='other_field', type_=str),
+                            ],
+                        ),
+                        field=FieldInfo(
+                            is_primary_key=False,
+                            types=[
+                                FieldItem(field='other_field', type_=ModelField(name='other_field', type_=str, required=True, class_validators=[], model_config=BaseConfig)),
+                            ],
+                        ),
+                    ),
+            }]
         actual = ReferencingDoubleKey._prepare_kwargs(id_ref_part=In[DoublePrimaryKeyTable(id_part_1=101, id_part_2=1.11), (202, 2.22)], other_field="sample text", _allow_in=True)
-        self.assertEqual(expected, actual)
+        self.assertEqual(str(expected), str(actual))
     # end def
 
 
@@ -518,8 +624,47 @@ class ReferencingDoubleKeyTestCase(unittest.TestCase):
 
     def test__prepare_kwargs_in_clause_non_pk_reference_tuple_single(self):
         actual = ReferencingDoubleKey._prepare_kwargs(id_ref_part=In[(69, 4458.0),], _allow_in=True)
-        expected = [{"id_ref_part__id_part_1": 69, "id_ref_part__id_part_2": 4458.0}]
-        self.assertListEqual(expected, actual)
+        expected = [
+            {
+                "id_ref_part__id_part_1": SqlFieldMeta(
+                    value=69,
+                    field_name='id_ref_part', sql_name='id_ref_part__id_part_1',
+                    type_=FieldInfo(
+                        is_primary_key=True,
+                        types=[
+                            FieldItem(field='id_ref_part', type_=DoublePrimaryKeyTable),
+                            FieldItem(field='id_part_1', type_=int),
+                        ],
+                    ),
+                    field=FieldInfo(
+                        is_primary_key=True,
+                        types=[
+                            FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
+                            FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type_=int, required=True, class_validators=[], model_config=BaseConfig)),
+                        ],
+                    ),
+                ),
+                "id_ref_part__id_part_2": SqlFieldMeta(
+                    value=4458.0,
+                    field_name='id_ref_part', sql_name='id_ref_part__id_part_2',
+                    type_=FieldInfo(
+                        is_primary_key=True,
+                        types=[
+                            FieldItem(field='id_ref_part', type_=DoublePrimaryKeyTable),
+                            FieldItem(field='id_part_2', type_=float),
+                        ],
+                    ),
+                    field=FieldInfo(
+                        is_primary_key=True,
+                        types=[
+                            FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
+                            FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type_=float, required=True, class_validators=[], model_config=BaseConfig)),
+                        ],
+                    ),
+                ),
+            }
+        ]
+        self.assertEqual(str(expected), str(actual))
     # end def
 
     def test_list_in(self):
