@@ -1607,42 +1607,7 @@ class _BaseFastORM(BaseModel):
                 # end if
                 sql = sql.format(**formatting_dict)
             else:
-                if psycopg2.sql is None or psycopg2.extensions is None or psycopg2.connect is None:
-                    # so we had an import error earlier (on top of the file)
-                    # raise a proper ImportError message with useful information
-                    raise ImportError(
-                        'For using complex default values (everything other than None, bool, int, and pure ascii strings) '
-                        'psycopg2 needs to be installed (pip install psycopg2-binary).'
-                    )
-                # end if
-                try:
-                    assert_type_or_raise(psycopg2_conn, Connection, psycopg2.extensions.connection, psycopg2.extensions.cursor, parameter_name='psycopg2_conn')
-                except TypeError:
-                    # enhance error message with useful information
-                    error_class = ValueError if psycopg2_conn is None else TypeError
-                    raise error_class(
-                        'For using complex default values (everything other than None, bool, int, and pure ascii strings) '
-                        'a psycopg2 connection or cursor needs to be provided as the psycopg2_conn parameter.'
-                    )
-                # end try
-                if isinstance(psycopg2_conn, Connection):
-                    # if it's a asyncpg Connection, try to build the needed psycopg2 connection from it.
-                    # noinspection PyProtectedMember
-                    params = dict(
-                        database=psycopg2_conn._params.database,  # aka dbname
-                        user=psycopg2_conn._params.user,
-                        password=psycopg2_conn._params.password,
-                        host=psycopg2_conn._addr[0] if isinstance(psycopg2_conn._addr, tuple) else psycopg2_conn._addr,
-                        port=psycopg2_conn._addr[1] if isinstance(psycopg2_conn._addr, tuple) else None,
-                    )
-                    unix_socket_match = re.match(r'^(?P<path>/.*)(?<=/)\.s\.PGSQL\.(?P<port>\d+)$', params['host'])  # https://regex101.com/r/bNWUzG/1/
-                    if unix_socket_match:
-                        params['host'] = unix_socket_match.group('path')
-                        params['port'] = int(unix_socket_match.group('port'))
-                    # end if
-                    psycopg2_conn = psycopg2.connect(**params)
-                # end if
-
+                psycopg2_conn = cls._as_psycopg2_connection(psycopg2_conn)
                 placeholder_values = [psycopg2.sql.Literal(value) for value in placeholder_values]
                 formatting_dict = {f'default_placeholder_{i}': val for i, val in enumerate(placeholder_values)}
                 sql = psycopg2.sql.SQL(sql)
@@ -1650,6 +1615,47 @@ class _BaseFastORM(BaseModel):
             # end if
         # noinspection PyRedundantParentheses
         return (sql, *[])
+    # end def
+
+    @classmethod
+    def _as_psycopg2_connection(cls, conn):
+        if psycopg2.sql is None or psycopg2.extensions is None or psycopg2.connect is None:
+            # so we had an import error earlier (on top of the file)
+            # raise a proper ImportError message with useful information
+            raise ImportError(
+                'For using complex default values (everything other than None, bool, int, and pure ascii strings) '
+                'psycopg2 needs to be installed (pip install psycopg2-binary).'
+            )
+        # end if
+        try:
+            assert_type_or_raise(conn, Connection, psycopg2.extensions.connection, psycopg2.extensions.cursor, parameter_name='psycopg2_conn')
+        except TypeError:
+            # enhance error message with useful information
+            error_class = ValueError if conn is None else TypeError
+            raise error_class(
+                'For using complex default values (everything other than None, bool, int, and pure ascii strings) '
+                'a psycopg2 connection or cursor needs to be provided as the psycopg2_conn parameter.'
+            )
+        # end try
+        if isinstance(conn, Connection):
+            # if it's a asyncpg Connection, try to build the needed psycopg2 connection from it.
+            # noinspection PyProtectedMember
+            params = dict(
+                database=conn._params.database,  # aka dbname
+                user=conn._params.user,
+                password=conn._params.password,
+                host=conn._addr[0] if isinstance(conn._addr, tuple) else conn._addr,
+                port=conn._addr[1] if isinstance(conn._addr, tuple) else None,
+            )
+            # https://regex101.com/r/bNWUzG/1/
+            unix_socket_match = re.match(r'^(?P<path>/.*)(?<=/)\.s\.PGSQL\.(?P<port>\d+)$', params['host'])
+            if unix_socket_match:
+                params['host'] = unix_socket_match.group('path')
+                params['port'] = int(unix_socket_match.group('port'))
+            # end if
+            conn = psycopg2.connect(**params)
+        # end if
+        return conn
     # end def
 
     @classmethod
