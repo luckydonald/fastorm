@@ -49,6 +49,12 @@ class In(Generic[VARIABLE_TYPE]):
         # check if typing stuff, e.g. In[str] or In[FastORM]
         if (
             is_typehint(variables)
+            or
+            (
+                isinstance(variables, (tuple, list))
+                and
+                all(is_typehint(variable) for variable in variables)
+            )
         ):
             # keep type hint support
             return super().__class_getitem__(variables)
