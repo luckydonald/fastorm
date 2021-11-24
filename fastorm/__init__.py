@@ -41,7 +41,7 @@ from .classes import FieldInfo, FieldItem, SqlFieldMeta
 from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
 from .compat import IS_PYTHON_3_9
 from .compat import Annotated, NoneType
-from .utils import failsafe_issubclass
+from .utils import failsafe_issubclass, evaluate_forward_ref
 from .query import *
 from .query import __all__ as __query__all__
 __all__.extend(__query__all__)
@@ -593,14 +593,7 @@ class _BaseFastORM(BaseModel):
                 union_params_unclean = type_hint.type_.__args__[:]
                 union_params = []
                 for union_param in union_params_unclean:
-                    if isinstance(union_param, typing.ForwardRef):
-                        if not union_param.__forward_evaluated__:
-                            raise ValueError(
-                                f'The typehint of {cls.__name__}.{key} is still a unresolved ForwardRef. You should probably call {cls.__name__}.update_forward_refs() after the class it is pointing to is defined.'
-                            )
-                        # end if
-                        union_param = union_param.__forward_value__
-                    # end if
+                    union_param = cls.evaluate_forward_ref(key, union_param)
                     # We also need to handle NoneType in those once more,
                     # Usually that would be filtered converted to Optional[…],
                     # but apparently not for ForwardRefs.
