@@ -77,7 +77,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             namespace['__original__annotations__'] = namespace['__annotations__']
             del namespace['__annotations__']  # so those two fields are inserted after each other
             automatic_fields = namespace.get('_automatic_fields', [])
-            namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
+            namespace['__annotations__'], namespace['__simple__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
         # end if
         logger.debug(f'namespace (new): {namespace!r}')
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
@@ -93,14 +93,19 @@ class ModelMetaclassFastORM(ModelMetaclass):
     @classmethod
     def process_annotation(mcs, automatic_fields: List[str], annotations: Dict[str, TYPEHINT_TYPE]):
         new_annotations = {}
+        simple_annotations = {}
         for field_name, annotation in annotations.items():
             annotation_args = mcs.recursive_get_union_params_with_pk_types(annotation)
+            base_type = mcs.process_fastorm_pk_union(type_hint=annotation, key=field_name)
+            base_types = [base_type]
             if field_name in automatic_fields:
                 annotation_args.append(None)
+                base_types.append(None)
             # end if
             new_annotations[field_name] = Union.__getitem__(tuple(annotation_args))  # calls Union[…]
+            simple_annotations[field_name] = Union.__getitem__(tuple(base_types))  # calls Union[…]
         # end for
-        return new_annotations
+        return new_annotations, simple_annotations
     # end def
 
     @classmethod
@@ -2192,6 +2197,7 @@ class FastORM(_BaseFastORM, metaclass=ModelMetaclassFastORM):
     __fields_typehints: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
     __fields_references: Dict[bool, Dict[str, FieldInfo[ModelField]]] = PrivateAttr()  # cache for `cls.get_fields_typehint()`
     __original__annotations__: Dict[str, Any]  # filled by the metaclass, before we do modify the __annotations__
+    __simple__annotations__: Dict[str, Any]  # filled by the metaclass, before we do modify the __annotations__
     __original__fields__: Dict[str, ModelField]  # filled by the metaclass, before we do modify the __fields__
 # end class
 

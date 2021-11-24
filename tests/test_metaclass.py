@@ -134,11 +134,15 @@ class MyTestCase(unittest.TestCase):
             ref: Union[Table, typing.Tuple[int,str]]
         # end class
 
-        expected_old_annotations = {'ref': typing.Union[Table, typing.Tuple[int, str]]}
+        expected_original_annotations = {'ref': typing.Union[Table, typing.Tuple[int, str]]}
+        expected_simple_annotations = {'ref': Table}
         expected_new_annotations = {'ref': typing.Union[Table, typing.Tuple[int, str]]}
 
-        with self.subTest('old'):
-            self.assertEqual(expected_old_annotations, Reference.__original__annotations__)
+        with self.subTest('original'):
+            self.assertEqual(expected_original_annotations, Reference.__original__annotations__)
+        # end with
+        with self.subTest('simple'):
+            self.assertEqual(expected_new_annotations, Reference.__simple__annotations__)
         # end with
         with self.subTest('new'):
             self.assertEqual(expected_new_annotations, Reference.__annotations__)
