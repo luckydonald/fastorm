@@ -516,7 +516,7 @@ class _BaseFastORM(BaseModel):
                 union_params_unclean = type_hint.type_.__args__[:]
                 union_params = []
                 for union_param in union_params_unclean:
-                    union_param = cls.evaluate_forward_ref(key, union_param)
+                    union_param = cls.evaluate_forward_ref(union_param, key=key, cls_name=cls.__name__)
                     # We also need to handle NoneType in those once more,
                     # Usually that would be filtered converted to Optional[…],
                     # but apparently not for ForwardRefs.
