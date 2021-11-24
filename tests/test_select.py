@@ -2,7 +2,7 @@ import unittest
 from textwrap import dedent
 from typing import Optional, List
 
-from fastorm import FastORM, In
+from fastorm import FastORM, In, SqlFieldMeta, FieldInfo
 
 
 class SimpleTable(FastORM):
@@ -65,15 +65,46 @@ class NormalTableTestCase(unittest.TestCase):
     # end def
 
     def test__prepare_kwargs_double(self):
-        expected = [{'id': 42}, {'text': 'sample text'}]
         actual = SimpleTable._prepare_kwargs(id=42, text="sample text", _allow_in=True)
-        self.assertEqual(expected, actual)
+        # expected = [{'id': SqlFieldMeta(42, …)}, {'text': SqlFieldMeta('sample text', …)}]
+        self.assertIsInstance(actual, list)
+        self.assertEqual(2, len(actual))
+
+        self.assertIsInstance(actual[0], dict)
+        self.assertEqual(['id'], list(actual[0].keys()))
+        self.assertIsInstance(actual[0]['id'], SqlFieldMeta)
+        self.assertEqual('id', actual[0]['id'].field_name)
+        self.assertEqual('id', actual[0]['id'].sql_name)
+        self.assertIsInstance(actual[0]['id'].type_, FieldInfo)
+        self.assertEqual(int, actual[0]['id'].type_.referenced_type)
+        self.assertEqual(int, actual[0]['id'].type_.resulting_type)
+
+        self.assertIsInstance(actual[1], dict)
+        self.assertEqual(['text'], list(actual[1].keys()))
+        self.assertIsInstance(actual[1]['text'], SqlFieldMeta)
+        self.assertEqual('text', actual[1]['text'].field_name)
+        self.assertEqual('text', actual[1]['text'].sql_name)
+        self.assertIsInstance(actual[1]['text'].type_, FieldInfo)
+        self.assertEqual(str, actual[1]['text'].type_.referenced_type)
+        self.assertEqual(str, actual[1]['text'].type_.resulting_type)
     # end def
 
     def test__prepare_kwargs_double_with_union(self):
-        expected = [In[{'id': 42}, {'id': 69}], {'text': 'sample text'}]
         actual = SimpleTable._prepare_kwargs(id=In[42, 69], text="sample text", _allow_in=True)
-        self.assertEqual(expected, actual)
+        expected = [
+            In[
+                {
+                    'id': SqlFieldMeta(value=42, sql_name='id', field_name='id', field=None, type_=None),
+                },
+                {
+                    'id': SqlFieldMeta(value=69, sql_name='id', field_name='id', field=None, type_=None),
+                }
+            ],
+            {
+                'text': SqlFieldMeta(value='sample text', sql_name='text', field_name='text', field=None, type_=None),
+            }
+        ]
+        self.assertEqual(str(expected), str(actual))
     # end def
 
     def test_normal_select_single_field_pk(self):
