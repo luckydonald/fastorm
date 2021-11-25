@@ -623,15 +623,15 @@ class _BaseFastORM(BaseModel):
         return return_val
     # end def
 
-    @classmethod
-    def wrap_optional_pydantic_typehint(cls, typehint_):
-            """
+    @staticmethod
+    def wrap_optional_pydantic_typehint(typehint: ModelField):
+        """
         Wrap e.g. an optional `int` back as `Optional[int]`.
         :param typehint_:
         :return:
         """
-        type_ = typehint_.type_
-        if typehint_.allow_none:
+        type_ = typehint.type_
+        if typehint.allow_none:
             # wrap e.g. an optional `int` as `Optional[int]`.
             type_ = Optional.__getitem__(type_)
         # end if
