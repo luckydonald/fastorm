@@ -132,7 +132,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
                     annotation_args.append(param)
                 # end for
                 annotation_args = tuple(annotation_args)
-                annotation_args = annotation.__origin__[annotation_args]  # calls List[…]
+                annotation_args = annotation.__origin__[annotation_args]  # calls list[…]
                 annotation_args = [annotation_args]
             # end if
         else:
@@ -304,6 +304,8 @@ class _BaseFastORM(BaseModel):
         Get's all fields which have type hints and thus we consider as fields for the database.
         Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
 
+        :uses: FastORM.get_fields_references
+
         :param flatten_table_references:
                 True if we should flatten the references to other table's primary key in the format of `f"{original_key}__{other_table_key}`.
                 False to not resolve those fields, and instead return the type hint for the other FastORM class.
@@ -423,7 +425,8 @@ class _BaseFastORM(BaseModel):
         """
         Get's all fields which have type hints and thus we consider as fields for the database.
         Filters out constants (all upper case, like `CAPSLOCK_VARIABLE`) and hidden fields (starting with `_`).
-        Then
+
+        :uses: FastORM.__original__fields__
 
         :param recursive: If we should not only take into account the current layer, but add the primary keys of the referenced tables to it as well, in the format `f"{our_key}__{referenced_primary_key}`.
         :return: the dictionary with the
@@ -532,7 +535,7 @@ class _BaseFastORM(BaseModel):
                     # the table ist the first entry and the actual field type is the second.
                     # Union[Table, int]
                     # Union[Table, Tuple[int, int]]
-                    expected_typehint = first_union_type.get_primary_keys_type_annotations()
+                    expected_typehint = list(first_union_type.get_primary_keys_type_annotations().values())
                     if not len(union_params) == 2:
                         raise TypeError(
                             f'Union with other table type must have it\'s primary key(s) as second argument, and no more values:\n'
