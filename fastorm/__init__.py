@@ -557,7 +557,14 @@ class _BaseFastORM(BaseModel):
                         implied_other_class_pk_types = [implied_other_class_pk_types]
                     # end if
                     typehints = first_union_type.get_fields_typehints(flatten_table_references=True)
-                    pk_keys_actual_types = [hint.resulting_type.type_ for hint in typehints.values() if hint.is_primary_key]
+                    pk_keys_actual_types = []
+                    for hint in typehints.values():
+                        if not hint.is_primary_key:
+                            continue
+                        # end if
+                        type_ = cls.wrap_optional_pydantic_typehint(hint.resulting_type)
+                        pk_keys_actual_types.append(type_)
+                    # end for
                     if implied_other_class_pk_types == pk_keys_actual_types:
                         # so basically the we know the referenced(!) `SomeTable` has `_id = ['id']`,
                         # and the referenced `SomeTable.id` is of type `int`,
@@ -583,7 +590,7 @@ class _BaseFastORM(BaseModel):
             if not other_class:
                 # is a regular key, just keep it as is
                 # e.g. 'title': (False, [('title', str)]),
-                return_val[key] = FieldInfo(key in _primary_keys, [FieldItem(key, type_hint.type_)])  # TODO: make a copy?
+                return_val[key] = FieldInfo(key in _primary_keys, [FieldItem(key, cls.wrap_optional_pydantic_typehint(type_hint))])  # TODO: make a copy?
                 # and then let's do the next key
                 continue
             # end if
@@ -614,6 +621,21 @@ class _BaseFastORM(BaseModel):
         cached_value[recursive] = return_val
         setattr(cls, cache_key, cached_value)
         return return_val
+    # end def
+
+    @classmethod
+    def wrap_optional_pydantic_typehint(cls, typehint_):
+            """
+        Wrap e.g. an optional `int` back as `Optional[int]`.
+        :param typehint_:
+        :return:
+        """
+        type_ = typehint_.type_
+        if typehint_.allow_none:
+            # wrap e.g. an optional `int` as `Optional[int]`.
+            type_ = Optional.__getitem__(type_)
+        # end if
+        return type_
     # end def
 
     @classmethod
