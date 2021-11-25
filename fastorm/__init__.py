@@ -1297,6 +1297,14 @@ class _BaseFastORM(BaseModel):
 
     @classmethod
     def from_row(cls, row):
+        """
+        Load a query result row into this class type.
+        It is is done automatically for you if you use `.get(…)` or `.select(…)`.
+        However for advanced raw SQL queries this can be helpful,
+        especially when combined with `get_select_fields(…)` to make sure you're not missing a field.
+        :param row:
+        :return:
+        """
         # noinspection PyArgumentList
         row_data = {key.rsplit(" ")[-1]: value for key, value in dict(row).items()}  # handles the namespaces like "namespace_name field_name"
         instance = cls(**row_data)
