@@ -1038,7 +1038,6 @@ class _BaseFastORM(BaseModel):
 
         for sql_wheres in sql_where:
             sql_wheres: Union[In[Dict[str, Any]], Dict[str, Any]]
-            # is_in_list_clause = cls._param_is_list_of_multiple_values(long_key, value, typehints[long_key].resulting_type)
 
             if not sql_wheres:  # it's empty
                 continue
@@ -1988,58 +1987,6 @@ class _BaseFastORM(BaseModel):
             is_optional = True
         # end if
         return is_optional, sql_type
-    # end def
-
-    @classmethod
-    def _param_is_list_of_multiple_values(cls, key: str, value: Any, typehint: Type):
-        """
-        If a value is multiple times of what was defined.
-        :param key:
-        :param value:
-        :param typehint:
-        :return: True if the `value` is a list of tuple of arguments satisfying the `typehint`.
-        """
-        if not isinstance(value, (list, tuple)):
-            # we don't have a list -> can't be multiple values
-            # this is a cheap check preventing most of the values.
-            return False
-        # end if
-
-        original_type_fits = False
-        listable_type_fits = False
-        try:
-            check_type(argname=key, value=value, expected_type=typehint)
-            original_type_fits = True  # the original was already compatible
-        except TypeError:
-            pass
-        # end if
-        try:
-            check_type(argname=key, value=value, expected_type=Union[Tuple[typehint], List[typehint]])
-            listable_type_fits = True  # the original was already compatible
-        except TypeError:
-            pass
-        # end if
-
-        logger.debug(f'type fitting analysis: original: {original_type_fits}, tuple/list: {listable_type_fits}')
-        if not listable_type_fits:
-            # easy one,
-            # so our list/tuple check doesn't match,
-            # so it isn't compatible.
-            return False
-        # end if
-        if not original_type_fits:
-            # tuple/list one fits
-            # but the original one does not.
-            # pretty confident we have a list/tuple of a normal attribute and can do a `WHERE {key} IN ({",".join(value)})`
-            return True
-        # end if
-
-        # else -> listable_type_fits == True, original_type_fits == True
-        # ooof, so that one would have already be accepted by the original type...
-        # That's a tough one...
-        # we err to the side of caution
-        logger.warn(f'Not quite sure if it fits or not, erring to the side of caution and assuming single parameter.')
-        return False
     # end def
 
     _CLASS_SERIALIZERS = {
