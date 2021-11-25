@@ -215,14 +215,14 @@ class CreateTableTestCase(unittest.TestCase):
                 is_primary_key=True,
                 types=[
                     FieldItem(field='double_trouble', type_=DoublePrimaryKeyTable),
-                    FieldItem(field='id_part1', type_=Tuple[int, Optional[int]]),
+                    FieldItem(field='id_part1', type_=int),
                 ],
             ),
             'double_trouble__id_part2': FieldInfo(
                 is_primary_key=True,
                 types=[
                     FieldItem(field='double_trouble', type_=DoublePrimaryKeyTable),
-                    FieldItem(field='id_part2', type_=Tuple[int, Optional[int]]),
+                    FieldItem(field='id_part2', type_=Optional[int]),
                 ],
             ),
         }
