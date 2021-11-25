@@ -85,7 +85,6 @@ try:
 except ImportError:
     def check_is_generic_alias(variable: Any) -> bool:
         return (
-            isinstance(variable, GenericAlias) or  # type(list[int])
             isinstance(variable, GenericAliasOld)  # type(List[int])
         )
     # end def
