@@ -1,7 +1,10 @@
 import unittest
 from typing import Optional, Union, Any, Type, List, Tuple, Dict
 
-from fastorm import FastORM
+from pydantic import BaseConfig
+from pydantic.fields import ModelField
+
+from fastorm import FastORM, FieldInfo, FieldItem
 from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring
 
 
@@ -180,6 +183,50 @@ class CreateTableTestCase(unittest.TestCase):
         expected_sql = extract_create_and_reference_sql_from_docstring(cls).create
         actual_sql, *actual_params = cls.build_sql_create()
         self.assertEqual(expected_sql, actual_sql)
+    # end def
+
+    def test_working_table_multi_references_optional_get_fields_typehints(self):
+        cls = ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional
+        actual = cls.get_fields_typehints(flatten_table_references=True)
+        expected = {
+            'double_trouble__id_part1': FieldInfo(
+                is_primary_key=True,
+                types=[
+                    FieldItem(field='double_trouble', type_=ModelField(name='double_trouble', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
+                    FieldItem(field='id_part1', type_=ModelField(name='id_part1', type_=Tuple[int, Optional[int]], required=True, class_validators=[], model_config=BaseConfig)),
+                ],
+            ),
+            'double_trouble__id_part2': FieldInfo(
+                is_primary_key=True,
+                types=[
+                    FieldItem(field='double_trouble', type_=ModelField(name='double_trouble', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
+                    FieldItem(field='id_part2', type_=ModelField(name='id_part2', type_=Tuple[int, Optional[int]], required=True, class_validators=[], model_config=BaseConfig)),
+                ],
+            ),
+        }
+        self.assertEqual(str(expected), str(actual))
+    # end def
+
+    def test_working_table_multi_references_optional_get_fields_references(self):
+        cls = ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional
+        actual = cls.get_fields_references(recursive=True)
+        expected = {
+            'double_trouble__id_part1': FieldInfo(
+                is_primary_key=True,
+                types=[
+                    FieldItem(field='double_trouble', type_=DoublePrimaryKeyTable),
+                    FieldItem(field='id_part1', type_=Tuple[int, Optional[int]]),
+                ],
+            ),
+            'double_trouble__id_part2': FieldInfo(
+                is_primary_key=True,
+                types=[
+                    FieldItem(field='double_trouble', type_=DoublePrimaryKeyTable),
+                    FieldItem(field='id_part2', type_=Tuple[int, Optional[int]]),
+                ],
+            ),
+        }
+        self.assertEqual(str(expected), str(actual))
     # end def
 
     def test_working_table_multi_references_optional_references(self):
