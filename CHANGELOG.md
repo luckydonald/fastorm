@@ -7,6 +7,11 @@
 >    **Solution**: Specify `foo: Bar` instead of `foo: Union[Bar, Tuple[int, int]]`.
 > - That's all we know of.
 
+# v0.0.11
+- 🔨 Fixed equality checking on deduplication if only one of them was a `ForwardRef`.
+- 🔨 Fixed upgrading of `Any` failing.
+
+
 # v0.0.10
 - 🔨 Fixed `SELECT` syntax for table references
 - 🔨 Fixed `INSERT`, `UPDATE`, `SELECT`, `DELETE` for new field syntax (where a field referencing `OtherTable.id` would be called `other_table__id`).

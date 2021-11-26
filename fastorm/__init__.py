@@ -110,7 +110,9 @@ class ModelMetaclassFastORM(ModelMetaclass):
         # is a List[…], Dict[…], ...
         is_complex = check_is_generic_alias(annotation)
 
-        if is_union or is_complex:
+        if annotation == typing.Any:  # do not attempt to upgrade `Any` in any way.
+            pass
+        elif is_union or is_complex:
             assert hasattr(annotation, '__args__')
             annotation_args = []
             if is_union:
@@ -203,10 +205,10 @@ class ModelMetaclassFastORM(ModelMetaclass):
                         and
                         new_annotation.__forward_arg__ == new_annotation.__forward_arg__  # the unresolved string will be enough
                     )
-                elif is_forward_refs == (False, True):
+                elif is_forward_refs == (True, False):
                     # only one is a forward ref -> check the actual value with the forwarded one
                     is_equal = is_equal or (new_annotation.__forward_evaluated__ and new_annotation.__forward_value__ == original_annotation)
-                elif is_forward_refs == (True, False):
+                elif is_forward_refs == (False, True):
                     # only one is a forward ref -> check the actual value with the forwarded one
                     is_equal = is_equal or (original_annotation.__forward_evaluated__ and original_annotation.__forward_value__ == new_annotation)
                 # end if
