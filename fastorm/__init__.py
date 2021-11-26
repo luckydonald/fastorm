@@ -174,7 +174,43 @@ class ModelMetaclassFastORM(ModelMetaclass):
         retrofitted_fields: Dict[str, ModelField] = {}
         annotations = None  # basically a cache, we don't wanna resolve anotations over and over again
         for key in generated_new_fields.keys():
-            if new_annotations[key] == original_annotations[key]:
+                # prepare if equal
+            new_annotation = new_annotations[key]
+            original_annotation = original_annotations[key]
+            is_equal = id(new_annotation) == id(original_annotation)
+            # basically we wanna check `new_annotation == original_annotation`,
+            #
+            # BUT in some cases that can lead to INFINITE RECURSION:
+            # If for some reason the resolved version of the `ForwardRef` points to itself (Why?),
+            # in other words `id(ref) == id(ref.__forward_value__)`,
+            # in `ForwardRef.__eq__(…)` it will compare it's `__forward_value__` with the `__forward_value__` of the other element.
+            # As that's the same as we started with, we're trapped in an infinite loop.
+            # We actually handle that case.
+            #
+            # I have not yet figured out why that happens in the first place, as `x = ForwardRef('x'); x == x` does work,
+            # but the test_create_table unittest's TableWithForwardRef is causing that behaviour.
+            # This can/could be seen e.g. in the version of commit 4ffd7e3964d339483e195adcceaa2d6fa2a70f54.
+            if not is_equal:  # the id(…) comparison is not enough
+                is_forward_refs = isinstance(new_annotation, typing.ForwardRef), isinstance(original_annotation, typing.ForwardRef)
+                if is_forward_refs == (True, True):
+                    new_annotation: typing.ForwardRef
+                    original_annotation: typing.ForwardRef
+                    is_equal = is_equal or (
+                        id(new_annotation.__forward_evaluated__) == id(new_annotation)  # will make a recursive loop
+                        and
+                        id(original_annotation.__forward_evaluated__) == id(original_annotation)  # will make a recursive loop
+                        and
+                        new_annotation.__forward_arg__ == new_annotation.__forward_arg__  # the unresolved string will be enough
+                    )
+                elif is_forward_refs == (False, True):
+                    is_equal = is_equal or (new_annotation.__forward_evaluated__ and new_annotation.__forward_value__ == original_annotation)
+                elif is_forward_refs == (True, False):
+                    is_equal = is_equal or (original_annotation.__forward_evaluated__ and original_annotation.__forward_value__ == new_annotation)
+                # end if
+                is_equal = is_equal or new_annotation == original_annotation
+            # end if
+
+            if is_equal:
                 # we have no change in types, so we can easily skip and just use the same as the generated one.
                 retrofitted_fields[key] = generated_new_fields[key]
                 continue
