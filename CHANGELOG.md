@@ -7,11 +7,13 @@
 
 # v0.0.10
 - 🔨 Fixed `SELECT` syntax for table references
+- 🔨 Fixed `INSERT`, `UPDATE`, `SELECT`, `DELETE` for new field syntax (where a field referencing `OtherTable.id` would be called `other_table__id`).
 - 🔨 Fixed `from_row(…)` if you used namespaces (those from `get_select_fields(namespace="…")`) 
+- ✅ Improved test coverage to pretty much everything.
 
 
 # v0.0.9
-- 🆕 Added caching for get_fields_typehints and get_fields_references.
+- 🆕 Added caching for `get_fields_typehints(…)` and `get_fields_references(…)`.
 - 🔨 Fixed error if you used a `ForwardRef` to reference a model not yet defined.
 - ⚠️ Extracted the referencing part from the create stable stuff (`create_table(…)` and `build_sql_create(…)`). That way they can be executed independently (`create_table_references(…)` and `build_sql_references(…)`), so you can first create all the tables and then add the references.
 
