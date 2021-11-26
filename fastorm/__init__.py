@@ -111,7 +111,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
         is_complex = check_is_generic_alias(annotation)
 
         if annotation == typing.Any:  # do not attempt to upgrade `Any` in any way.
-            pass
+            annotation_args = [annotation]
         elif is_union or is_complex:
             assert hasattr(annotation, '__args__')
             annotation_args = []
