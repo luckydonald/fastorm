@@ -193,6 +193,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             if not is_equal:  # the id(…) comparison is not enough
                 is_forward_refs = isinstance(new_annotation, typing.ForwardRef), isinstance(original_annotation, typing.ForwardRef)
                 if is_forward_refs == (True, True):
+                    # both are ForwardRefs. This is where this delicate problem can occur.
                     new_annotation: typing.ForwardRef
                     original_annotation: typing.ForwardRef
                     is_equal = is_equal or (
@@ -203,10 +204,14 @@ class ModelMetaclassFastORM(ModelMetaclass):
                         new_annotation.__forward_arg__ == new_annotation.__forward_arg__  # the unresolved string will be enough
                     )
                 elif is_forward_refs == (False, True):
+                    # only one is a forward ref -> check the actual value with the forwarded one
                     is_equal = is_equal or (new_annotation.__forward_evaluated__ and new_annotation.__forward_value__ == original_annotation)
                 elif is_forward_refs == (True, False):
+                    # only one is a forward ref -> check the actual value with the forwarded one
                     is_equal = is_equal or (original_annotation.__forward_evaluated__ and original_annotation.__forward_value__ == new_annotation)
                 # end if
+
+                # if it's not yet considered equal, we're gonna resort to normal comparison, hopefully no recursion now.
                 is_equal = is_equal or new_annotation == original_annotation
             # end if
 
