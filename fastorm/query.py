@@ -148,7 +148,6 @@ class In(Generic[VARIABLE_TYPE]):
     # end def
 
     def __eq__(self, other):
-
         if isinstance(other, In):
             other = other.as_list()
         # end if
