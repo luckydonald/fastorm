@@ -3,7 +3,8 @@
 >   That means, `list[int]` will be missing an array at the end (`BIGINT[]` will be only `BIGINT`, `BIGINT[][][]` will be only `BIGINT[][]`) and
 >   referencing other tables as part of an optional segment will result in an `JSONB` field instead of the referencing fields.   
 >   **Workaround**: Change the type of the field after creation in python versions if you must use both 3.10 and the `create_table(…)` (or `build_sql_create(…)`) function
-> 2. Currently optional references are not working properly.
+> 2. Currently references are not working correctly if you provide a union with it and the underlaying primary type (or type tuple.)
+>    **Solution**: Specify `foo: Bar` instead of `foo: Union[Bar, Tuple[int, int]]`.
 > - That's all we know of.
 
 # v0.0.10
