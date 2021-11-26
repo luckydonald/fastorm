@@ -165,7 +165,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @classmethod
     def process_fields(
-        cls,
+        mcs,
         generated_new_fields: Dict[str, ModelField],
         new_annotations: Dict[str, TYPEHINT_TYPE],
         original_annotations: Dict[str, TYPEHINT_TYPE],
