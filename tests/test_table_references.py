@@ -5,7 +5,7 @@ from pydantic import BaseConfig
 from pydantic.fields import ModelField
 
 from fastorm import FastORM, FieldInfo, FieldItem
-from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring
+from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
 
 
 class Table1(FastORM):
@@ -134,7 +134,7 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional(FastORM):
 # ----------------------------------------------------
 
 
-class CreateTableTestCase(unittest.TestCase):
+class CreateTableTestCase(VerboseTestCase):
     def test_working_table_single_references_mandatory_create(self):
         cls = Table1HavingTable2VersionSingleReferencesMandatory
         expected_sql = extract_create_and_reference_sql_from_docstring(cls).create
