@@ -192,15 +192,15 @@ class CreateTableTestCase(unittest.TestCase):
             'double_trouble__id_part1': FieldInfo(
                 is_primary_key=True,
                 types=[
-                    FieldItem(field='double_trouble', type_=ModelField(name='double_trouble', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
-                    FieldItem(field='id_part1', type_=ModelField(name='id_part1', type_=Tuple[int, Optional[int]], required=True, class_validators=[], model_config=BaseConfig)),
+                    FieldItem(field='double_trouble', type_=ModelField(name='double_trouble', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                    FieldItem(field='id_part1', type_=ModelField(name='id_part1', type_=Tuple[int, Optional[int]], required=True, class_validators={}, model_config=BaseConfig)),
                 ],
             ),
             'double_trouble__id_part2': FieldInfo(
                 is_primary_key=True,
                 types=[
-                    FieldItem(field='double_trouble', type_=ModelField(name='double_trouble', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
-                    FieldItem(field='id_part2', type_=ModelField(name='id_part2', type_=Tuple[int, Optional[int]], required=True, class_validators=[], model_config=BaseConfig)),
+                    FieldItem(field='double_trouble', type_=ModelField(name='double_trouble', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                    FieldItem(field='id_part2', type_=ModelField(name='id_part2', type_=Tuple[int, Optional[int]], required=True, class_validators={}, model_config=BaseConfig)),
                 ],
             ),
         }

@@ -75,7 +75,7 @@ class NormalTableTestCase(unittest.TestCase):
             field=FieldInfo(
                 is_primary_key=True,
                 types=[
-                    FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators=[], model_config=BaseConfig)),
+                    FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators={}, model_config=BaseConfig)),
                 ],
             )
         )}]
@@ -111,7 +111,7 @@ class NormalTableTestCase(unittest.TestCase):
     def test__prepare_kwargs_double_with_union(self):
         actual = SimpleTable._prepare_kwargs(id=In[42, 69], text="sample text", _allow_in=True)
         id_type = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=int)])
-        id_field = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators=[], model_config=BaseConfig))])
+        id_field = FieldInfo(is_primary_key=True, types=[FieldItem(field='id', type_=ModelField(name='id', type_=int, required=True, class_validators={}, model_config=BaseConfig))])
         expected = [
             In[
                 {
@@ -135,7 +135,7 @@ class NormalTableTestCase(unittest.TestCase):
                 'text': SqlFieldMeta(
                     value='sample text',
                     sql_name='text', field_name='text',
-                    field=FieldInfo(is_primary_key=False, types=[FieldItem(field='text', type_=ModelField(name='text', type_=str, required=True, class_validators=[], model_config=BaseConfig))]),
+                    field=FieldInfo(is_primary_key=False, types=[FieldItem(field='text', type_=ModelField(name='text', type_=str, required=True, class_validators={}, model_config=BaseConfig))]),
                     type_=FieldInfo(is_primary_key=False, types=[FieldItem(field='text', type_=str)]),
                 ),
             }
@@ -431,8 +431,8 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
                         field=FieldInfo(
                             is_primary_key=True,
                             types=[
-                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
-                                FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type_=int, required=True, class_validators=[], model_config=BaseConfig)),
+                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                                FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type_=int, required=True, class_validators={}, model_config=BaseConfig)),
                             ],
                         ),
                     ),
@@ -449,8 +449,8 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
                         field=FieldInfo(
                             is_primary_key=True,
                             types=[
-                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
-                                FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type_=float, required=True, class_validators=[], model_config=BaseConfig)),
+                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                                FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type_=float, required=True, class_validators={}, model_config=BaseConfig)),
                             ],
                         ),
                     ),
@@ -469,13 +469,8 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
                         field=FieldInfo(
                             is_primary_key=True,
                             types=[
-                                FieldItem(field='id_ref_part',
-                                          type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable,
-                                                           required=True, class_validators=[],
-                                                           model_config=BaseConfig)),
-                                FieldItem(field='id_part_1',
-                                          type_=ModelField(name='id_part_1', type_=int, required=True,
-                                                           class_validators=[], model_config=BaseConfig)),
+                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                                FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type_=int, required=True, class_validators={}, model_config=BaseConfig)),
                             ],
                         ),
                     ),
@@ -492,13 +487,8 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
                         field=FieldInfo(
                             is_primary_key=True,
                             types=[
-                                FieldItem(field='id_ref_part',
-                                          type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable,
-                                                           required=True, class_validators=[],
-                                                           model_config=BaseConfig)),
-                                FieldItem(field='id_part_2',
-                                          type_=ModelField(name='id_part_2', type_=float, required=True,
-                                                           class_validators=[], model_config=BaseConfig)),
+                                FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                                FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type_=float, required=True, class_validators={}, model_config=BaseConfig)),
                             ],
                         ),
                     ),
@@ -517,7 +507,7 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
                         field=FieldInfo(
                             is_primary_key=False,
                             types=[
-                                FieldItem(field='other_field', type_=ModelField(name='other_field', type_=str, required=True, class_validators=[], model_config=BaseConfig)),
+                                FieldItem(field='other_field', type_=ModelField(name='other_field', type_=str, required=True, class_validators={}, model_config=BaseConfig)),
                             ],
                         ),
                     ),
@@ -639,8 +629,8 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
                     field=FieldInfo(
                         is_primary_key=True,
                         types=[
-                            FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
-                            FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type_=int, required=True, class_validators=[], model_config=BaseConfig)),
+                            FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                            FieldItem(field='id_part_1', type_=ModelField(name='id_part_1', type_=int, required=True, class_validators={}, model_config=BaseConfig)),
                         ],
                     ),
                 ),
@@ -657,8 +647,8 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
                     field=FieldInfo(
                         is_primary_key=True,
                         types=[
-                            FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators=[], model_config=BaseConfig)),
-                            FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type_=float, required=True, class_validators=[], model_config=BaseConfig)),
+                            FieldItem(field='id_ref_part', type_=ModelField(name='id_ref_part', type_=DoublePrimaryKeyTable, required=True, class_validators={}, model_config=BaseConfig)),
+                            FieldItem(field='id_part_2', type_=ModelField(name='id_part_2', type_=float, required=True, class_validators={}, model_config=BaseConfig)),
                         ],
                     ),
                 ),
