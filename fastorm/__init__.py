@@ -995,6 +995,17 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
+    def _prepare_kwargs_flattened(cls, **kwargs: Any) -> List[SqlFieldMeta[Any]]:
+        kwargs = cls._prepare_kwargs(_allow_in=False, **kwargs)
+        new_list = []
+        for dictionary in kwargs:
+            new_list.extend(dictionary.values())
+        # end for
+        return new_list
+    # end def
+
+
+    @classmethod
     def _resolve_referencing_kwargs(cls, typehint, value) -> Union[Any, In]:
         if isinstance(value, In):
             # so you used Union[variable_a, variable_b]
@@ -1350,7 +1361,9 @@ class _BaseFastORM(BaseModel):
         """
         # noinspection PyArgumentList
         row_data = {key.rsplit(" ")[-1]: value for key, value in dict(row).items()}  # handles the namespaces like "namespace_name field_name"
-        instance = cls(**row_data)
+        processed = cls._prepare_kwargs_flattened(**row_data)
+        kwargs = {sql_meta.field_name: sql_meta.value for sql_meta in processed}
+        instance = cls(**kwargs)
         instance._database_cache_overwrite_with_current()
         return instance
     # end def
