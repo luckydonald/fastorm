@@ -1707,7 +1707,7 @@ class _BaseFastORM(BaseModel):
 
     @classmethod
     def _as_psycopg2_connection(cls, conn):
-        if psycopg2.sql is None or psycopg2.extensions is None or psycopg2.connect is None:
+        if psycopg2 is None:
             # so we had an import error earlier (on top of the file)
             # raise a proper ImportError message with useful information
             raise ImportError(
