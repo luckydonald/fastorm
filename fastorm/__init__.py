@@ -3,7 +3,7 @@
 
 """FastORM framework, easy to learn, fast to code"""
 __author__ = 'luckydonald'
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 __all__ = ['__author__', '__version__', 'FastORM', 'Autoincrement', 'query']
 
 import ipaddress
