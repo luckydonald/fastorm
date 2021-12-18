@@ -1157,14 +1157,18 @@ class _BaseFastORM(BaseModel):
         # end if
         updated_automatic_values_rows = await conn.fetch(*fetch_params)
         logger.debug(f'INSERT for {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
-        assert len(updated_automatic_values_rows) == 1
-        updated_automatic_values = updated_automatic_values_rows[0]
-        if ignore_setting_automatic_fields and write_back_automatic_fields:
-            for field in _automatic_fields:
-                assert field in updated_automatic_values
-                setattr(self, field, updated_automatic_values[field])
-                self._database_cache[field] = updated_automatic_values[field]
-            # end for
+        if self.get_automatic_fields():
+            assert len(updated_automatic_values_rows) == 1
+            updated_automatic_values = updated_automatic_values_rows[0]
+            if ignore_setting_automatic_fields and write_back_automatic_fields:
+                for field in _automatic_fields:
+                    assert field in updated_automatic_values
+                    setattr(self, field, updated_automatic_values[field])
+                    self._database_cache[field] = updated_automatic_values[field]
+                # end for
+            # end if
+        else:
+            assert len(updated_automatic_values_rows) == 0
         # end if
         return self
     # end def
