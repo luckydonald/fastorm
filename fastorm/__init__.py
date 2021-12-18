@@ -727,7 +727,7 @@ class _BaseFastORM(BaseModel):
     def get_sql_fields(cls) -> List[str]:
         key = f'_{cls.__name__!s}__selectable_fields'
         if getattr(cls, key, None) is None:
-            setattr(cls, key, [field for field in cls.get_fields() if not field.startswith('_')])
+            setattr(cls, key, [field for field in cls.get_fields(flatten_table_references=True) if not field.startswith('_')])
         # end if
         return getattr(cls, key)
     # end if
