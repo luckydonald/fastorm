@@ -782,7 +782,7 @@ class _BaseFastORM(BaseModel):
     def build_sql_insert(
         self, *,
         ignore_setting_automatic_fields: Optional[bool] = None,
-        on_conflict_upsert_field_list: Optional[List[str]] = None,
+        upsert_on_conflict: Union[List[str], bool] = False,
     ) -> Tuple[str, Any]:
         """
         :param ignore_setting_automatic_fields:
@@ -792,10 +792,14 @@ class _BaseFastORM(BaseModel):
             If `False`, the value there will be written to the database.
             If `None`, it will be ignored as long as the value actually is None, but set if it is non-None.
             The default setting is `None`.
-        :param on_conflict_upsert_field_list: List of fields which are expected to cause an duplicate conflict, and thus will instead be overwritten.
+        :param upsert_on_conflict:
+            List of fields which are expected to cause a duplicate conflict, and thus all the other fields will be overwritten.
+            Either a boolean to set the automatic mode, or a list of fields.
+            If `True`: Will automatically use the primary key field(s) as conflict source.
+            If `False`: Will not upsert (update) but simply fail.
+            If `List[str]`: Will use those given conflicting fields.
         :return: The sql and the placeholder parameters.
         """
-        own_keys = self.get_fields()
         _ignored_fields = self.get_ignored_fields()
         _automatic_fields = self.get_automatic_fields()
         sql_fields_data = self._prepare_kwargs(**self.dict(), _allow_in=False)
@@ -821,7 +825,8 @@ class _BaseFastORM(BaseModel):
         # end for
         for key, sql_meta in merged_fields.items():
             sql_meta: SqlFieldMeta
-            if ignore_setting_automatic_fields or on_conflict_upsert_field_list:
+            is_automatic_field = False
+            if ignore_setting_automatic_fields or upsert_on_conflict:
                 is_automatic_field = key in _automatic_fields
             if ignore_setting_automatic_fields and is_automatic_field:
                 continue
@@ -834,7 +839,7 @@ class _BaseFastORM(BaseModel):
             placeholder.append(f'${placeholder_index}')
             values.append(sql_meta.value)
 
-            if on_conflict_upsert_field_list and not is_automatic_field:
+            if upsert_on_conflict and not is_automatic_field:
                 # for upsert we can recycle the already existing values, thus the same placeholder index.
                 upsert_fields[key] = placeholder_index
             # end if
@@ -842,10 +847,17 @@ class _BaseFastORM(BaseModel):
 
         # noinspection SqlNoDataSourceInspection,SqlResolve
         sql = f'INSERT INTO {self.get_table()} ({",".join(keys)})\n VALUES ({",".join(placeholder)})'
-        if on_conflict_upsert_field_list and upsert_fields:
-                # Build additional part for the on conflict overwriting with the given fields.
-            upsert_sql = ', '.join([f'"{key}" = ${placeholder_index}' for key, placeholder_index in upsert_fields.items()])
-            upsert_fields_sql = ', '.join([f'"{field}"' for field in on_conflict_upsert_field_list])
+        if upsert_on_conflict is True:
+            upsert_on_conflict_fields: List[str] = self.get_primary_keys_sql_fields()
+        elif upsert_on_conflict is False:
+            upsert_on_conflict_fields: List[str] = []
+        else:
+            upsert_on_conflict_fields: List[str] = upsert_on_conflict
+        # end if
+        if upsert_on_conflict_fields and upsert_fields:
+            # Build additional part for the on conflict overwriting with the given fields.
+            upsert_sql = ', '.join([f'"{key}" = ${placeholder_index}' for key, placeholder_index in upsert_fields.items() if key not in upsert_on_conflict_fields])
+            upsert_fields_sql = ', '.join([f'"{field}"' for field in upsert_on_conflict_fields])
             sql += f'\n ON CONFLICT ({upsert_fields_sql}) DO UPDATE SET {upsert_sql}'
         # end if
         if _automatic_fields:
@@ -1126,8 +1138,9 @@ class _BaseFastORM(BaseModel):
     async def insert(
         self, conn: Connection, *,
         ignore_setting_automatic_fields: Optional[bool] = None,
-        on_conflict_upsert_field_list: Optional[List[str]] = None,
+        upsert_on_conflict: Union[List[str], bool] = False,
         write_back_automatic_fields: bool = True,
+        on_conflict_upsert_field_list: None = None,  # deprecated! Use `upsert_on_conflict=…` instead!
     ) -> 'FastORM':
         """
         :param conn: Database connection to run at.
@@ -1138,14 +1151,30 @@ class _BaseFastORM(BaseModel):
             If `False`, the value there will be written to the database.
             If `None`, it will be ignored as long as the value actually is None, but set if it is non-None.
             The default setting is `None`.
-        :param on_conflict_upsert_field_list: List of fields which are expected to cause an duplicate conflict, and thus will instead be overwritten.
+        :param upsert_on_conflict:
+            List of fields which are expected to cause a duplicate conflict, and thus all the other fields will be overwritten.
+            Either a boolean to set the automatic mode, or a list of fields.
+            If `True`: Will automatically use the primary key field(s) as conflict source.
+            If `False`: Will not upsert (update) but simply fail.
+            If `List[str]`: Will use those given conflicting fields.
+        :param on_conflict_upsert_field_list: Deprecated and will be removed in the future. Use `upsert_on_conflict` instead.
         :param write_back_automatic_fields: Apply the automatic fields back to this object.
                                             Ignored if `ignore_setting_automatic_fields` is False.
         :return: self
         """
+        if on_conflict_upsert_field_list is not None:
+            logger.warn("FastORM.insert(…)'s `on_conflict_upsert_field_list` is deprecated, use")
+            if upsert_on_conflict:
+                raise ValueError("Only use the new `upsert_on_conflict`. Don't use the old `on_conflict_upsert_field_list`.")
+            # end if
+            assert isinstance(on_conflict_upsert_field_list, list)  # we don't bother with proper type errors as you should use `upsert_on_conflict` instead anyway.
+            upsert_on_conflict = on_conflict_upsert_field_list
+        # end if
+        assert_type_or_raise(upsert_on_conflict, list, bool, parameter_name="upsert_on_conflict")
+
         fetch_params = self.build_sql_insert(
             ignore_setting_automatic_fields=ignore_setting_automatic_fields,
-            on_conflict_upsert_field_list=on_conflict_upsert_field_list,
+            upsert_on_conflict=upsert_on_conflict,
         )
         self._database_cache_overwrite_with_current()
         _automatic_fields = self.get_automatic_fields()
