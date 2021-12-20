@@ -1363,6 +1363,7 @@ class _BaseFastORM(BaseModel):
     def get_primary_keys_sql_fields(cls) -> List[str]:
         """
         Returns the actual sql fields of the primary keys.
+        They are not quoted or escaped in any way.
         :return:
         """
         keys = cls.get_primary_keys_keys()
