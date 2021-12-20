@@ -18,6 +18,26 @@ class Table1(FastORM):
 # end class
 
 
+class Table2(FastORM):
+    _table_name = 'table2'
+    _automatic_fields = ['id']
+    _primary_keys = ['id']
+
+    id: int
+# end class
+
+
+class Table3(FastORM):
+    _table_name = 'table3'
+    _automatic_fields = ['id']
+    _primary_keys = ['table1', 'table2']
+
+    table1: Table1
+    table2: Table2
+    number: int
+# end class
+
+
 # noinspection SqlNoDataSourceInspection,SqlResolve
 class InsertRowSimpleTestCase(unittest.TestCase):
     def test_insert(self):
@@ -35,6 +55,62 @@ class InsertRowSimpleTestCase(unittest.TestCase):
             number=expected_params[1]
         )
         actual_sql, *actual_params = row.build_sql_insert()
+        self.assertEqual(expected_sql, actual_sql)
+        self.assertEqual(expected_params, actual_params)
+    # end def
+
+    def test_upsert_off(self):
+        expected_sql = dedent(
+            f"""
+            INSERT INTO "table3" ("table1__id","table2__id","number")
+             VALUES ($1,$2,$3)
+             RETURNING "id"
+            ;
+            """
+        ).strip()
+        expected_params = [1234, 4458, 69]
+
+        row = Table3(table1=1234, table2=4458, number=69)
+        actual_sql, *actual_params = row.build_sql_insert(upsert_on_conflict=False)
+
+        self.assertEqual(expected_sql, actual_sql)
+        self.assertEqual(expected_params, actual_params)
+    # end def
+
+    def test_upsert_auto(self):
+        expected_sql = dedent(
+            f"""
+            INSERT INTO "table3" ("table1__id","table2__id","number")
+             VALUES ($1,$2,$3)
+             ON CONFLICT ("table1__id", "table2__id") DO UPDATE SET "number" = $3
+             RETURNING "id"
+            ;
+            """
+        ).strip()
+        expected_params = [1234, 4458, 69]
+
+        row = Table3(table1=1234, table2=4458, number=69)
+        actual_sql, *actual_params = row.build_sql_insert(upsert_on_conflict=True)
+
+        self.assertEqual(expected_sql, actual_sql)
+        self.assertEqual(expected_params, actual_params)
+    # end def
+
+    def test_upsert_manually(self):
+        expected_sql = dedent(
+            f"""
+            INSERT INTO "table3" ("table1__id","table2__id","number")
+             VALUES ($1,$2,$3)
+             ON CONFLICT ("table1__id", "table2__id") DO UPDATE SET "number" = $3
+             RETURNING "id"
+            ;
+            """
+        ).strip()
+        expected_params = [1234, 4458, 69]
+
+        row = Table3(table1=1234, table2=4458, number=69)
+        actual_sql, *actual_params = row.build_sql_insert(upsert_on_conflict=["table1__id", "table2__id"])
+
         self.assertEqual(expected_sql, actual_sql)
         self.assertEqual(expected_params, actual_params)
     # end def
