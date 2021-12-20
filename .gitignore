@@ -1,6 +1,10 @@
 *
 !fastorm
+!fastorm/*
+!fastorm/**/*
 !tests
+!tests/*
+!tests/**/*
 !CHANGELOG.md
 !DEPLOYMENT.md
 !example.py
