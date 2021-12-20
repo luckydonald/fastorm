@@ -1330,6 +1330,24 @@ class _BaseFastORM(BaseModel):
         return cls._primary_keys
     # end def
 
+    @classmethod
+    def get_primary_keys_sql_fields(cls) -> List[str]:
+        """
+        Returns the actual sql fields of the primary keys.
+        :return:
+        """
+        keys = cls.get_primary_keys_keys()
+        hints = cls.get_fields_references(recursive=True)
+        # 'reference_to_other_table__id_part_1': FieldInfo(is_primary_key=False, types=[FieldItem(field='reference_to_other_table', type_=<class 'fastorm.OtherTable'>), FieldItem(field='id_part_1', type_=<class 'int'>)])
+        sql_fields: List[str] = []
+        for sql_field, hint in hints.items():
+            if hint.unflattened_field in keys:
+                sql_fields.append(sql_field)
+            # end if
+        # end for
+        return sql_fields
+    # end def
+
     def get_primary_keys(self) -> Dict[str, Any]:
         _primary_keys = self.get_primary_keys_keys()
         return {k: v for k, v in self.as_dict().items() if k in _primary_keys}
