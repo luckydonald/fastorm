@@ -11,6 +11,18 @@
 >    **Solution**: Specify `foo: Bar` instead of `foo: Union[Bar, Tuple[int, int]]`.
 > 2. Do not use `from __future__ import annotations`, as that turns all types to be strings, which currently can't be inspected on class creation. 
 
+# v0.0.12
+- 🆕 Added a new `FastORM.get_primary_keys_sql_fields()` method to get the sql column name(s) of the primary key(s).
+- ⚠️ Replaced the `on_conflict_upsert_field_list` parameter of `FastORM.insert(…)` and `FastORM.build_sql_insert(…)` with a new `upsert_on_conflict`.
+   - It is mostly the same, but the variable name speaks better what it does. That is, specifying the fields which it would conflict on.
+   - Migration:
+     - `on_conflict_upsert_field_list=['some_field', 'another_field']` is now `upsert_on_conflict=['some_field', 'another_field']`.
+     - `on_conflict_upsert_field_list=None` is now `upsert_on_conflict=False`.
+   - 🆕 Also there's a new case now:
+     - `upsert_on_conflict=True`. Here it will now automatically use the primary keys to conflict on those.
+- 🔨 Fixed `FastORM.insert(…)` and `FastORM.build_sql_insert(…)` that a key listed in the conflict list for UPSERTs would not be excluded from the UPDATE part of the UPSERT, the value overwriting part.
+    
+
 # v0.0.11
 - 🔨 Fixed equality checking on deduplication if only one of them was a `ForwardRef`.
 - 🔨 Fixed upgrading of `Any` failing.
