@@ -1179,7 +1179,7 @@ class _BaseFastORM(BaseModel):
             upsert_on_conflict = on_conflict_upsert_field_list
         # end if
         assert_type_or_raise(upsert_on_conflict, list, bool, parameter_name="upsert_on_conflict")
-        fetch_params: Tuple[str, Any, ...] = self.build_sql_insert(
+        fetch_params: Tuple[Any, ...] = self.build_sql_insert(
             ignore_setting_automatic_fields=ignore_setting_automatic_fields,
             upsert_on_conflict=upsert_on_conflict,
         )
