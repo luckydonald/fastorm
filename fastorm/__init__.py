@@ -1162,9 +1162,13 @@ class _BaseFastORM(BaseModel):
         :return: self
         """
         if on_conflict_upsert_field_list is not None:
-            logger.warn("FastORM.insert(…)'s `on_conflict_upsert_field_list` is deprecated, use")
+            logger.warn(
+                    "FastORM.insert(…)'s `on_conflict_upsert_field_list=…` is deprecated, use `upsert_on_conflict=…` instead."
+            )
             if upsert_on_conflict:
-                raise ValueError("Only use the new `upsert_on_conflict`. Don't use the old `on_conflict_upsert_field_list`.")
+                raise ValueError(
+                    "Only use the new `upsert_on_conflict`. Don't use the old `on_conflict_upsert_field_list`."
+                )
             # end if
             assert isinstance(on_conflict_upsert_field_list, list)  # we don't bother with proper type errors as you should use `upsert_on_conflict` instead anyway.
             upsert_on_conflict = on_conflict_upsert_field_list
