@@ -35,7 +35,7 @@ from pydantic.fields import ModelField, UndefinedType, Undefined, Field, Private
 from pydantic.typing import NoArgAnyCallable, resolve_annotations
 from typeguard import check_type
 
-from asyncpg import Connection, Pool
+from asyncpg import Connection, Pool, Record
 
 from .classes import FieldInfo, FieldItem, SqlFieldMeta
 from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
@@ -783,7 +783,7 @@ class _BaseFastORM(BaseModel):
         self, *,
         ignore_setting_automatic_fields: Optional[bool] = None,
         upsert_on_conflict: Union[List[str], bool] = False,
-    ) -> Tuple[str, Any]:
+    ) -> Tuple[str, Any, ...]:
         """
         :param ignore_setting_automatic_fields:
             Skip setting fields marked as automatic, even if you provided.
@@ -1140,9 +1140,10 @@ class _BaseFastORM(BaseModel):
         ignore_setting_automatic_fields: Optional[bool] = None,
         upsert_on_conflict: Union[List[str], bool] = False,
         on_conflict_upsert_field_list: None = None,  # deprecated! Use `upsert_on_conflict=…` instead!
-    ):
+    ) -> Tuple[str, Any, ...]:
         """
-        :param conn: Database connection to run at.
+        Preparation step for `.insert(…)`. See that method for more information.
+
         :param ignore_setting_automatic_fields:
             Skip setting fields marked as automatic, even if you provided.
             For example if the id field is marked automatic, as it's an autoincrement int.
@@ -1157,13 +1158,12 @@ class _BaseFastORM(BaseModel):
             If `False`: Will not upsert (update) but simply fail.
             If `List[str]`: Will use those given conflicting fields.
         :param on_conflict_upsert_field_list: Deprecated and will be removed in the future. Use `upsert_on_conflict` instead.
-        :param write_back_automatic_fields: Apply the automatic fields back to this object.
-                                            Ignored if `ignore_setting_automatic_fields` is False.
-        :return: self
+        :returns: the fetch parameters (`fetch_params`) for the SQL call.
+        :used-by: insert
         """
         if on_conflict_upsert_field_list is not None:
             logger.warn(
-                    "FastORM.insert(…)'s `on_conflict_upsert_field_list=…` is deprecated, use `upsert_on_conflict=…` instead."
+                "FastORM.insert(…)'s `on_conflict_upsert_field_list=…` is deprecated, use `upsert_on_conflict=…` instead."
             )
             if upsert_on_conflict:
                 raise ValueError(
@@ -1174,30 +1174,31 @@ class _BaseFastORM(BaseModel):
             upsert_on_conflict = on_conflict_upsert_field_list
         # end if
         assert_type_or_raise(upsert_on_conflict, list, bool, parameter_name="upsert_on_conflict")
-        fetch_params = self.build_sql_insert(
+        fetch_params: Tuple[str, Any, ...] = self.build_sql_insert(
             ignore_setting_automatic_fields=ignore_setting_automatic_fields,
             upsert_on_conflict=upsert_on_conflict,
         )
         self._database_cache_overwrite_with_current()
-        _automatic_fields = self.get_automatic_fields()
         if VERBOSE_SQL_LOG:
             fetch_params_debug = "\n".join([f"${i}={param!r}" for i, param in enumerate(fetch_params)][1:])
             logger.debug(f'INSERT query for {self.__class__.__name__}\nQuery:\n{fetch_params[0]}\nParams:\n{fetch_params_debug!s}')
         else:
             logger.debug(f'INSERT query for {self.__class__.__name__}: {fetch_params!r}')
         # end if
-        return _automatic_fields, fetch_params
+        return fetch_params
     # end def
 
     def _insert_postprocess(
         self,
-        _automatic_fields,
-        updated_automatic_values_rows,
+        updated_automatic_values_rows: List[Union[Record, object]],
         ignore_setting_automatic_fields: Optional[bool] = None,
         write_back_automatic_fields: bool = True,
-    ):
+    ) -> None:
         """
-        :param conn: Database connection to run at.
+        Writes back the updated data from the database to the object, especially the `_automatic_fields`.
+
+        :param updated_automatic_values_rows:
+            The result of the executed database query. List of objects containing the rows.
         :param ignore_setting_automatic_fields:
             Skip setting fields marked as automatic, even if you provided.
             For example if the id field is marked automatic, as it's an autoincrement int.
@@ -1205,18 +1206,13 @@ class _BaseFastORM(BaseModel):
             If `False`, the value there will be written to the database.
             If `None`, it will be ignored as long as the value actually is None, but set if it is non-None.
             The default setting is `None`.
-        :param upsert_on_conflict:
-            List of fields which are expected to cause a duplicate conflict, and thus all the other fields will be overwritten.
-            Either a boolean to set the automatic mode, or a list of fields.
-            If `True`: Will automatically use the primary key field(s) as conflict source.
-            If `False`: Will not upsert (update) but simply fail.
-            If `List[str]`: Will use those given conflicting fields.
-        :param on_conflict_upsert_field_list: Deprecated and will be removed in the future. Use `upsert_on_conflict` instead.
         :param write_back_automatic_fields: Apply the automatic fields back to this object.
                                             Ignored if `ignore_setting_automatic_fields` is False.
-        :return: self
+        :return: None
+        :used-by: insert
         """
-        if self.get_automatic_fields():
+        _automatic_fields = self.get_automatic_fields()
+        if _automatic_fields:
             assert len(updated_automatic_values_rows) == 1
             updated_automatic_values = updated_automatic_values_rows[0]
             if ignore_setting_automatic_fields and write_back_automatic_fields:
@@ -1258,15 +1254,14 @@ class _BaseFastORM(BaseModel):
                                             Ignored if `ignore_setting_automatic_fields` is False.
         :return: self
         """
-        _automatic_fields, fetch_params = self._insert_preparation(
+        fetch_params = self._insert_preparation(
             ignore_setting_automatic_fields=ignore_setting_automatic_fields,
             upsert_on_conflict=upsert_on_conflict,
             on_conflict_upsert_field_list=on_conflict_upsert_field_list,
         )
-        updated_automatic_values_rows = await conn.fetch(*fetch_params)
+        updated_automatic_values_rows: List[Record] = await conn.fetch(*fetch_params)
         logger.debug(f'INSERT for {self.__class__.__name__}: {updated_automatic_values_rows} for {self}')
         self._insert_postprocess(
-            _automatic_fields=_automatic_fields,
             updated_automatic_values_rows=updated_automatic_values_rows,
             ignore_setting_automatic_fields=ignore_setting_automatic_fields,
             write_back_automatic_fields=write_back_automatic_fields,
