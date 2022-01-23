@@ -11,6 +11,9 @@
 >    **Solution**: Specify `foo: Bar` instead of `foo: Union[Bar, Tuple[int, int]]`.
 > 2. Do not use `from __future__ import annotations`, as that turns all types to be strings, which currently can't be inspected on class creation. 
 
+# v0.0.13
+- Made sure that the `async insert(…)` method contains no database-agnostic code, and that is actually refectored out to calls to new `_insert_preparation` and `_insert_postprocess` methods.  
+
 # v0.0.12
 - 🆕 Added a new `FastORM.get_primary_keys_sql_fields()` method to get the sql column name(s) of the primary key(s).
 - ⚠️ Replaced the `on_conflict_upsert_field_list` parameter of `FastORM.insert(…)` and `FastORM.build_sql_insert(…)` with a new `upsert_on_conflict`.
