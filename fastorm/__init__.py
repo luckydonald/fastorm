@@ -783,7 +783,7 @@ class _BaseFastORM(BaseModel):
         self, *,
         ignore_setting_automatic_fields: Optional[bool] = None,
         upsert_on_conflict: Union[List[str], bool] = False,
-    ) -> Tuple[str, Any, ...]:
+    ) -> Tuple[Any, ...]:
         """
         :param ignore_setting_automatic_fields:
             Skip setting fields marked as automatic, even if you provided.
@@ -798,7 +798,9 @@ class _BaseFastORM(BaseModel):
             If `True`: Will automatically use the primary key field(s) as conflict source.
             If `False`: Will not upsert (update) but simply fail.
             If `List[str]`: Will use those given conflicting fields.
-        :return: The sql and the placeholder parameters.
+        :returns:
+            The fetch parameters (`fetch_params`) for the SQL call.
+            The sql string is the first tuple element, followed by the placeholder parameter values.
         """
         _ignored_fields = self.get_ignored_fields()
         _automatic_fields = self.get_automatic_fields()
@@ -1140,7 +1142,7 @@ class _BaseFastORM(BaseModel):
         ignore_setting_automatic_fields: Optional[bool] = None,
         upsert_on_conflict: Union[List[str], bool] = False,
         on_conflict_upsert_field_list: None = None,  # deprecated! Use `upsert_on_conflict=…` instead!
-    ) -> Tuple[str, Any, ...]:
+    ) -> Tuple[Any, ...]:
         """
         Preparation step for `.insert(…)`. See that method for more information.
 
@@ -1158,7 +1160,10 @@ class _BaseFastORM(BaseModel):
             If `False`: Will not upsert (update) but simply fail.
             If `List[str]`: Will use those given conflicting fields.
         :param on_conflict_upsert_field_list: Deprecated and will be removed in the future. Use `upsert_on_conflict` instead.
-        :returns: the fetch parameters (`fetch_params`) for the SQL call.
+        :returns:
+            The fetch parameters (`fetch_params`) for the SQL call.
+            The sql string is the first tuple element, followed by the placeholder parameter values.
+
         :used-by: insert
         """
         if on_conflict_upsert_field_list is not None:
