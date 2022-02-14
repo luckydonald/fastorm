@@ -40,6 +40,40 @@ class UpdateRowTestCase(unittest.TestCase):
 # end class
 
 
+class PrimaryKeyIsReferenceTable(FastORM):
+    _table_name = 'primary_key_is_reference'
+    _primary_keys = ['that_other_table']
+    _ignored_fields = []
+
+    that_other_table: OtherTable
+    fooz: float
+    barz: str
+# end class
+
+
+class PrimaryKeyIsReferenceTestCase(unittest.TestCase):
+    def test_foo(self):
+        object = PrimaryKeyIsReferenceTable(
+            that_other_table=(12, 'text'),
+            fooz=2.35,
+            barz="kiwi",
+        )
+
+        sql, *where_values = object.build_sql_delete()
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        self.assertEqual(
+            dedent("""
+                DELETE FROM "primary_key_is_reference"
+                 WHERE "that_other_table__id_part_1" = $1 AND "that_other_table__id_part_2" = $2
+                ;
+            """).strip(),
+            sql,
+            "the produced update SQL is correct"
+        )
+    # end def
+# end class
+
+
 if __name__ == '__main__':
     unittest.main()
 # end if
