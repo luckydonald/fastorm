@@ -1383,26 +1383,40 @@ class _BaseFastORM(BaseModel):
     # end if
 
     def build_sql_delete(self):
-        _primary_keys = self.get_primary_keys_keys()
-        _ignored_fields = self.get_ignored_fields()
         _database_cache = self._database_cache
-        assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
-        assert_type_or_raise(_primary_keys, list, parameter_name='self._primary_keys')
         assert_type_or_raise(_database_cache, dict, parameter_name='self._database_cache')
+
+        typehints = self.get_fields_typehints(flatten_table_references=True)
 
         # DELETE FROM "name" WHERE pk...
         where_values = []
         placeholder_index = 0
         primary_key_parts: List[str] = []  # "foo" = $1
-        for primary_key in _primary_keys:
-            if primary_key in _database_cache:
-                value = _database_cache[primary_key]
-            else:
-                value = getattr(self, primary_key)
+        kwargs = {}
+
+        # collect data
+        for primary_key_long, field_info in typehints.items():
+            if not field_info.is_primary_key:
+                continue
             # end if
+            primary_key_short = field_info.unflattened_field
+            if primary_key_long in _database_cache:
+                kwargs[primary_key_long] = _database_cache[primary_key_long]
+            elif primary_key_short in _database_cache:
+                kwargs[primary_key_short] = _database_cache[primary_key_short]
+            else:
+                kwargs[primary_key_short] = getattr(self, primary_key_short)
+            # end if
+        # end for
+
+        # make sure we do allow all reference formats in the data. (e.g. Tuples and TableObjects)
+        new_fields = self._prepare_kwargs_flattened(**kwargs)
+
+        # built where tuples for which rows to delete
+        for sql_field_meta in new_fields:
             placeholder_index += 1
-            primary_key_parts.append(f'"{primary_key}" = ${placeholder_index}')
-            where_values.append(value)
+            primary_key_parts.append(f'"{sql_field_meta.sql_name}" = ${placeholder_index}')
+            where_values.append(sql_field_meta.value)
         # end if
         logger.debug(f'Fields to DELETE for selector {primary_key_parts!r}: {where_values!r}')
 
