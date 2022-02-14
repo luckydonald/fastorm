@@ -13,6 +13,9 @@
 
 # v0.0.13
 - Made sure that the `async insert(…)` method contains no database-agnostic code, and that is actually refectored out to calls to new `_insert_preparation` and `_insert_postprocess` methods.  
+- ~~Make classes referencing themself possible~~
+- ~~Fixed DELETE not working for primary keys which are references~~
+- ~~Added sync version of the client~~
 
 # v0.0.12
 - 🆕 Added a new `FastORM.get_primary_keys_sql_fields()` method to get the sql column name(s) of the primary key(s).
