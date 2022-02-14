@@ -1897,12 +1897,12 @@ class _BaseFastORM(BaseModel):
         """
         reference_params = cls.build_sql_references()
         logger.debug(f'REFERENCE query for {cls.__name__}: {reference_params!r}')
-        if reference_params[0] != SQL_DO_NOTHING:
-            reference_status = await conn.execute(*reference_params)
-            logger.debug(f'REFERENCEed {cls.__name__}: {reference_status}')
-        else:
+        if reference_params[0] == SQL_DO_NOTHING:
             logger.debug(f'REFERENCEed {cls.__name__}: No need to do anything.')
-        # end def
+            return
+        # end if
+        reference_status = await conn.execute(*reference_params)
+        logger.debug(f'REFERENCEed {cls.__name__}: {reference_status}')
     # end if
 
     @classmethod
