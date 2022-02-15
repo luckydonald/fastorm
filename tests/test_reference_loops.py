@@ -19,6 +19,9 @@ class SelfReferencingTable(FastORM):
 # end class
 
 
+SelfReferencingTable.update_forward_refs()
+
+
 class SelfReferencingTableTestCase(VerboseTestCase):
     def test_sql_text_create(self):
         self.maxDiff = None
