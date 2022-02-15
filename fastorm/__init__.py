@@ -1955,10 +1955,12 @@ class _BaseFastORM(BaseModel):
             referenced_table_field = field_typehint.referenced_field
             # noinspection SqlNoDataSourceInspection,SqlResolve
             index_lines.append(
-                f'CREATE INDEX "idx_{current_table}___{current_table_field}" ON "{current_table}" ("{current_table_field}");')
+                f'CREATE INDEX "idx_{current_table}___{current_table_field}" ON "{current_table}" ("{current_table_field}");'
+            )
             # noinspection SqlNoDataSourceInspection,SqlResolve
             reference_lines.append(
-                f'ALTER TABLE "{current_table}" ADD CONSTRAINT "fk_{current_table}___{current_table_field}" FOREIGN KEY ("{current_table_field}") REFERENCES "{referenced_table}" ("{referenced_table_field}") ON DELETE CASCADE;')
+                f'ALTER TABLE "{current_table}" ADD CONSTRAINT "fk_{current_table}___{current_table_field}" FOREIGN KEY ("{current_table_field}") REFERENCES "{referenced_table}" ("{referenced_table_field}") ON DELETE CASCADE;'
+            )
         # end for
         sql_lines: List[str] = []
         sql_lines.extend(index_lines)
