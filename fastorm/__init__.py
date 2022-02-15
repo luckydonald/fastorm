@@ -675,8 +675,8 @@ class _BaseFastORM(BaseModel):
                     raise ValueError(f'Huh? No history at all! {other_long_name!r}, {other_class!r}, {field_ref.types!r}')
                 # end if
                 return_val[f'{key}__{other_long_name}'] = FieldInfo(
-                        is_primary_key=key in _primary_keys,
-                        types=[FieldItem(key, other_class)] + field_ref.types
+                    is_primary_key=key in _primary_keys,
+                    types=[FieldItem(key, other_class)] + field_ref.types
                 )
                 # end if
             # end for
