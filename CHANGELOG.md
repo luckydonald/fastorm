@@ -11,11 +11,13 @@
 >    **Solution**: Specify `foo: Bar` instead of `foo: Union[Bar, Tuple[int, int]]`.
 > 2. Do not use `from __future__ import annotations`, as that turns all types to be strings, which currently can't be inspected on class creation. 
 
+# Planned
+- ~~Added sync version of the client~~ 
+
 # v0.0.13
 - 🔄 Made sure that the `async insert(…)` method contains no database-agnostic code, and that is actually refactored out to calls to new `_insert_preparation` and `_insert_postprocess` methods.  
 - 🆕 Make classes referencing themself possible.
 - 🔨 Fixed `DELETE` not working for primary keys which are references.
-- ~~Added sync version of the client~~
 - ~~`REFERENCES` to other tables with a double Primary key now set the `FOREIGN KEY` correctly in one, as opposed to trying to create `FOREIGN KEY` for each field.~~
   - ~~This would result in `ERROR:  there is no unique constraint matching given keys for referenced table "perk_level"`~~
 
