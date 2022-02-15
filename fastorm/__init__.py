@@ -426,6 +426,9 @@ class _BaseFastORM(BaseModel):
             for field_item in field_reference.types:
                 type_hint = classes_typehints[last_class][field_item.field]
                 if isinstance(type_hint.outer_type_, typing.ForwardRef):
+                    if not type_hint.outer_type_.__forward_evaluated__:
+                        raise AssertionError(f'Unevaluated ForwardRef. Try to call {cls.__name__}.update_forward_refs() after the referenced class ({type_hint.outer_type_.__forward_arg__}) it defined.')
+                    # end def
                     # The .type_ of a resolved ForwardRef seems alright, only the Optional[…] wrapping goes poof.
                     # We parse the inner resolved .type_ as a new hint (supplying Optional[…] where needed),
                     # and if the inner parsed .type_ still matches, we replace the current type hint by this new one.
