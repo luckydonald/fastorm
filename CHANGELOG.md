@@ -18,8 +18,8 @@
 - 🔄 Made sure that the `async insert(…)` method contains no database-agnostic code, and that is actually refactored out to calls to new `_insert_preparation` and `_insert_postprocess` methods.  
 - 🆕 Make classes referencing themself possible.
 - 🔨 Fixed `DELETE` not working for primary keys which are references.
-- ~~`REFERENCES` to other tables with a double Primary key now set the `FOREIGN KEY` correctly in one, as opposed to trying to create `FOREIGN KEY` for each field.~~
-  - ~~This would result in `ERROR:  there is no unique constraint matching given keys for referenced table "perk_level"`~~
+- 🔨 Fixed `REFERENCES` to other tables with a double Primary key now set the `FOREIGN KEY` correctly in one, as opposed to trying to create `FOREIGN KEY` for each field.
+  - The old generated SQL would result in `ERROR: there is no unique constraint matching given keys for referenced table "<table name>"`
 
 # v0.0.12
 - 🆕 Added a new `FastORM.get_primary_keys_sql_fields()` method to get the sql column name(s) of the primary key(s).
