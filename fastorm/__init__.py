@@ -1958,7 +1958,14 @@ class _BaseFastORM(BaseModel):
         index_lines = []
         reference_lines = []
         current_table = cls.get_name()
-        for current_table_field, field_typehint in references_types.items():
+        for short_key, field_typehint_dict in references_types.items():
+            if len(field_typehint_dict) == 0:
+                raise ValueError('Shouldn\'t get 0 types...')
+            elif len(field_typehint_dict) > 1:
+                continue
+            # end if
+            field_typehint = list(field_typehint.values())[0]
+            current_table_field = list(field_typehint.keys())[0]
             field_typehint: FieldInfo[ModelField]
             assert issubclass(field_typehint.referenced_type, FastORM)
             referenced_table = field_typehint.referenced_type.get_name()
