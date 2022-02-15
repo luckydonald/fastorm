@@ -636,7 +636,10 @@ class _BaseFastORM(BaseModel):
             if not other_class:
                 # is a regular key, just keep it as is
                 # e.g. 'title': (False, [('title', str)]),
-                return_val[key] = FieldInfo(key in _primary_keys, [FieldItem(key, cls.wrap_optional_pydantic_typehint(type_hint))])  # TODO: make a copy?
+                return_val[key] = FieldInfo(
+                    is_primary_key=key in _primary_keys,
+                    types=[FieldItem(key, cls.wrap_optional_pydantic_typehint(type_hint))]
+                )  # TODO: make a copy?
                 # and then let's do the next key
                 continue
             # end if
@@ -645,15 +648,18 @@ class _BaseFastORM(BaseModel):
             assert issubclass(other_class, FastORM)
             # 'test_two__test_one_a__id_part_1': (True, [('test_two', Test2), ('test_one_a', Test1A), ('id_part_1', int)]),
             if not recursive:
-                return_val[key] = FieldInfo(key in _primary_keys, [FieldItem(key, other_class)])  # TODO: make a copy?
+                return_val[key] = FieldInfo(
+                    is_primary_key=key in _primary_keys,
+                    types=[FieldItem(key, other_class)]
+                )  # TODO: make a copy?
                 continue
             # end if
             if other_class == cls:
                 # Referencing ourselves in a loop.
                 for self_reference_primary_key in _primary_keys:
                     return_val[f'{key}__{self_reference_primary_key}'] = FieldInfo(
-                        key in _primary_keys,
-                        [FieldItem(key, other_class)] + return_val[self_reference_primary_key].types  # let's just hope we are done with our primary keys, as they should be ordered on top. Otherwise, this will fail.
+                        is_primary_key=key in _primary_keys,
+                        types=[FieldItem(key, other_class)] + return_val[self_reference_primary_key].types  # let's just hope we are done with our primary keys, as they should be ordered on top. Otherwise, this will fail.
                     )
                 # end for
                 continue
@@ -669,8 +675,8 @@ class _BaseFastORM(BaseModel):
                     raise ValueError(f'Huh? No history at all! {other_long_name!r}, {other_class!r}, {field_ref.types!r}')
                 # end if
                 return_val[f'{key}__{other_long_name}'] = FieldInfo(
-                        key in _primary_keys,
-                        [FieldItem(key, other_class)] + field_ref.types
+                        is_primary_key=key in _primary_keys,
+                        types=[FieldItem(key, other_class)] + field_ref.types
                 )
                 # end if
             # end for
