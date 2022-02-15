@@ -1936,7 +1936,7 @@ class _BaseFastORM(BaseModel):
         you can check for `sql == fastorm.SQL_DO_NOTHING` and then not do the database query.
         """
         # references to other tables
-        references_types: Dict[str, FieldInfo[ModelField]] = {
+        references_types: cls._GET_FIELDS_REFERENCES_TYPE = {
             # everything with a different table will have more than one type in there.
             long_key: field_typehint for long_key, field_typehint in cls.get_fields_references(recursive=True).items()
             if len(field_typehint.types) > 1
@@ -1946,41 +1946,53 @@ class _BaseFastORM(BaseModel):
             return (SQL_DO_NOTHING,)
         # end if
 
-        references_per_field: Dict[str, Dict[str, FieldInfo[ModelField]]] = {}
+        import dataclasses
+        @dataclasses.dataclass
+        class Holder(object):
+            referenced_table: str
+            table_fields: List[str]
+            referenced_table_fields: List[str]
+        # end class
+
+        data_per_field: Dict[str, Holder] = {}
         for current_table_field, field_typehint in references_types.items():
-            short_key = field_typehint.referenced_field.name
-            if short_key not in references_per_field:
-                references_per_field[short_key] = {}
+            short_key = field_typehint.unflattened_field
+            assert issubclass(field_typehint.referenced_type, FastORM)
+            new_holder = Holder(
+                referenced_table=typing.cast(Type[FastORM], field_typehint.referenced_type).get_name(),
+                table_fields=[current_table_field],
+                referenced_table_fields=[field_typehint.referenced_field],
+            )
+            if short_key not in data_per_field:
+                data_per_field[short_key] = new_holder
+            else:
+                holder = data_per_field[short_key]
+                assert holder.referenced_table == new_holder.referenced_table
+                holder.table_fields += new_holder.table_fields
+                holder.referenced_table_fields += new_holder.referenced_table_fields
             # end if
-            references_per_field[short_key][current_table_field] = field_typehint
         # end for
 
         index_lines = []
         reference_lines = []
         current_table = cls.get_name()
-        for short_key, field_typehint_dict in references_types.items():
-            if len(field_typehint_dict) == 0:
-                raise ValueError('Shouldn\'t get 0 types...')
-            elif len(field_typehint_dict) > 1:
-                continue
+        for short_key, holder in data_per_field.items():
+            if len(holder.table_fields) == 0 or len(holder.referenced_table_fields) == 0:
+                raise ValueError('Shouldn\'t get 0 references...')
             # end if
-            field_typehints = list(field_typehint_dict.values())
-            field_typehint = field_typehints[0]
-            field_typehint: FieldInfo[ModelField]
-            current_table_fields = list(field_typehint_dict.keys())
-            current_table_field = current_table_fields[0]
-            current_table_field: str
-
-            assert issubclass(field_typehint.referenced_type, FastORM)
-            referenced_table = field_typehint.referenced_type.get_name()
-            referenced_table_field = field_typehint.referenced_field
             # noinspection SqlNoDataSourceInspection,SqlResolve
-            index_lines.append(
-                f'CREATE INDEX "idx_{current_table}___{current_table_field}" ON "{current_table}" ("{current_table_field}");'
-            )
+            for current_table_field in holder.table_fields:
+                index_lines.append(
+                    f'CREATE INDEX "idx_{current_table}___{current_table_field}" ON "{current_table}" ("{current_table_field}");'
+                )
+            # end for
+            referenced_table = holder.referenced_table
+            current_table_fields = ', '.join(f'"{current_table_field}"' for current_table_field in holder.table_fields)
+            referenced_table_fields = ', '.join(f'"{current_referenced_table_field}"' for current_referenced_table_field in holder.referenced_table_fields)
+            constraint_suffix = short_key if len(holder.table_fields) > 1 else f'{short_key}__{holder.referenced_table_fields[0]}'
             # noinspection SqlNoDataSourceInspection,SqlResolve
             reference_lines.append(
-                f'ALTER TABLE "{current_table}" ADD CONSTRAINT "fk_{current_table}___{current_table_field}" FOREIGN KEY ("{current_table_field}") REFERENCES "{referenced_table}" ("{referenced_table_field}") ON DELETE CASCADE;'
+                f'ALTER TABLE "{current_table}" ADD CONSTRAINT "fk_{current_table}___{constraint_suffix}" FOREIGN KEY ({current_table_fields}) REFERENCES "{referenced_table}" ({referenced_table_fields}) ON DELETE CASCADE;'
             )
         # end for
         sql_lines: List[str] = []
