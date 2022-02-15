@@ -648,6 +648,17 @@ class _BaseFastORM(BaseModel):
                 return_val[key] = FieldInfo(key in _primary_keys, [FieldItem(key, other_class)])  # TODO: make a copy?
                 continue
             # end if
+            if other_class == cls:
+                # Referencing ourselves in a loop.
+                for self_reference_primary_key in _primary_keys:
+                    return_val[f'{key}__{self_reference_primary_key}'] = FieldInfo(
+                        key in _primary_keys,
+                        [FieldItem(key, other_class)] + return_val[self_reference_primary_key].types  # let's just hope we are done with our primary keys, as they should be ordered on top. Otherwise, this will fail.
+                    )
+                # end for
+                continue
+            # end if
+
             other_refs = other_class.get_fields_references(recursive=True)
 
             for other_long_name, field_ref in other_refs.items():
