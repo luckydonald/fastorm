@@ -16,7 +16,7 @@
 - ~~Make classes referencing themself possible~~
 - 🔨 Fixed `DELETE` not working for primary keys which are references.
 - ~~Added sync version of the client~~
-- ~~REFERENCES to other tables with a double Primary key now set the `FOREIGN KEY` correctly in one, as opposed to trying to create `FOREIGN KEY` for each field.~~
+- ~~`REFERENCES` to other tables with a double Primary key now set the `FOREIGN KEY` correctly in one, as opposed to trying to create `FOREIGN KEY` for each field.~~
   - ~~This would result in `ERROR:  there is no unique constraint matching given keys for referenced table "perk_level"`~~
 
 # v0.0.12
