@@ -1964,11 +1964,13 @@ class _BaseFastORM(BaseModel):
             elif len(field_typehint_dict) > 1:
                 continue
             # end if
-            field_typehints = list(field_typehint.values())
+            field_typehints = list(field_typehint_dict.values())
             field_typehint = field_typehints[0]
-            current_table_fields = list(field_typehint.keys())
-            current_table_field = current_table_fields[0]
             field_typehint: FieldInfo[ModelField]
+            current_table_fields = list(field_typehint_dict.keys())
+            current_table_field = current_table_fields[0]
+            current_table_field: str
+
             assert issubclass(field_typehint.referenced_type, FastORM)
             referenced_table = field_typehint.referenced_type.get_name()
             referenced_table_field = field_typehint.referenced_field
