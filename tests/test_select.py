@@ -405,8 +405,7 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
             """
             CREATE INDEX "idx_ref_to_double_key_table___id_ref_part__id_part_1" ON "ref_to_double_key_table" ("id_ref_part__id_part_1");
             CREATE INDEX "idx_ref_to_double_key_table___id_ref_part__id_part_2" ON "ref_to_double_key_table" ("id_ref_part__id_part_2");
-            ALTER TABLE "ref_to_double_key_table" ADD CONSTRAINT "fk_ref_to_double_key_table___id_ref_part__id_part_1" FOREIGN KEY ("id_ref_part__id_part_1") REFERENCES "double_pk_table" ("id_part_1") ON DELETE CASCADE;
-            ALTER TABLE "ref_to_double_key_table" ADD CONSTRAINT "fk_ref_to_double_key_table___id_ref_part__id_part_2" FOREIGN KEY ("id_ref_part__id_part_2") REFERENCES "double_pk_table" ("id_part_2") ON DELETE CASCADE;
+            ALTER TABLE "ref_to_double_key_table" ADD CONSTRAINT "fk_ref_to_double_key_table___id_ref_part" FOREIGN KEY ("id_ref_part__id_part_1", "id_ref_part__id_part_2") REFERENCES "double_pk_table" ("id_part_1", "id_part_2") ON DELETE CASCADE;
             """
         ).strip()
         actual_sql, *actual_params = ReferencingDoubleKey.build_sql_references()
@@ -820,26 +819,8 @@ class TableWithWayTooManyReferencesTestCase(unittest.TestCase):
             CREATE INDEX "idx_uh_oh___ref_2__id_08" ON "uh_oh" ("ref_2__id_08");
             CREATE INDEX "idx_uh_oh___ref_2__id_09" ON "uh_oh" ("ref_2__id_09");
             CREATE INDEX "idx_uh_oh___ref_2__id_10" ON "uh_oh" ("ref_2__id_10");
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_01" FOREIGN KEY ("ref_1__id_01") REFERENCES "too_many_refs" ("id_01") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_02" FOREIGN KEY ("ref_1__id_02") REFERENCES "too_many_refs" ("id_02") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_03" FOREIGN KEY ("ref_1__id_03") REFERENCES "too_many_refs" ("id_03") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_04" FOREIGN KEY ("ref_1__id_04") REFERENCES "too_many_refs" ("id_04") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_05" FOREIGN KEY ("ref_1__id_05") REFERENCES "too_many_refs" ("id_05") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_06" FOREIGN KEY ("ref_1__id_06") REFERENCES "too_many_refs" ("id_06") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_07" FOREIGN KEY ("ref_1__id_07") REFERENCES "too_many_refs" ("id_07") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_08" FOREIGN KEY ("ref_1__id_08") REFERENCES "too_many_refs" ("id_08") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_09" FOREIGN KEY ("ref_1__id_09") REFERENCES "too_many_refs" ("id_09") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1__id_10" FOREIGN KEY ("ref_1__id_10") REFERENCES "too_many_refs" ("id_10") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_01" FOREIGN KEY ("ref_2__id_01") REFERENCES "too_many_refs" ("id_01") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_02" FOREIGN KEY ("ref_2__id_02") REFERENCES "too_many_refs" ("id_02") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_03" FOREIGN KEY ("ref_2__id_03") REFERENCES "too_many_refs" ("id_03") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_04" FOREIGN KEY ("ref_2__id_04") REFERENCES "too_many_refs" ("id_04") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_05" FOREIGN KEY ("ref_2__id_05") REFERENCES "too_many_refs" ("id_05") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_06" FOREIGN KEY ("ref_2__id_06") REFERENCES "too_many_refs" ("id_06") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_07" FOREIGN KEY ("ref_2__id_07") REFERENCES "too_many_refs" ("id_07") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_08" FOREIGN KEY ("ref_2__id_08") REFERENCES "too_many_refs" ("id_08") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_09" FOREIGN KEY ("ref_2__id_09") REFERENCES "too_many_refs" ("id_09") ON DELETE CASCADE;
-            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2__id_10" FOREIGN KEY ("ref_2__id_10") REFERENCES "too_many_refs" ("id_10") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_1" FOREIGN KEY ("ref_1__id_01", "ref_1__id_02", "ref_1__id_03", "ref_1__id_04", "ref_1__id_05", "ref_1__id_06", "ref_1__id_07", "ref_1__id_08", "ref_1__id_09", "ref_1__id_10") REFERENCES "too_many_refs" ("id_01", "id_02", "id_03", "id_04", "id_05", "id_06", "id_07", "id_08", "id_09", "id_10") ON DELETE CASCADE;
+            ALTER TABLE "uh_oh" ADD CONSTRAINT "fk_uh_oh___ref_2" FOREIGN KEY ("ref_2__id_01", "ref_2__id_02", "ref_2__id_03", "ref_2__id_04", "ref_2__id_05", "ref_2__id_06", "ref_2__id_07", "ref_2__id_08", "ref_2__id_09", "ref_2__id_10") REFERENCES "too_many_refs" ("id_01", "id_02", "id_03", "id_04", "id_05", "id_06", "id_07", "id_08", "id_09", "id_10") ON DELETE CASCADE;
             """
         ).strip()
         actual_sql, *actual_params = UhOhReferencingTableWithWayTooManyReferences.build_sql_references()

@@ -88,8 +88,7 @@ class TheReferenceHasBeenDoubled(FastORM):
         -- and now the references --
         CREATE INDEX "idx_double_reference___another_reference__id_part_1" ON "double_reference" ("another_reference__id_part_1");
         CREATE INDEX "idx_double_reference___another_reference__id_part_2" ON "double_reference" ("another_reference__id_part_2");
-        ALTER TABLE "double_reference" ADD CONSTRAINT "fk_double_reference___another_reference__id_part_1" FOREIGN KEY ("another_reference__id_part_1") REFERENCES "other_table" ("id_part_1") ON DELETE CASCADE;
-        ALTER TABLE "double_reference" ADD CONSTRAINT "fk_double_reference___another_reference__id_part_2" FOREIGN KEY ("another_reference__id_part_2") REFERENCES "other_table" ("id_part_2") ON DELETE CASCADE;
+        ALTER TABLE "double_reference" ADD CONSTRAINT "fk_double_reference___another_reference" FOREIGN KEY ("another_reference__id_part_1", "another_reference__id_part_2") REFERENCES "other_table" ("id_part_1", "id_part_2") ON DELETE CASCADE;
     """
     _table_name = 'double_reference'
     _primary_keys = ['another_reference']
@@ -138,8 +137,7 @@ class SystemUnderTest(FastORM):
         -- and now the references --
         CREATE INDEX "idx_cool_table_yo___t7_1__id_part_1" ON "cool_table_yo" ("t7_1__id_part_1");
         CREATE INDEX "idx_cool_table_yo___t7_1__id_part_2" ON "cool_table_yo" ("t7_1__id_part_2");
-        ALTER TABLE "cool_table_yo" ADD CONSTRAINT "fk_cool_table_yo___t7_1__id_part_1" FOREIGN KEY ("t7_1__id_part_1") REFERENCES "other_table" ("id_part_1") ON DELETE CASCADE;
-        ALTER TABLE "cool_table_yo" ADD CONSTRAINT "fk_cool_table_yo___t7_1__id_part_2" FOREIGN KEY ("t7_1__id_part_2") REFERENCES "other_table" ("id_part_2") ON DELETE CASCADE;
+        ALTER TABLE "cool_table_yo" ADD CONSTRAINT "fk_cool_table_yo___t7_1" FOREIGN KEY ("t7_1__id_part_1", "t7_1__id_part_2") REFERENCES "other_table" ("id_part_1", "id_part_2") ON DELETE CASCADE;
         """
     _table_name = 'cool_table_yo'
     _primary_keys = ['t0_id']
