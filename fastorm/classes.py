@@ -81,12 +81,14 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
     # end def
 
     @property
-    def referenced_field(self) -> FIELD_REFERENCE_TYPE:
+    def referenced_field(self) -> str:
         """
         The first type in the type resolving list.
 
-        That means this is the first type, pointing to either the actual type if there's no reference or the table it references to
-        TL;DR: no flattening to the end type
+        Not the one of the current class.
+        That means this is the first type, pointing to either the actual field if there's no reference or the table it references to
+
+        TL;DR: no flattening to the end field
         """
         return self.types[1].field
     # end def
@@ -118,4 +120,3 @@ class SqlFieldMeta(typing.Generic[SQL_FIELD_META_VALUE_TYPE]):
             r')'
         )
 # end class
-
