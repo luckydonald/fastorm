@@ -1945,6 +1945,16 @@ class _BaseFastORM(BaseModel):
             # noinspection PyRedundantParentheses
             return (SQL_DO_NOTHING,)
         # end if
+
+        references_per_field: Dict[str, Dict[str, FieldInfo[ModelField]]] = {}
+        for current_table_field, field_typehint in references_types.items():
+            short_key = field_typehint.referenced_field.name
+            if short_key not in references_per_field:
+                references_per_field[short_key] = {}
+            # end if
+            references_per_field[short_key][current_table_field] = field_typehint
+        # end for
+
         index_lines = []
         reference_lines = []
         current_table = cls.get_name()
