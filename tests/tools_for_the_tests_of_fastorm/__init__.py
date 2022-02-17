@@ -7,6 +7,7 @@ Yes, this has a very long name, but we need to import it absolutely so better ma
 import contextlib
 import dataclasses
 import unittest.case
+from textwrap import dedent
 
 from luckydonaldUtils.logger import logging
 
@@ -31,7 +32,7 @@ def remove_prefix(line, prefix):
 
 
 def extract_sql_from_docstring(cls: type) -> str:
-    return "\n".join(remove_prefix(line, '        ') for line in cls.__doc__.strip().splitlines() if not line.strip().startswith('#'))
+    return dedent("\n".join(line for line in cls.__doc__.splitlines() if not line.strip().startswith('#')))
 # end def
 
 
