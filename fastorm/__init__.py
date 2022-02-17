@@ -1961,7 +1961,7 @@ class _BaseFastORM(BaseModel):
             new_holder = Holder(
                 referenced_table=typing.cast(Type[FastORM], field_typehint.referenced_type).get_name(),
                 table_fields=[current_table_field],
-                referenced_table_fields=[field_typehint.referenced_field],
+                referenced_table_fields=[field_typehint.referenced_field_sql],
             )
             if short_key not in data_per_field:
                 data_per_field[short_key] = new_holder

@@ -86,11 +86,21 @@ class FieldInfo(typing.Generic[FIELD_REFERENCE_TYPE]):
         The first type in the type resolving list.
 
         Not the one of the current class.
-        That means this is the first type, pointing to either the actual field if there's no reference or the table it references to
+        That means this is the first type, pointing to either the actual field if there's no reference or the field in the table it references to
 
         TL;DR: no flattening to the end field
         """
         return self.types[1].field
+    # end def
+
+    @property
+    def referenced_field_sql(self) -> str:
+        """
+        Builds the name a sql fields needs to point the reference to,
+        based on the names of the remaining field reference chain.
+        :return:
+        """
+        return '__'.join(type_.field for type_ in self.types[1:])
     # end def
 
     __getitem__ = __getitem__  # reuse, as it's the same function basically
