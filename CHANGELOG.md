@@ -12,7 +12,10 @@
 > 2. Do not use `from __future__ import annotations`, as that turns all types to be strings, which currently can't be inspected on class creation. 
 
 # Planned
-- ~~Added sync version of the client~~ 
+- ~~Added sync version of the client~~
+
+# v0.0.14
+- 🔨 Fixed `REFERENCES` for more than one level of primary key references. 
 
 # v0.0.13
 - 🔄 Made sure that the `async insert(…)` method contains no database-agnostic code, and that is actually refactored out to calls to new `_insert_preparation` and `_insert_postprocess` methods.
