@@ -768,7 +768,7 @@ class _BaseFastORM(BaseModel):
                 continue
             # end if
 
-            other_refs = other_class.get_fields_references(recursive=True)
+            other_refs = other_class.get_fields_references(recursive=True)  # recursive must be True, as False has a `continue` above.
 
             for other_long_name, field_ref in other_refs.items():
                 if not field_ref.is_primary_key:
