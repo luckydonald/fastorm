@@ -8,6 +8,11 @@ The key features are:
  - Async postgres
  - Tested to work with Python 3.10
 
+#### Install
+```
+pip install fastorm
+```
+
 #### Example
 > See [example.py](example.py) for more examples.
 
