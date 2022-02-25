@@ -120,43 +120,43 @@ class ModelMetaclassFastORM(ModelMetaclass):
         dict_attributes: List[str],
         list_attributes: List[str],
     ) -> Dict[str, Union[List, Dict[str, Any]]]:
-            return_value: Dict[str, Union[List, Dict[str, Any]]] = {}
+        return_value: Dict[str, Union[List, Dict[str, Any]]] = {}
+        for key in dict_attributes:
+            return_value[key] = {}
+        # end for
+        for key in list_attributes:
+            return_value[key] = []
+        # end for
+        for base_cls in reversed(bases):  # TODO: Is reverse order correct?
+            # `class C(A, B): pass` will keep A's variables over B's.
+            # So we should update the dict of C with B first, to then overwrite with A.
             for key in dict_attributes:
-                return_value[key] = {}
-            # end for
-            for key in list_attributes:
-                return_value[key] = []
-            # end for
-            for base_cls in reversed(bases):  # TODO: Is reverse order correct?
-                # `class C(A, B): pass` will keep A's variables over B's.
-                # So we should update the dict of C with B first, to then overwrite with A.
-                for key in dict_attributes:
-                    if hasattr(base_cls, key):
-                        return_value[key].update(getattr(base_cls, key))
-                    # end if
-                # end for
-
-                for key in list_attributes:
-                    if hasattr(base_cls, key):
-                        return_value[key].extend(getattr(base_cls, key))
-                    # end if
-                # end for
-            # end for
-
-            # Additionally, process the currently to-be-added ones of this very class we are creating
-
-            for key in dict_attributes:
-                if key in namespace:
-                    return_value[key].update(namespace[key])
+                if hasattr(base_cls, key):
+                    return_value[key].update(getattr(base_cls, key))
                 # end if
             # end for
 
             for key in list_attributes:
-                if key in namespace:
-                    return_value[key].extend(namespace[key])
+                if hasattr(base_cls, key):
+                    return_value[key].extend(getattr(base_cls, key))
                 # end if
             # end for
-            return return_value
+        # end for
+
+        # Additionally, process the currently to-be-added ones of this very class we are creating
+
+        for key in dict_attributes:
+            if key in namespace:
+                return_value[key].update(namespace[key])
+            # end if
+        # end for
+
+        for key in list_attributes:
+            if key in namespace:
+                return_value[key].extend(namespace[key])
+            # end if
+        # end for
+        return return_value
     # end def
 
     @classmethod
