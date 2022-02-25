@@ -134,7 +134,36 @@ class ModelMetaclassFastORM(ModelMetaclass):
                     annotation_args.append(param)
                 # end for
                 annotation_args = tuple(annotation_args)
-                annotation_args = annotation.__origin__[annotation_args]  # calls list[…]
+                if annotation_args:
+                    # check if is a `Callable[[param1, ...], return_type]`
+                    # as they need a special packing of the parameters:
+                    # A tuple, where the last element of the `annotation_args` tuple element is the return type,
+                    # and everything before that is the type of each function parameter.
+                    # Then merged to a single tuple with two items: list of parameter types, return type.
+                    #
+                    # We try checking out `annotation._name`, and if that fails the `repr(…)`.
+                    # Same as isinstance(annotation, _CallableGenericAlias), but without that funky import.
+                    is_callable = False
+                    if hasattr(annotation, '_name'):
+                       is_callable = getattr(annotation, '_name') == 'Callable'
+                    else:
+                        is_callable = (
+                          repr(annotation) == 'typing.Callable' or repr(annotation).startswith('typing.Callable[') or
+                          repr(annotation) == 'collections.abc.Callable' or repr(annotation).startswith('collections.abc.Callable[')
+                        )
+                    # end if
+                    if is_callable:
+                        # Basically taken from the __repr__ function of typing._CallableGenericAlias:
+                        # f'typing.Callable[[{", ".join([_type_repr(a) for a in args[:-1]])}], {_type_repr(args[-1])}]'
+                        annotation_args = (list(annotation_args[:-1]), annotation_args[-1])
+                    # end if
+                # end if
+
+                if hasattr(annotation.__origin__, '__gettiem__'):
+                    annotation_args = getattr(annotation.__origin__, '__gettiem__')(annotation_args)
+                else:
+                    annotation_args = annotation.__origin__[annotation_args]  # calls list[…]
+                # end if
                 annotation_args = [annotation_args]
             # end if
         else:
