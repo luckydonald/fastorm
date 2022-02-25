@@ -1526,6 +1526,24 @@ class _BaseFastORM(BaseModel):
         return instance
     # end def
 
+    @classmethod
+    def consume_from_row(cls: Type[CLS_TYPE], row: list) -> Tuple[CLS_TYPE, list]:
+        """
+        Like `.from_row(row)`, but will consume many columns as the `.get_sql_fields()` returns fields from the given row.
+        From those an instance of this class will be constructed and returned as the first tuple element.
+        The reminder list of columns will be returned as the second tuple element.
+
+        :param row: List of column data.
+                    Must be the at least the same length and be the same order as `.get_sql_fields()` returns fields.
+
+        :return: a new instance of this class and the leftover fields.
+        """
+        own_fields_count = cls.get_select_fields_len()
+        row_data, row_reminder = row[:own_fields_count], row[own_fields_count:]
+        instance = cls.from_row(row_data)
+        return instance, row_reminder
+    # end def
+
     _COLUMN_AUTO_TYPES: Dict[type, str] = {
         int: "BIGSERIAL",
     }

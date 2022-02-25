@@ -14,6 +14,9 @@
 # Planned
 - ~~Added sync version of the client~~
 
+# Not yet released
+- 🆕 Added a new `consume_from_row(row)` to make custom query result parsing easier.
+
 # v0.0.14
 - 🔨 Fixed `REFERENCES` for more than one level of primary key references. 
 
