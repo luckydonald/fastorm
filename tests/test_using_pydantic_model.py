@@ -71,7 +71,7 @@ class TableWithModelLast(TableModel, FastORM):
 
 class MyTestCase(VerboseTestCase):
     def test_create(self):
-        for test_cls in (TableAsFastORM, TableWithModelFirst, TableWithModelLast):
+        for test_cls in (TableHowItUsedToBe, TableWithModelFirst, TableWithModelLast):
             print(f'testing {test_cls.__name__}')
             with self.subTest(test_cls.__name__):
                 expected_sql = extract_create_and_reference_sql_from_docstring(test_cls).create
@@ -83,7 +83,7 @@ class MyTestCase(VerboseTestCase):
     # end def
 
     def test_references(self):
-        for test_cls in (TableAsFastORM, TableWithModelFirst, TableWithModelLast):
+        for test_cls in (TableHowItUsedToBe, TableWithModelFirst, TableWithModelLast):
             print(f'testing {test_cls.__name__}')
             with self.subTest(test_cls.__name__):
                 expected_sql = extract_create_and_reference_sql_from_docstring(test_cls).references
