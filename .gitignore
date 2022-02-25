@@ -13,6 +13,7 @@
 !pyproject.toml
 !README.md
 !requirements.txt
+!requirements.tests.txt
 !run_tests.sh
 
 

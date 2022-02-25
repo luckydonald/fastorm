@@ -1,0 +1,2 @@
+# pip install -r 'requirements.tests.txt'
+fastapi==0.74.1
