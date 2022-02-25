@@ -15,7 +15,7 @@ class TableHowItUsedToBe(FastORM):
 
     # noinspection SqlNoDataSourceInspection
     __doc__ = """
-    CREATE TABLE "pydantic_table" (
+    CREATE TABLE "table_how_it_used_to_be" (
       "id" BIGINT NOT NULL PRIMARY KEY,
       "name" TEXT NOT NULL,
       "field_with_default" TEXT NOT NULL DEFAULT 'mangoes are the best'
@@ -40,7 +40,7 @@ class TableWithModelFirst(TableModel, FastORM):
 
     # noinspection SqlNoDataSourceInspection
     __doc__ = """
-    CREATE TABLE "pydantic_table" (
+    CREATE TABLE "table_with_model_first" (
       "id" BIGINT NOT NULL PRIMARY KEY,
       "name" TEXT NOT NULL,
       "field_with_default" TEXT NOT NULL DEFAULT 'mangoes are the best'
@@ -58,7 +58,7 @@ class TableWithModelLast(TableModel, FastORM):
 
     # noinspection SqlNoDataSourceInspection
     __doc__ = """
-    CREATE TABLE "pydantic_table" (
+    CREATE TABLE "table_with_model_last" (
       "id" BIGINT NOT NULL PRIMARY KEY,
       "name" TEXT NOT NULL,
       "field_with_default" TEXT NOT NULL DEFAULT 'mangoes are the best'
