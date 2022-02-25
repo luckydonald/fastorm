@@ -648,6 +648,12 @@ class _BaseFastORM(BaseModel):
                 and key not in _ignored_fields
             )
         }
+        if cls.__original__fields__ != cls.__fields__:
+            logger.warn(f'{cls.__name__}.__original__fields__ != {cls.__name__}.__fields__')
+            logger.warn(f'{cls.__name__}.__original__fields__ = {cls.__original__fields__!r}')
+            logger.warn(f'{cls.__name__}.__fields__ = {cls.__fields__!r}')
+            logger.warn('.')
+        # end if
         return_val: FastORM._GET_FIELDS_REFERENCES_TYPE = {}
         for key, value in type_hints.items():
             type_hint = type_hints[key]
