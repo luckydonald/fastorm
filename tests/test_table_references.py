@@ -72,7 +72,7 @@ class Table1HavingTable2VersionSingleReferencesMandatory(FastORM):
 
 class DoublePrimaryKeyTable(FastORM):
     """
-        CREATE TABLE "table1_having_table2" (
+        CREATE TABLE "double_primary_key" (
           "table1__id" BIGINT NOT NULL,
           "table2__id" BIGINT,
           PRIMARY KEY ("id_part1", "id_part2")
@@ -91,7 +91,7 @@ class DoublePrimaryKeyTable(FastORM):
 
 class ReferencingDoublePrimaryKeyTableVersionMultiReferencesMandatory(FastORM):
     """
-        CREATE TABLE "double_primary_key" (
+        CREATE TABLE "double_primary_key_ref" (
           "double_trouble__id_part1" BIGINT NOT NULL,
           "double_trouble__id_part2" BIGINT,
           PRIMARY KEY ("double_trouble__id_part1", "double_trouble__id_part2")
@@ -99,9 +99,9 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesMandatory(FastORM):
         -- and now the references --
         CREATE INDEX "idx_double_primary_key___double_trouble__id_part1" ON "double_primary_key" ("double_trouble__id_part1");
         CREATE INDEX "idx_double_primary_key___double_trouble__id_part2" ON "double_primary_key" ("double_trouble__id_part2");
-        ALTER TABLE "double_primary_key" ADD CONSTRAINT "fk_double_primary_key___double_trouble" FOREIGN KEY ("double_trouble__id_part1", "double_trouble__id_part2") REFERENCES "double_primary_key" ("id_part1", "id_part2") ON DELETE CASCADE;
+        ALTER TABLE "double_primary_key_ref" ADD CONSTRAINT "fk_double_primary_key_ref___double_trouble" FOREIGN KEY ("double_trouble__id_part1", "double_trouble__id_part2") REFERENCES "double_primary_key" ("id_part1", "id_part2") ON DELETE CASCADE;
     """
-    _table_name = 'double_primary_key'
+    _table_name = 'double_primary_key_ref'
     _primary_keys = ['double_trouble']
     _automatic_fields = []
 
@@ -111,7 +111,7 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesMandatory(FastORM):
 
 class ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional(FastORM):
     """
-        CREATE TABLE "double_primary_key" (
+        CREATE TABLE "double_primary_key_ref_2" (
           "double_trouble__id_part1" BIGINT NOT NULL,
           "double_trouble__id_part2" BIGINT,
           PRIMARY KEY ("double_trouble__id_part1", "double_trouble__id_part2")
@@ -119,9 +119,9 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesOptional(FastORM):
         -- and now the references --
         CREATE INDEX "idx_double_primary_key___double_trouble__id_part1" ON "double_primary_key" ("double_trouble__id_part1");
         CREATE INDEX "idx_double_primary_key___double_trouble__id_part2" ON "double_primary_key" ("double_trouble__id_part2");
-        ALTER TABLE "double_primary_key" ADD CONSTRAINT "fk_double_primary_key___double_trouble" FOREIGN KEY ("double_trouble__id_part1", "double_trouble__id_part2") REFERENCES "double_primary_key" ("id_part1", "id_part2") ON DELETE CASCADE;
+        ALTER TABLE "double_primary_key_ref_2" ADD CONSTRAINT "fk_double_primary_key___double_trouble" FOREIGN KEY ("double_trouble__id_part1", "double_trouble__id_part2") REFERENCES "double_primary_key" ("id_part1", "id_part2") ON DELETE CASCADE;
     """
-    _table_name = 'double_primary_key'
+    _table_name = 'double_primary_key_ref_2'
     _primary_keys = ['double_trouble']
     _automatic_fields = []
 
