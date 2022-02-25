@@ -73,9 +73,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
         logger.debug(f'bases: {bases!r}')
         logger.debug(f'kwargs: {kwargs!r}')
         logger.debug(f'namespace (old): {namespace!r}')
-        all_annotations = {}
         all_automatic_fields = []
-        all_primary_keys = []
 
         collected_attributes = mcs.merge_base_class_attributes(
             bases=bases,
