@@ -174,9 +174,9 @@ class ModelMetaclassFastORM(ModelMetaclass):
         namespace: Dict
     ) -> Dict[str, ModelField]:
         retrofitted_fields: Dict[str, ModelField] = {}
-        annotations = None  # basically a cache, we don't wanna resolve anotations over and over again
+        annotations = None  # basically a cache, we don't want to resolve annotations over and over again
         for key in generated_new_fields.keys():
-                # prepare if equal
+            # prepare if equal
             new_annotation = new_annotations[key]
             original_annotation = original_annotations[key]
             is_equal = id(new_annotation) == id(original_annotation)
