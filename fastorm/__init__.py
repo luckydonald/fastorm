@@ -1565,7 +1565,7 @@ class _BaseFastORM(BaseModel):
 
     @classmethod
     def get_primary_keys_keys(cls) -> List[str]:
-        return cls._primary_keys
+        return cls._primary_keys if hasattr(cls, '_primary_keys') else []
     # end def
 
     @classmethod
