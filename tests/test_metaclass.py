@@ -56,6 +56,7 @@ class MyTestCase(unittest.TestCase):
     # end def
 
     def test_automatic_value(self):
+        """ this tests that the`. _automatic_fields` made the id optional."""
         class Table(FastORM):
             _table_name = 'table'
             _automatic_fields = ['id']
