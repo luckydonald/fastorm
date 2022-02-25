@@ -73,18 +73,73 @@ class ModelMetaclassFastORM(ModelMetaclass):
         logger.debug(f'bases: {bases!r}')
         logger.debug(f'kwargs: {kwargs!r}')
         logger.debug(f'namespace (old): {namespace!r}')
-        if '__annotations__' in namespace:
-            namespace['__original__annotations__'] = namespace['__annotations__']
-            del namespace['__annotations__']  # so those two fields are inserted after each other
-            automatic_fields = namespace.get('_automatic_fields', [])
-            namespace['__annotations__'] = mcs.process_annotation(automatic_fields, namespace['__original__annotations__'])
+        all_annotations = {}
+        all_automatic_fields = []
+        all_primary_keys = []
+
+        for base_cls in reversed(bases):  # TODO: Is reverse order correct?
+        # `class C(A, B): pass` will keep A's variables over B's.
+        # So we should update the dict of C with B first, to then overwrite with A.
+
+            if hasattr(base_cls, '__annotations__'):
+                # type information
+                base_cls_annotations = getattr(base_cls, '__annotations__')
+                all_annotations.update(base_cls_annotations)
+            # end if
+            if hasattr(base_cls, '_automatic_fields'):
+                # which fields are to be set automatically
+                base_cls_automatic_fields = getattr(base_cls, '_automatic_fields')
+                all_automatic_fields.extend(base_cls_automatic_fields)
+            # end if
+            if hasattr(base_cls, '_primary_keys'):
+                # which fields are to be set automatically
+                base_cls_primary_keys = getattr(base_cls, '_primary_keys')
+                all_primary_keys.extend(base_cls_primary_keys)
+            # end if
+        # end for
+
+        # additionally, process the currently to-be-added ones of this very class we are creating
+        curr_cls_annotations = namespace.get('__annotations__', {})
+        if curr_cls_annotations:
+            all_annotations.update(curr_cls_annotations)
         # end if
+
+        curr_cls_automatic_fields = namespace.get('_automatic_fields', {})
+        if curr_cls_automatic_fields:
+            all_automatic_fields.update(curr_cls_automatic_fields)
+        # end if
+
+        curr_cls_primary_keys = namespace.get('_primary_keys', {})
+        if curr_cls_primary_keys:
+            all_primary_keys.update(curr_cls_primary_keys)
+        # end if
+
+        if all_annotations:
+            all_new_annotations = mcs.process_annotation(all_automatic_fields, all_annotations)
+        else:
+            all_new_annotations = {}
+        # end if
+        for key in ('__annotations__', '_automatic_fields', '_primary_keys'):
+            # TODO: Skip FastORM and _BaseFastORM  # Problem: hot to check? Those aren't created yet.
+            if key in namespace:
+                namespace[f'__original{key}'] = namespace[key]
+                del namespace[key]  # so those two fields are inserted after each other
+            # end if
+        # end for
+
+        namespace['__annotations__'] = all_new_annotations
+        # this basically adds the types from parent classes as well.
+        # but that's okey, we only want
+
+        namespace['_automatic_fields'] = all_automatic_fields
+        namespace['_primary_keys'] = all_primary_keys
+
         logger.debug(f'namespace (new): {namespace!r}')
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
         cls.__original__fields__ = mcs.process_fields(
             generated_new_fields=cls.__fields__,
-            new_annotations=namespace.get('__annotations__', []),
-            original_annotations=namespace.get('__original__annotations__', []),
+            new_annotations=all_new_annotations,
+            original_annotations=all_annotations,
             namespace=namespace,
         )
         return cls
