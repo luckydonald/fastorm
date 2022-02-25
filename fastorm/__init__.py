@@ -1508,11 +1508,11 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
-    def from_row(cls, row):
+    def from_row(cls: Type[CLS_TYPE], row) -> CLS_TYPE:
         """
         Load a query result row into this class type.
-        It is is done automatically for you if you use `.get(…)` or `.select(…)`.
-        However for advanced raw SQL queries this can be helpful,
+        It's done automatically for you if you use `.get(…)` or `.select(…)`.
+        However, for advanced raw SQL queries this can be helpful,
         especially when combined with `get_select_fields(…)` to make sure you're not missing a field.
         :param row:
         :return:
