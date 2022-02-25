@@ -39,7 +39,7 @@ from asyncpg import Connection, Pool, Record
 
 from .classes import FieldInfo, FieldItem, SqlFieldMeta
 from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
-from .compat import IS_PYTHON_3_9
+from .compat import IS_MIN_PYTHON_3_9
 from .compat import Annotated, NoneType
 from .utils import failsafe_issubclass, evaluate_forward_ref
 from .query import *
@@ -245,12 +245,12 @@ class ModelMetaclassFastORM(ModelMetaclass):
     @classmethod
     def deduplicate_types(mcs, annotations: List[TYPEHINT_TYPE]) -> List[TYPEHINT_TYPE]:
         # first barebones deduplication
-        if not IS_PYTHON_3_9:
+        if not IS_MIN_PYTHON_3_9:
             # old python version: we don't have `tuple[…]` which we would need to distinguish from `typing.Tuple[…]`,
             # so we can optimize with letting set do the deduplication, and only run the list based compare if that
             # resulting set is shorter.
             params_set = set(annotations)
-            if len(params_set) == len(annotations) and not IS_PYTHON_3_9:
+            if len(params_set) == len(annotations) and not IS_MIN_PYTHON_3_9:
                 return annotations
             # end if
         # end if
@@ -261,7 +261,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
         generic_aliases = set()
 
         for param in annotations:
-            if IS_PYTHON_3_9 and check_is_generic_alias(param):
+            if IS_MIN_PYTHON_3_9 and check_is_generic_alias(param):
                 # check if we have a different type with similar stuff.
                 # so tuple[] instead of Tuple[] and so on.
                 assert hasattr(param, '__args__')

@@ -10,9 +10,9 @@ from pydantic.fields import ModelField
 
 TYPEHINT_TYPE = Union[Type, ModelField]
 
-IS_PYTHON_3_7 = sys.version_info[:3] >= (3, 7, 0)
-IS_PYTHON_3_9 = sys.version_info[:3] >= (3, 9, 0)
-IS_PYTHON_3_10 = sys.version_info[:3] >= (3, 10, 0)
+IS_MIN_PYTHON_3_7 = sys.version_info[:3] >= (3, 7, 0)
+IS_MIN_PYTHON_3_9 = sys.version_info[:3] >= (3, 9, 0)
+IS_MIN_PYTHON_3_10 = sys.version_info[:3] >= (3, 10, 0)
 
 
 # noinspection PyUnusedLocal
@@ -126,13 +126,13 @@ except:
     NoneType = type(None)
 # end try
 
-if IS_PYTHON_3_10:
+if IS_MIN_PYTHON_3_10:
     from typing import get_type_hints
 
     def get_type_hints_with_annotations(cls) -> Dict[str, any]:
         return get_type_hints(cls, include_extras=True)
     # end def
-elif not IS_PYTHON_3_7:
+elif not IS_MIN_PYTHON_3_7:
     from typing import get_type_hints
 
     def get_type_hints_with_annotations(cls) -> Dict[str, any]:

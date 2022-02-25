@@ -2,7 +2,7 @@ import typing
 import unittest
 from typing import Union
 
-from fastorm import FastORM, IS_PYTHON_3_9, ModelMetaclassFastORM
+from fastorm import FastORM, IS_MIN_PYTHON_3_9, ModelMetaclassFastORM
 
 
 class MyTestCase(unittest.TestCase):
@@ -145,7 +145,7 @@ class MyTestCase(unittest.TestCase):
         # end with
     # end def
 
-    @unittest.skipIf(not IS_PYTHON_3_9, 'skip if low python version')
+    @unittest.skipIf(not IS_MIN_PYTHON_3_9, 'skip if low python version')
     def test_type_deduplication_py39(self):
         similar_stuffsies = {
             "tuple": [tuple[str, int], typing.Tuple[str, int]],
