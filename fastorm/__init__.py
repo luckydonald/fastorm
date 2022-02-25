@@ -99,7 +99,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             # end if
             namespace[key] = collected_attributes[key]
         # end for
-                            namespace['__annotations__'] = all_new_annotations
+        namespace['__annotations__'] = all_new_annotations
 
         logger.debug(f'namespace (new): {namespace!r}')
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
