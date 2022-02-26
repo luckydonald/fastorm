@@ -97,8 +97,8 @@ class ReferencingDoublePrimaryKeyTableVersionMultiReferencesMandatory(FastORM):
           PRIMARY KEY ("double_trouble__id_part1", "double_trouble__id_part2")
         );
         -- and now the references --
-        CREATE INDEX "idx_double_primary_key___double_trouble__id_part1" ON "double_primary_key" ("double_trouble__id_part1");
-        CREATE INDEX "idx_double_primary_key___double_trouble__id_part2" ON "double_primary_key" ("double_trouble__id_part2");
+        CREATE INDEX "idx_double_primary_key_ref___double_trouble__id_part1" ON "double_primary_key_ref" ("double_trouble__id_part1");
+        CREATE INDEX "idx_double_primary_key_ref___double_trouble__id_part2" ON "double_primary_key_ref" ("double_trouble__id_part2");
         ALTER TABLE "double_primary_key_ref" ADD CONSTRAINT "fk_double_primary_key_ref___double_trouble" FOREIGN KEY ("double_trouble__id_part1", "double_trouble__id_part2") REFERENCES "double_primary_key" ("id_part1", "id_part2") ON DELETE CASCADE;
     """
     _table_name = 'double_primary_key_ref'
