@@ -118,6 +118,20 @@ class ModelMetaclassFastORM(ModelMetaclass):
         dict_attributes: List[str],
         list_attributes: List[str],
     ) -> Dict[str, Union[List, Dict[str, Any]]]:
+        """
+        Goes through the needed fields (`dict_attributes` and `list_attributes` in the base classes (`bases`),
+        as well at the current `namespace`, and collects them to a dict.
+        The key is the field name as in those `*_attributes` list, the value is a merged `dict` or `list` as indicated
+        by the `*_attributes` list you used.
+
+        :param bases: The base classes of this function, where we search for those attributes.
+        :param namespace: The current class which also may have those attributes.
+        :param dict_attributes: Keys of the attributes to collect, those merged as a dict.
+        :param list_attributes: Keys of the attributes to collect, those merged as a list.
+
+        :return: Dictionary of the collected items. The keys are as in the provided attributes lists
+                 and the values are the combined dicts or lists respectively.
+        """
         return_value: Dict[str, Union[List, Dict[str, Any]]] = {}
         for key in dict_attributes:
             return_value[key] = {}
@@ -159,6 +173,12 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @classmethod
     def process_annotation(mcs, automatic_fields: List[str], annotations: Dict[str, TYPEHINT_TYPE]):
+        """
+        Makes sure that primary keys
+        :param automatic_fields:
+        :param annotations:
+        :return:
+        """
         new_annotations = {}
         for field_name, annotation in annotations.items():
             annotation_args = mcs.recursive_get_union_params_with_pk_types(annotation)
@@ -172,6 +192,16 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @classmethod
     def recursive_get_union_params_with_pk_types(mcs, annotation):
+        """
+        Processes the annotation to check if there's a reference to another FastORM table in there, and if so,
+        will replace that with a tuple of that and the other table primary keys.
+
+        That way, if you're referenced table has a single integer, when working with data,
+        you can set it to that single integer of the primary key instead of providing a fully loaded object
+        which has those primary key values set. But that's still possible, too.
+        :param annotation:
+        :return:
+        """
         # is a Union[…]
         is_union = check_is_typing_union_type(annotation) or check_is_new_union_type(annotation)
         # is a List[…], Dict[…], ...
@@ -231,18 +261,24 @@ class ModelMetaclassFastORM(ModelMetaclass):
                 else:
                     annotation_args = annotation.__origin__[annotation_args]  # calls list[…]
                 # end if
-                # end if
                 annotation_args = [annotation_args]
             # end if
         else:
-            annotation_args = mcs.upgrade_annotation(annotation)
+            annotation_args = mcs.upgrade_reference_annotation(annotation)
         # end if
         annotation_args = mcs.deduplicate_types(annotation_args)  # especially tuple vs typing.Tuple
         return annotation_args
     # end def
 
     @classmethod
-    def upgrade_annotation(mcs, annotation: TYPEHINT_TYPE) -> List[TYPEHINT_TYPE]:
+    def upgrade_reference_annotation(mcs, annotation: TYPEHINT_TYPE) -> List[TYPEHINT_TYPE]:
+        """
+        Upgrades a reference annotation to another FastORM table to be a Tuple of that class and their primary keys.
+
+        :used-by: ModelMetaclassFastORM.recursive_get_union_params_with_pk_types()
+        :param annotation:
+        :return:
+        """
         annotations = [annotation]
         try:
             if issubclass(annotation, _BaseFastORM):
@@ -270,6 +306,12 @@ class ModelMetaclassFastORM(ModelMetaclass):
         original_annotations: Dict[str, TYPEHINT_TYPE],
         namespace: Dict
     ) -> Dict[str, ModelField]:
+        """
+        Compare `original_annotations` and `new_annotations`.
+        For annotations that differ we have to build a new pydantic representation for the new `__fields__`.
+        as they need to be based on the new `__annotations__`.
+        Otherwise, we can be cheap and simply copy the old ones over.
+        """
         retrofitted_fields: Dict[str, ModelField] = {}
         annotations = None  # basically a cache, we don't wanna resolve annotations over and over again
         for key in generated_new_fields.keys():
@@ -322,12 +364,15 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
             # now the tough part, mimicking pydantic's processing
             if annotations is None:
-                annotations = resolve_annotations(original_annotations, namespace.get('__module__', None))
+                annotations = resolve_annotations(original_annotations, namespace.get('__module__', None))  # TODO: shouldn't this be the new annotations?!?
             # end if
 
             # annotation only fields need to come first in fields (???)
             value = namespace.get(key, Undefined)
             ann_type = annotations[key]
+            # basically we copy over `.class_validators` and `.model_config`,
+            # pull the ann_type from the `original_annotations` as resolved by pydantic,
+            # and that allows for a duplicated `__field__` list.
             retrofitted_fields[key] = ModelField.infer(
                 name=key,
                 value=value,
@@ -341,6 +386,19 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @classmethod
     def deduplicate_types(mcs, annotations: List[TYPEHINT_TYPE]) -> List[TYPEHINT_TYPE]:
+        """
+        Makes sure that `[int, int, float, int]` is deduplicated to `[int, float]`.
+        And `[int, int, int, int]` becomes a single [`int`].
+
+        This a Union can be deduplicated:
+        `Union[int, int, float, int]` becomes `Union[int, float]`.
+        This is exactly what's happening in `recursive_get_union_params_with_pk_types()`.
+
+
+        :used-by: ModelMetaclassFastORM.recursive_get_union_params_with_pk_types()
+        :param annotations:
+        :return:
+        """
         # first barebones deduplication
         if not IS_MIN_PYTHON_3_9:
             # old python version: we don't have `tuple[…]` which we would need to distinguish from `typing.Tuple[…]`,
@@ -383,6 +441,15 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
     @staticmethod
     def is_generic_alias_equal(param, other_param):
+        """
+        A comparison function for `GenericAlias`es (as determined by `check_is_generic_alias()`).
+        Returns true on direct equality,
+        or if both are a `GenericAlias` and have the same `__args__` and `__origin__`.
+
+        :param param:
+        :param other_param:
+        :return:
+        """
         if param == other_param:
             return True
         # end def
