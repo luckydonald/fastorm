@@ -18,6 +18,7 @@ Based on https://stackoverflow.com/a/31665827/3423324#display-python-unittest-re
 and https://gist.github.com/viniciusd/73e6eccd39dea5e714b1464e3c47e067
 """
 import datetime
+from textwrap import indent
 
 try:
     from StringIO import StringIO
@@ -102,6 +103,9 @@ class Table(object):
             except IndexError:
                 self.__columnSize__.append(self.__len__(x))
         self.__titles__ = titles
+
+    def __bool__(self):
+        return bool(self.__rows__)
 
     def __str__(self):
         """
@@ -409,9 +413,11 @@ class TestRunner(Template_mixin):
         table = Table(padding=padding)
         table.addTitles(["Test group/Test case", "Count", "Pass", "Fail", "Error"])
         tests = ''
+        test_table_padding = 2 * padding
         for cid, (testClass, classResults) in enumerate(sortedResult):  # Iterate over the test cases
-            classTable = Table(padding=2 * padding)
-            classTable.addTitles(["Test name", "Status", "Stack"])
+            classTable = Table(padding=test_table_padding)
+            stackList = []
+            classTable.addTitles(["Test name", "Status"])
             # subtotal for a class
             np = nf = ne = 0
             for n, t, o, e in classResults:
@@ -434,8 +440,20 @@ class TestRunner(Template_mixin):
             table.addRow([desc, str(np + nf + ne), str(np), str(nf), str(ne)])
             for tid, (n, test, output, error) in enumerate(classResults):  # Iterate over the unit tests
                 t_name, t_stack, t_status = self._generate_report_test(cid, tid, n, test, output, error)
-                classTable.addRow([t_name, t_status, t_stack])
+                classTable.addRow([t_name, t_status])
+                if t_stack or t_status != self.STATUS[0]:
+                    stackList.append(f'- `{t_name} ({t_status}):  ')
+                    if t_stack.strip():
+                        stackList.append(f'  ```py\n{indent(t_stack.strip(), prefix="  ")}\n  ```')
+                    else:
+                        stackList.append('  _No output._')
+                    # end if
+                # end if
             tests += str(classTable)
+            if stackList:
+                tests += '\n'
+                tests += '##### Errors\n'
+                tests += str('\n'.join(stackList))
         table.addRow(
             ["Total", str(result.success_count + result.failure_count + result.error_count), str(result.success_count),
              str(result.failure_count), str(result.error_count)])
