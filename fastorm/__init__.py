@@ -1063,7 +1063,7 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
-    async def get(cls: Type[CLS_TYPE], conn: Connection, **kwargs) -> Optional[CLS_TYPE]:
+    async def get(cls: Union[Type[CLS_TYPE], 'FastORM'], conn: Connection, **kwargs) -> Optional[CLS_TYPE]:
         """
         Retrieves a single Database element. Error if there are more matching ones.
         Like `.select(…)` but returns `None` for no matches, the match itself or an error if it's more than one row.
@@ -1081,7 +1081,7 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
-    async def select(cls: Type[CLS_TYPE], conn: Connection, **kwargs) -> List[CLS_TYPE]:
+    async def select(cls: Union[Type[CLS_TYPE], 'FastORM'], conn: Connection, **kwargs) -> List[CLS_TYPE]:
         """
         Get's multiple ones.
         :param conn:
@@ -1678,7 +1678,10 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
-    def from_row(cls: Type[CLS_TYPE], row) -> CLS_TYPE:
+    def from_row(
+        cls: Union[Type[CLS_TYPE], 'FastORM'],
+        row,
+    ) -> CLS_TYPE:
         """
         Load a query result row into this class type.
         It's done automatically for you if you use `.get(…)` or `.select(…)`.
@@ -1697,7 +1700,7 @@ class _BaseFastORM(BaseModel):
     # end def
 
     @classmethod
-    def consume_from_row(cls: Type[CLS_TYPE], row: list) -> Tuple[CLS_TYPE, list]:
+    def consume_from_row(cls: Union[Type[CLS_TYPE], 'FastORM'], row: list) -> Tuple[CLS_TYPE, list]:
         """
         Like `.from_row(row)`, but will consume many columns as the `.get_sql_fields()` returns fields from the given row.
         From those an instance of this class will be constructed and returned as the first tuple element.
