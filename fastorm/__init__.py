@@ -4,7 +4,14 @@
 """FastORM framework, easy to learn, fast to code"""
 __author__ = 'luckydonald'
 __version__ = "0.0.14"
-__all__ = ['__author__', '__version__', 'FastORM', 'Autoincrement', 'query']
+__all__ = [
+    # meta:
+    '__author__', '__version__',
+    # classes:
+    'FastORM', 'Autoincrement',
+    # other modules:
+    'query', 'utils', 'classes', 'compat',
+]
 
 import ipaddress
 import builtins
