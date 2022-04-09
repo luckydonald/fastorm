@@ -1680,20 +1680,22 @@ class _BaseFastORM(BaseModel):
     @classmethod
     def from_row(
         cls: Union[Type[CLS_TYPE], 'FastORM'],
-        row,
+        row: Dict[str, Any],
     ) -> CLS_TYPE:
         """
         Load a query result row into this class type.
         It's done automatically for you if you use `.get(…)` or `.select(…)`.
         However, for advanced raw SQL queries this can be helpful,
         especially when combined with `get_select_fields(…)` to make sure you're not missing a field.
-        :param row:
-        :return:
+        :param row: A dict, which can contain a space separated namespace prefix
+                    in the key (see `.get_select_fields(namespace="…")`, e.g. `"the_namespace field1"`).
+        :return: An object containing the data.
         """
-        # noinspection PyArgumentList
+        assert_type_or_raise(row, dict, parameter_name='row')
         row_data = {key.rsplit(" ")[-1]: value for key, value in dict(row).items()}  # handles the namespaces like "namespace_name field_name"
         processed = cls._prepare_kwargs_flattened(**row_data)
         kwargs = {sql_meta.field_name: sql_meta.value for sql_meta in processed}
+        # noinspection PyArgumentList
         instance = cls(**kwargs)
         instance._database_cache_overwrite_with_current()
         return instance
