@@ -31,4 +31,24 @@ class FastApiTestCase(VerboseTestCase):
         self.assertEquals(12, result.id)
         self.assertEquals('yellow', result.banana)
     # end def
+
+    def test_list(self):
+        row = [13, 'green']
+
+        result = SimpleTable.from_row(row)
+
+        self.assertIsInstance(result, SimpleTable)
+        self.assertEquals(13, result.id)
+        self.assertEquals('green', result.banana)
+    # end def
+
+    def test_tuple(self):
+        row = [14, 'yellow-green']
+
+        result = SimpleTable.from_row(row)
+
+        self.assertIsInstance(result, SimpleTable)
+        self.assertEquals(14, result.id)
+        self.assertEquals('yellow-green', result.banana)
+    # end def
 # end class
