@@ -288,7 +288,13 @@ class ModelMetaclassFastORM(ModelMetaclass):
         """
         annotations = [annotation]
         try:
-            if issubclass(annotation, _BaseFastORM):
+            if isinstance(annotation, typing.ForwardRef) and not annotation.__forward_evaluated__:
+                logger.warning(
+                    f'The typehint of that class still contains a unresolved ForwardRef({annotation.__forward_arg__!r}). You should probably call Class.update_forward_refs() after the class it is pointing to is defined.'
+                )
+            elif isinstance(annotation, typing.ForwardRef):  # __forward_evaluated__ now True
+                annotation = annotation.__forward_value__
+            elif issubclass(annotation, _BaseFastORM):
                 pk_annotations = tuple(annotation.get_primary_keys_type_annotations().values())
                 if len(pk_annotations) == 1:
                     pk_annotations = pk_annotations[0]
@@ -1699,7 +1705,7 @@ class _BaseFastORM(BaseModel):
                     Or a list/tuple of values matching the order of `.get_select_fields(…)`.
         :return: An object containing the data.
         """
-        assert_type_or_raise(row, (dict, list, tuple), parameter_name='row')
+        assert_type_or_raise(row, (dict, list, tuple, asyncpg.Record), parameter_name='row')
         if isinstance(row, (list, tuple)):
             fields = cls.get_sql_fields()
             row = {fields[i]: row[i] for i in range(min(len(row), len(fields)))}
