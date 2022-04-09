@@ -1423,7 +1423,7 @@ class _BaseFastORM(BaseModel):
         if _automatic_fields:
             assert len(updated_automatic_values_rows) == 1
             updated_automatic_values = updated_automatic_values_rows[0]
-            if ignore_setting_automatic_fields and write_back_automatic_fields:
+            if ignore_setting_automatic_fields is not False and write_back_automatic_fields:
                 for field in _automatic_fields:
                     assert field in updated_automatic_values
                     setattr(self, field, updated_automatic_values[field])
