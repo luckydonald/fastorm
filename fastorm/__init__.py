@@ -293,7 +293,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             # end if
         except TypeError as e:
             # TypeError: issubclass() arg 1 must be a class
-            logger.debug(annotation, e)
+            logger.warn(f'Annotation failed to process: {annotation}', exc_info=True)
             pass
         return annotations
     # end def
