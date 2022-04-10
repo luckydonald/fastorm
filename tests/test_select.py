@@ -176,6 +176,15 @@ class NormalTableTestCase(unittest.TestCase):
         self.assertEqual(expected[0], actual[0], 'sql')
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
+
+    def test_select_singular_null(self):
+        actual = SimpleTable.build_sql_select(id=None, text="littlepip")
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id","text" FROM "simple_table" WHERE "id" IS NULL AND "text" = $1', "littlepip"
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
 # end class
 
 

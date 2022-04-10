@@ -1323,9 +1323,15 @@ class _BaseFastORM(BaseModel):
             # end if
 
             if not isinstance(sql_wheres, In):
-                key_string, placeholder_string, values_list, where_index = cls._prepared_dict_to_sql(sql_variable_dict=sql_wheres, placeholder_index=where_index)
-                where_values.extend(values_list)
-                where_parts.append(f'{key_string} = {placeholder_string}')
+                if not all(meta.value is None for meta in sql_wheres.values()):
+                    key_string, placeholder_string, values_list, where_index = cls._prepared_dict_to_sql(sql_variable_dict=sql_wheres, placeholder_index=where_index)
+                    where_values.extend(values_list)
+                    where_parts.append(f'{key_string} = {placeholder_string}')
+                else:  # it is None
+                    # basically we need no placeholder stuff, so we can save a lot
+                    key_string, _, _, _ = cls._prepared_dict_to_sql(sql_variable_dict=sql_wheres, placeholder_index=0)
+                    where_parts.append(f'{key_string} IS NULL')
+                # end if
             else:
                 key_string = None
                 placeholder_strings = []
