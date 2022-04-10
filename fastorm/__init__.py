@@ -1263,6 +1263,14 @@ class _BaseFastORM(BaseModel):
         """
         Builds a query/insert sql string, based on the sql_variable dict (result of _prepare_kwargs())
 
+
+        **`sql_variable_dict`** can contain one or more items:
+
+        For one item it's gonna result in something like
+         - `"foo" = $1`
+        If it has more than one field (dict entry) it will do a combined key for those:
+         - `("foo1", "foo2") = ($1, $2)`
+
         :param sql_variable_dict:
         :param placeholder_index:
         :return: key_string, placeholder_string, values_list, placeholder_index_after
