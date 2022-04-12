@@ -593,6 +593,15 @@ class ReferencingDoubleKeyTestCase(VerboseTestCase):
         self.assertEqual(expected[1:], actual[1:], 'variables')
     # end def
 
+    def test_in_clause_with_None(self):
+        actual = ReferencingDoubleKey.build_sql_select(id_part_3=In["littlepip is best pony", None])
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        expected = 'SELECT "id_ref_part__id_part_1","id_ref_part__id_part_2","id_part_3","other_field" FROM "ref_to_double_key_table" WHERE "id_part_3" = $1 OR "id_part_3" IS NULL', "littlepip is best pony", "littlepip is my waifu"
+
+        self.assertEqual(expected[0], actual[0], 'sql')
+        self.assertEqual(expected[1:], actual[1:], 'variables')
+    # end def
+
     def test_in_clause_non_pk_multiple(self):
         actual = ReferencingDoubleKey.build_sql_select(id_part_3=In["littlepip is best pony", "littlepip is my waifu"])
         # noinspection SqlResolve,SqlNoDataSourceInspection

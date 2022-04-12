@@ -1335,14 +1335,20 @@ class _BaseFastORM(BaseModel):
             else:
                 key_string = None
                 placeholder_strings = []
+                can_be_null = False
                 for actual_wheres in sql_wheres.variables:
-                    key_string_new, placeholder_string, values_list, where_index = cls._prepared_dict_to_sql(sql_variable_dict=actual_wheres, placeholder_index=where_index)
-                    where_values.extend(values_list)
-                    assert key_string is None or key_string_new == key_string  # make sure once more it's consistently the same
-                    key_string = key_string_new
-                    placeholder_strings.append(placeholder_string)
+                    if all(value is None for value in actual_wheres.values()):
+                        can_be_null = True
+                    else:  # is not None
+                        key_string_new, placeholder_string, values_list, where_index = cls._prepared_dict_to_sql(sql_variable_dict=actual_wheres, placeholder_index=where_index)
+                        where_values.extend(values_list)
+                        placeholder_strings.append(placeholder_string)
+                        assert key_string is None or key_string_new == key_string  # make sure once more it's consistently the same
+                        key_string = key_string_new
+                    # end if
                 # end for
-                where_parts.append(f'{key_string} IN ({", ".join(placeholder_strings)})')
+                is_null_part = f"OR {key_string} IS NULL" if can_be_null else ""
+                where_parts.append(f'{key_string} IN ({", ".join(placeholder_strings)}) {is_null_part}'.strip())
             # end if
         # end if
         where_sql = "" if not where_parts else f' WHERE {" AND ".join(where_parts)}'
@@ -1461,9 +1467,11 @@ class _BaseFastORM(BaseModel):
         :param ignore_setting_automatic_fields:
             Skip setting fields marked as automatic, even if you provided.
             For example if the id field is marked automatic, as it's an autoincrement int.
-            If `True`, setting `id=123` (commonly `id=None`) would be ignored, and instead the database assigns that value.
-            If `False`, the value there will be written to the database.
-            If `None`, it will be ignored as long as the value actually is None, but set if it is non-None.
+            If `True`, setting the field to a value in your data, for example. `id=123` (but commonly `id=None`) would
+                       be ignored, and instead the database has to assign that value.
+            If `False`, the value in that field will be written to the database, even if it is `None`.
+            If `None`, it will be ignored as long as the value actually is `None`, and the database has to setit,
+                       but set if it is non-`None`.
             The default setting is `None`.
         :param upsert_on_conflict:
             List of fields which are expected to cause a duplicate conflict, and thus all the other fields will be overwritten.
