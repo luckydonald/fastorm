@@ -1010,7 +1010,7 @@ class _BaseFastORM(BaseModel):
         """
         _ignored_fields = self.get_ignored_fields()
         _automatic_fields = self.get_automatic_fields()
-        sql_fields_data = self._prepare_kwargs(**self.dict(), _allow_in=False)
+        sql_fields_data = self._prepare_kwargs(**self.dict(), _allow_in=False, _fill_defaults=True)
         assert_type_or_raise(_ignored_fields, list, parameter_name='self._ignored_fields')
         assert_type_or_raise(_automatic_fields, list, parameter_name='self._automatic_fields')
 
@@ -1114,12 +1114,19 @@ class _BaseFastORM(BaseModel):
     def _prepare_kwargs(
         cls,
         _allow_in: bool,
+        _fill_defaults: bool = False,
         **kwargs: Any
     ) -> List[Union[In[Dict[str, SqlFieldMeta[Any]]], Dict[str, SqlFieldMeta[Any]]]]:
         """
         Will parse the current classes parameters into SQL field names.
         It will handle some special cases, when you provide a FastORM element for a field as defined in the model.
         For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
+
+        Another special case handled are datetime values, those will be converted to UTC.
+        For native ones, i.e. without timezone, we assume the local computer's timezone.
+
+        Also if ` _fill_defaults` is `True`, any `None` values  will be replaced by any set default,
+        as set via pydantic's `Field(default=…)` or `Field(default_factory=…)`.
 
         Will return a list of single elements.
         :param kwargs: Input fields, key being the python model.
@@ -1168,6 +1175,14 @@ class _BaseFastORM(BaseModel):
                 logger.debug('datetime received: ' + repr(value))
                 value = value.astimezone(tz=UTC).replace(tzinfo=None)
                 logger.debug('datetime converted: ' + repr(value))
+            # end if
+
+            if _fill_defaults and value is None:
+                if pydantic_typehint.referenced_type.default is not None:
+                    value = pydantic_typehint.referenced_type.default
+                elif pydantic_typehint.referenced_type.default_factory is not None:
+                    value = pydantic_typehint.referenced_type.default_factory()
+                # end if
             # end if
 
             if not typehint.is_reference:
