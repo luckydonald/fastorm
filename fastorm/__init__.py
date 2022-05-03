@@ -23,6 +23,7 @@ import types
 import uuid
 import re
 from typing import List, Dict, Any, Optional, Tuple, Type, Union, TypeVar, Callable, Set
+from datetime import timezone
 
 try:
     import psycopg2
@@ -58,6 +59,8 @@ VERBOSE_SQL_LOG = True
 SQL_DO_NOTHING = "SELECT 1;"
 
 CLS_TYPE = TypeVar("CLS_TYPE")
+
+UTC = timezone.utc
 
 
 logger = logging.getLogger(__name__)
@@ -1152,6 +1155,13 @@ class _BaseFastORM(BaseModel):
             # end if
             if not _allow_in and isinstance(value, In):
                 raise TypeError('In[…] is not allowed in this type of query.')
+            # end if
+
+            if isinstance(value, datetime.datetime):
+                # make sure it's UTC.
+                logger.debug('datetime received: ' + repr(value))
+                value = value.astimezone(tz=UTC).replace(tzinfo=None)
+                logger.debug('datetime converted: ' + repr(value))
             # end if
 
             if not typehint.is_reference:
