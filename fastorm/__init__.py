@@ -1118,7 +1118,9 @@ class _BaseFastORM(BaseModel):
     ) -> List[Union[In[Dict[str, SqlFieldMeta[Any]]], Dict[str, SqlFieldMeta[Any]]]]:
         """
         Will parse the current classes parameters into SQL field names.
-        It will handle some special cases, when you provide a FastORM element for a field as defined in the model. For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
+        It will handle some special cases, when you provide a FastORM element for a field as defined in the model.
+        For those referencing fields you can also use the underlying primary key values directly, in case of multiple primary keys by specifying a tuple.
+
         Will return a list of single elements.
         :param kwargs: Input fields, key being the python model.
 
