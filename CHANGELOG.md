@@ -18,6 +18,7 @@
 
 
 # v0.0.15
+- 🔨 Fixed a lot of stuff making it not work nicely with FastAPI.
 - 🆕 Added a new `consume_from_row(row)` to make custom query result parsing easier.
 - 🔨 Fixed it not handling timezones in `datetime`s but instead breaking.
     - It now converts everything it encounters to UTC first.
