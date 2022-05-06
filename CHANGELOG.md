@@ -16,9 +16,8 @@
 
 # Not yet released
 
-
-# v0.0.15
-- 🔨 Fixed a lot of stuff making it not work nicely with FastAPI.
+# v0.0.16
+- 🔨 Fixed a lot more stuff to make it now work quite nicely with FastAPI.
 - 🆕 Added a new `consume_from_row(row)` to make custom query result parsing easier.
 - 🔨 Fixed it not handling timezones in `datetime`s but instead breaking.
     - It now converts everything it encounters to UTC first.
@@ -26,6 +25,9 @@
 - 🆕 Take into account when you set `Field(default=123)` or `Field(default_factory=datetime.utcnow)` as value of the class field.
 - 🔨 Fixed `In[value, None]`.
 - 🔨 Fixed `field=None` in `select(…)` and `get(…)` not properly resulting in `field IS NULL`.
+
+# v0.0.15
+- 🔨 Some fixes making it work with FastAPI.
 
 # v0.0.14
 - 🔨 Fixed `REFERENCES` for more than one level of primary key references. 
