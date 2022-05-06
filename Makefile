@@ -1,4 +1,4 @@
 
 
 upload:
-	 flit publish
+	python -m flit publish
