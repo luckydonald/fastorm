@@ -15,7 +15,16 @@
 - ~~Added sync version of the client~~
 
 # Not yet released
+
+
+# v0.0.15
 - 🆕 Added a new `consume_from_row(row)` to make custom query result parsing easier.
+- 🔨 Fixed it not handling timezones in `datetime`s but instead breaking.
+    - It now converts everything it encounters to UTC first.
+    - For naïve `datetime` objects, that is assumed to take the computer's local timezone and is adapted for that to UTC as well. 
+- 🆕 Take into account when you set `Field(default=123)` or `Field(default_factory=datetime.utcnow)` as value of the class field.
+- 🔨 Fixed `In[value, None]`.
+- 🔨 Fixed `field=None` in `select(…)` and `get(…)` not properly resulting in `field IS NULL`.
 
 # v0.0.14
 - 🔨 Fixed `REFERENCES` for more than one level of primary key references. 
