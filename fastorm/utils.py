@@ -55,10 +55,12 @@ def snakecase(string: str) -> str:
     # based on https://github.com/okunishinishi/python-stringcase/blob/04afe0044a9c513bc7899ae2dd1b97f1fe165f6c/stringcase.py#L141-L156
 
     # noinspection RegExpRedundantEscape
-    string = re.sub(r"[\-\.\s]", '_', str(string))
+    string = re.sub(r"[^\w\d]", '_', str(string))
     if not string:
         return string
     # end if
-    return string[0].lower() + re.sub(r"[A-Z]", lambda matched: '_' + matched.group(0).lower(), string[1:])
+    string = string[0].lower() + re.sub(r"[A-Z]", lambda matched: '_' + matched.group(0).lower(), string[1:])
+    string = re.sub(r"(\D)(\d)", lambda matched: matched.group(1) + '_' + matched.group(2), string)
+    return re.sub(r"_+", '_', string)
 # end def
 
