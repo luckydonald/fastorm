@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from typing import ForwardRef, Optional
+import re
 
 from luckydonaldUtils.logger import logging
 
@@ -42,4 +43,22 @@ def failsafe_isinstance(var, types):
     # end try
 # end def
 
+
+def snakecase(string: str) -> str:
+    """Convert string into snake case.
+    Join punctuation with underscore
+    Args:
+        string: String to convert.
+    Returns:
+        string: Snake cased string.
+    """
+    # based on https://github.com/okunishinishi/python-stringcase/blob/04afe0044a9c513bc7899ae2dd1b97f1fe165f6c/stringcase.py#L141-L156
+
+    # noinspection RegExpRedundantEscape
+    string = re.sub(r"[\-\.\s]", '_', str(string))
+    if not string:
+        return string
+    # end if
+    return string[0].lower() + re.sub(r"[A-Z]", lambda matched: '_' + matched.group(0).lower(), string[1:])
+# end def
 

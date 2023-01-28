@@ -49,7 +49,7 @@ from .classes import FieldInfo, FieldItem, SqlFieldMeta
 from .compat import check_is_new_union_type, TYPEHINT_TYPE, check_is_generic_alias, check_is_annotated_type, check_is_typing_union_type
 from .compat import IS_MIN_PYTHON_3_9
 from .compat import Annotated, NoneType
-from .utils import failsafe_issubclass, evaluate_forward_ref
+from .utils import failsafe_issubclass, evaluate_forward_ref, snakecase
 from .query import *
 from .query import __all__ as __query__all__
 __all__.extend(__query__all__)
@@ -1002,7 +1002,7 @@ class _BaseFastORM(BaseModel):
         The name of the table, as used with the database.
         :return: `table`
         """
-        _table_name = getattr(cls, '_table_name', cls.__name__.lower())
+        _table_name = getattr(cls, '_table_name', snakecase(cls.__name__))
         return _table_name
     # end def
 
