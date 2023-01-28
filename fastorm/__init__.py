@@ -606,22 +606,27 @@ class _BaseFastORM(BaseModel):
             for field_item in field_reference.types:
                 type_hint = classes_typehints[last_class][field_item.field]
                 if isinstance(type_hint.outer_type_, typing.ForwardRef):
+                    new_type = type_hint.type_
                     if not type_hint.outer_type_.__forward_evaluated__ and type_hint.outer_type_.__forward_arg__ == cls.__name__:
                         # special case where the class points to itself, recursively
                         # force it to update its forward ref with itself.
                         # for some reason `cls.update_forward_refs()` doesn't do that reliable, but as we have our own class ready, we can do it easily here.
                         type_hint.outer_type_._evaluate(globalns={}, localns={cls.__name__: cls}, recursive_guard=frozenset())
+                        new_type = type_hint.outer_type_.__forward_value__
                     # end if
                     # so we check if that resolving was successful, or the user manually resolved it beforehand.
                     if not type_hint.outer_type_.__forward_evaluated__:
                         raise AssertionError(f'Unevaluated ForwardRef. Try to call {cls.__name__}.update_forward_refs() after the referenced class ({type_hint.outer_type_.__forward_arg__}) it defined.')
+                    # end if
+                    if new_type == type_hint.type_:
+                        logger.debug('Case with the unions?')
                     # end if
                     # The .type_ of a resolved ForwardRef seems alright, only the Optional[…] wrapping goes poof.
                     # We parse the inner resolved .type_ as a new hint (supplying Optional[…] where needed),
                     # and if the inner parsed .type_ still matches, we replace the current type hint by this new one.
                     new_type_hint = ModelField(
                         name=type_hint.name,
-                        type_=type_hint.type_ if type_hint.allow_none else Optional[type_hint.type_],
+                        type_=new_type if type_hint.allow_none else Optional[new_type],
                         model_config=type_hint.model_config,
                         default=type_hint.default,
                         default_factory=type_hint.default_factory,
@@ -631,7 +636,7 @@ class _BaseFastORM(BaseModel):
                         class_validators=type_hint.class_validators,
                     )
                     if (
-                        new_type_hint.type_ == type_hint.type_ and
+                        new_type_hint.type_ == new_type and
                         new_type_hint.required == type_hint.required and
                         new_type_hint.outer_type_ != type_hint.outer_type_ and
                         True
