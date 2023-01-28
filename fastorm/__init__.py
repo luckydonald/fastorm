@@ -610,7 +610,8 @@ class _BaseFastORM(BaseModel):
                     if not type_hint.outer_type_.__forward_evaluated__ and type_hint.outer_type_.__forward_arg__ == cls.__name__:
                         # special case where the class points to itself, recursively
                         # force it to update its forward ref with itself.
-                        # for some reason `cls.update_forward_refs()` doesn't do that reliable, but as we have our own class ready, we can do it easily here.
+                        # for some reason `cls.update_forward_refs()` doesn't do that reliable,
+                        # but as we have our own class ready, we can do it easily here.
                         type_hint.outer_type_._evaluate(globalns={}, localns={cls.__name__: cls}, recursive_guard=frozenset())
                         new_type = type_hint.outer_type_.__forward_value__
                     # end if
