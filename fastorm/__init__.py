@@ -989,7 +989,7 @@ class _BaseFastORM(BaseModel):
         The name of the table, as used with the database.
         :return: `table`
         """
-        _table_name = getattr(cls, '_table_name')
+        _table_name = getattr(cls, '_table_name', cls.__name__.lower())
         return _table_name
     # end def
 
