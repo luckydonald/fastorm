@@ -637,7 +637,7 @@ class _BaseFastORM(BaseModel):
                     )
                     if (
                         new_type_hint.type_ == new_type and
-                        new_type_hint.required == type_hint.required and
+                        ((type_hint.required == Undefined and new_type_hint.required is False) or (new_type_hint.required == type_hint.required)) and
                         new_type_hint.outer_type_ != type_hint.outer_type_ and
                         True
                     ):
