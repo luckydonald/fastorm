@@ -733,8 +733,16 @@ class _BaseFastORM(BaseModel):
         }
         if cls.__original__fields__ != cls.__fields__:
             logger.warn(f'{cls.__name__}.__original__fields__ != {cls.__name__}.__fields__')
-            logger.warn(f'{cls.__name__}.__original__fields__ = {cls.__original__fields__!r}')
-            logger.warn(f'{cls.__name__}.__fields__ = {cls.__fields__!r}')
+            try:
+                logger.warn(f'{cls.__name__}.__original__fields__ = {cls.__original__fields__!r}')
+            except AttributeError as e:
+                logger.warn(f'{cls.__name__}.__original__fields__ = {e!s}')
+            # end try
+            try:
+                logger.warn(f'{cls.__name__}.__fields__ = {cls.__fields__!r}')
+            except AttributeError as e:
+                logger.warn(f'{cls.__name__}.__fields__ = {e!s}')
+            # end try
             logger.warn('.')
         # end if
         return_val: FastORM._GET_FIELDS_REFERENCES_TYPE = {}
