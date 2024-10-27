@@ -85,7 +85,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
         all_automatic_fields = []
 
         collected_attributes = mcs.merge_base_class_attributes(
-            bases=bases,
+            bases=list(bases),
             namespace=namespace,
             dict_attributes=['__annotations__'],
             list_attributes=['_automatic_fields', '_primary_keys'],
@@ -1917,7 +1917,8 @@ class _BaseFastORM(BaseModel):
         # uuid.UUID
         uuid.UUID: "UUID",
 
-        BaseModel: "JSONB",
+        BaseModel: "JSONB",  # new pydantic v2 model
+        BaseModelV1: "JSONB",  # legacy pydantic v1 model
     }
 
     _COLUMN_TYPES_SPECIAL: Dict[Callable[[type], bool], str] = {
