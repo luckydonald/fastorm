@@ -25,10 +25,15 @@ import re
 from typing import List, Dict, Any, Optional, Tuple, Type, Union, TypeVar, Callable, Set
 from datetime import timezone
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 from pydantic.v1 import BaseModel as BaseModelV1
 from pydantic._internal._model_construction import ModelMetaclass
-from sqlmodel._compat import ModelField  # TODO: this needs something working instead. Need to figure out all the code touching this.
+from pydantic.v1.fields import UndefinedType
+from pydantic_core import PydanticUndefined
+
+
+class ModelField:
+    pass
 
 try:
     import psycopg2
@@ -323,7 +328,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
     ) -> Dict[str, ModelField]:
         """
         Compare `original_annotations` and `new_annotations`.
-        For annotations that differ we have to build a new pydantic representation for the new `__fields__`.
+        For annotations that differ and we have to build a new pydantic representation for the new `__fields__`.
         as they need to be based on the new `__annotations__`.
         Otherwise, we can be cheap and simply copy the old ones over.
         """
@@ -383,7 +388,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             # end if
 
             # annotation only fields need to come first in fields (???)
-            value = namespace.get(key, Undefined)
+            value = namespace.get(key, PydanticUndefined)
             ann_type = annotations[key]
             # basically we copy over `.class_validators` and `.model_config`,
             # pull the ann_type from the `original_annotations` as resolved by pydantic,
@@ -2049,7 +2054,7 @@ class _BaseFastORM(BaseModel):
                     not sub_hint.type_.required and
                     # using sub_hint.field_info.* instead of sub_hint.* as there a non set default will actually be `pydantic.Undefined` and thus can't be confused with None.
                     # now either the default is already None. Alternatively it doesn't has a default and .allow_none is set to true.
-                    (sub_hint.type_.field_info.default is None or (isinstance(sub_hint.type_.field_info.default, UndefinedType) and sub_hint.type_.allow_none)) and
+                    (sub_hint.type_.field_info.default is None or ((isinstance(sub_hint.type_.field_info.default, UndefinedType) or sub_hint.type_.field_info.default is PydanticUndefined) and sub_hint.type_.allow_none)) and
                     # also there shouldn't be a default factory. But we allow some special cases which have no actual default "value" meaning and can be treated as no default factory.
                     (sub_hint.type_.field_info.default_factory is None or isinstance(sub_hint.type_.field_info.default_factory, (AutoincrementType,)))
 
