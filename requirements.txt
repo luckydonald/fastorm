@@ -4,4 +4,4 @@ luckydonald-utils==0.84
 typeguard==2.13.0
 pydantic==2.9.2
 coverage==6.0.2
-psycopg2-binary==2.9.1
+psycopg2-binary==2.9.10
