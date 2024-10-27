@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass
+from dataclasses import dataclass, astuple
 import typing
 
 try:
@@ -24,7 +24,7 @@ def __getitem__(self, key):
 
 
 def __iter__(self):
-    return iter(dataclasses.astuple(self))
+    return iter(astuple(self))
 # end def
 
 
