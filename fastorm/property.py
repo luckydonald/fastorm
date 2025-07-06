@@ -36,7 +36,7 @@ def log_call[FUNC: Callable | None](name: str, func: FUNC) -> FUNC:
 
 
 # noinspection SpellCheckingInspection
-class Property:
+class Property(native_property):
     "Emulate PyProperty_Type() in Objects/descrobject.c"
     # originally from https://github.com/python/cpython/blob/bffed80230f2617de2ee02bd4bdded1024234dab/Doc/howto/descriptor.rst?plain=1#L992-L993
 
@@ -57,12 +57,15 @@ class Property:
         fdoc: FDocType | None = None,
         fann: FDocType | None = None,
     ) -> None:
-        self.fget = log_call('fget', fget)
-        self.fset = log_call('fset', fset)
-        self.fdel = log_call('fdel', fdel)
+        super().__init__(
+            fget=log_call('fget', fget),
+            fset=log_call('fset', fset),
+            fdel=log_call('fdel', fdel),
+            doc=doc,
+        )
+
         self.fdoc = log_call('fdoc', fdoc)
         self.fann = log_call('fann', fann)
-        self._doc = doc
         self._name = None
 
     def __set_name__(self, owner, name: NameType):
@@ -174,8 +177,8 @@ class Property:
     # end def
 
     def get_doc(self: PropSelf, obj: ObjectSelf = None) -> DocType:
-        if self._doc:
-            return self._doc
+        if self.doc:
+            return self.doc
         # end if
         if obj is None and self.fget is not None and hasattr(self.fget, '__self__'):
             # Get the bound instance from the fget method
@@ -191,14 +194,38 @@ class Property:
     # end def
 
     def set_doc(self: PropSelf, doc: DocType, obj: ObjectSelf = None) -> None:
-        self._doc = doc
+        self.doc = doc
     # end def
 
     def del_doc(self: PropSelf, obj: ObjectSelf = None) -> None:
-        self._doc = None
+        self.doc = None
     # end def
 
-    __doc__ = native_property(get_doc, set_doc, del_doc, "The documentation string for the property.")
+    __doc__ = native_property(
+        fget=partial(get_doc),
+        fset=partial(set_doc),
+        fdel=partial(del_doc),
+        doc="The documentation string for the property.",
+    )
+
+    def get_ann(self: PropSelf, obj: ObjectSelf = None) -> DocType:
+        if obj is None and self.fget is not None and hasattr(self.fget, '__self__'):
+            # Get the bound instance from the fget method
+            obj = self.fget.__self__
+        # end if
+        if self.fann is not None:
+            return self.fann(obj)  # TODO: this `self` paramter should be the class we are in, not the property.
+        # end if
+        if self.fget is not None:
+            return self.fget.__annotations__
+        # end if
+        return None
+    # end def
+
+    __annotations__ = native_property(
+        fget=partial(get_ann),
+        doc="The type annotation for the property.",
+    )
 
     def _duplicate(
         self: PropSelf,
@@ -214,7 +241,7 @@ class Property:
             fget=self.fget if fget is Unset else fget,
             fset=self.fset if fset is Unset else fset,
             fdel=self.fdel if fdel is Unset else fdel,
-            doc=self._doc if doc is Unset else doc,
+            doc=self.doc if doc is Unset else doc,
             fdoc=self.fdoc if fdoc is Unset else fdoc,
             fann=self.fann if fann is Unset else fann,
         )
@@ -262,6 +289,8 @@ class PropertyInstanceProxy:
         print(f'Proxy: forwarding attribute {name!r} (instance={self.instance!r})')
         if name == '__doc__':
             return self.prop.get_doc(self.instance)
+        if name == '__annotations__':
+            return self.prop.get_ann(self.instance)
         # end if
         return self.prop.fget(self.instance)
     # end def
