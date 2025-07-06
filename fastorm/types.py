@@ -1,6 +1,5 @@
-from typing import NewType, TypeVar, Union, Generic, TYPE_CHECKING, NotRequired
+from typing import NewType, TypeVar, Union, Generic, TYPE_CHECKING, NotRequired, Annotated, Optional
 from uuid import UUID
-
 from pydantic import BaseModel
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
@@ -8,41 +7,30 @@ OtherTableDataType = TypeVar("OtherTableDataType", bound=BaseModel)
 AutoSupporting = int | UUID
 AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 
-# Internal marker classes
-class _PK(Generic[PrimaryKeyDataType]):
-    """Type marker for a Primary Key of type PrimaryKeyDataType."""
+# Marker classes for Annotated metadata
+class PKMarker(Generic[PrimaryKeyDataType]):
+    """Marker for Primary Key."""
     pass
 
-class _ForeignKey(Generic[OtherTableDataType]):
-    """Type marker for a Foreign Key referencing type OtherTableDataType."""
+class ForeignKeyMarker(Generic[OtherTableDataType]):
+    """Marker for Foreign Key."""
     pass
 
-class _AutoPK(_PK[AutoSupportingType]):
-    """Type marker for a Primary Key that can be auto-incrementing or automatic UUID."""
+class AutoMarker(Generic[AutoSupportingType]):
+    """Marker for Auto Primary Key (int or UUID)."""
     pass
 
-# User-facing type aliases for better IDE/type checker support
-if TYPE_CHECKING:
-    PK = Union[PrimaryKeyDataType, _PK[PrimaryKeyDataType]]
-    ForeignKey = Union[OtherTableDataType, _ForeignKey[OtherTableDataType]]
-    # noinspection PyTypedDict
-    AutoPK = NotRequired[Union[AutoSupportingType, _AutoPK[AutoSupportingType]]]
-else:
-    PK = _PK
-    ForeignKey = _ForeignKey
-    AutoPK = _AutoPK
+# Annotated types for user-facing API
+PK = Annotated[PrimaryKeyDataType, PKMarker[PrimaryKeyDataType]]
+ForeignKey = Annotated[OtherTableDataType, ForeignKeyMarker[OtherTableDataType]]
+AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker[PrimaryKeyDataType]]]
 
+AutoIncrement = AutoPK[int]
+AutoUUID = AutoPK[UUID]
 
-class AutoIncrementPK(AutoPK[int]):
-    """Type marker for an auto-incrementing integer Primary Key."""
-    pass
-
-class AutoUUID(AutoPK[UUID]):
-    """Type marker for an auto-incrementing integer Primary Key."""
-    pass
 
 class ExampleTableWithAutoincrement(BaseModel):
-    id: AutoIncrementPK
+    id: AutoIncrement
     name: str
     description: str
 
@@ -140,3 +128,6 @@ def test_insert_row_manually() -> None:
         foreign_key_nullable=123,
     )
 # end def
+
+if __name__ == "__main__":
+    test_insert_row_manually()
