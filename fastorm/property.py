@@ -1,34 +1,52 @@
-from typing import TypeVar, Any, Type
+from typing import TypeVar, Any, Type, Callable
 
 native_property = property
 
 PropSelf = TypeVar('PropSelf', bound='Property')
 ObjectSelf = TypeVar('ObjectSelf', bound=object)
+
+NameType = str | None
+DocType = str | None
+FGetType = Callable[[ObjectSelf], Any]
+FSetType = Callable[[ObjectSelf, Any], None]
+FDelType = Callable[[ObjectSelf], None]
+
+
 # noinspection SpellCheckingInspection
 class Property:
     "Emulate PyProperty_Type() in Objects/descrobject.c"
     # originally from https://github.com/python/cpython/blob/bffed80230f2617de2ee02bd4bdded1024234dab/Doc/howto/descriptor.rst?plain=1#L992-L993
 
-    def __init__(self, fget=None, fset=None, fdel=None, doc=None, freturntype=None):
+    fget: FGetType | None
+    fset: FSetType | None
+    fdel: FDelType | None
+    _doc: DocType
+    _name: NameType
+
+    def __init__(
+        self,
+        fget: FGetType | None = None,
+        fset: FSetType | None = None,
+        fdel: FDelType | None = None,
+        doc: DocType = None,
+    ) -> None:
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
-        self.freturntype = freturntype
-        if doc is None and fget is not None:
-            doc = fget.__doc__
         self.__doc__ = doc
         self._name = None
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner, name: NameType):
         self._name = name
 
     @native_property
-    def __name__(self):
+    def __name__(self) -> NameType:
         return self._name if self._name is not None else self.fget.__name__
 
     @__name__.setter
-    def __name__(self, value):
+    def __name__(self, value: NameType) -> None:
         self._name = value
+    # end def
 
     def __get__(self: PropSelf, obj: ObjectSelf, objtype: Type[ObjectSelf] = None):
         """
@@ -114,21 +132,25 @@ class Property:
         self.fdel(obj)
     # end def
 
-    def getter(self, fget):
+    def getter(self: PropSelf, fget: FGetType | None) -> PropSelf:
         prop = type(self)(fget, self.fset, self.fdel, self.__doc__)
         prop._name = self._name
         return prop
+    # end def
 
-    def setter(self, fset):
+    def setter(self: PropSelf, fset: FSetType | None) -> PropSelf:
         prop = type(self)(self.fget, fset, self.fdel, self.__doc__)
         prop._name = self._name
         return prop
+    # end def
 
-    def deleter(self, fdel):
+    def deleter(self: PropSelf, fdel: FDelType | None) -> PropSelf:
         prop = type(self)(self.fget, self.fset, fdel, self.__doc__)
         prop._name = self._name
         return prop
+    # end def
 # end class
+
 
 # noinspection PyShadowingBuiltins
 property = Property
