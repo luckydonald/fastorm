@@ -29,55 +29,47 @@ class CCC:
     def x(self):
         del self.__x
 
-def test_property_via_docstring():
-    """
-    >>> cc = CC()
-    >>> hasattr(cc, 'x')
-    False
-    >>> cc.x = 33
-    >>> cc.x
-    33
-    >>> del cc.x
-    >>> hasattr(cc, 'x')
-    False
+import unittest
 
-    >>> ccc = CCC()
-    >>> hasattr(ccc, 'x')
-    False
-    >>> ccc.x = 333
-    >>> ccc.x == 333
-    True
-    >>> del ccc.x
-    >>> hasattr(ccc, 'x')
-    False
+class TestProperty(unittest.TestCase):
+    def test_property_get_set_del(self):
+        cc = CC()
+        self.assertFalse(hasattr(cc, "x"))
+        cc.x = 33
+        self.assertEqual(cc.x, 33)
+        del cc.x
+        self.assertFalse(hasattr(cc, "x"))
+        cc.x = 44  # Should not raise
 
-    >>> cc = CC()
-    >>> cc.x = 33
-    >>> try:
-    ...     cc.no_getter
-    ... except AttributeError as e:
-    ...     e.args[0]
-    ...
-    "property 'no_getter' of 'CC' object has no getter"
+    def test_property_decorator(self):
+        ccc = CCC()
+        self.assertFalse(hasattr(ccc, "x"))
+        ccc.x = 333
+        self.assertEqual(ccc.x, 333)
+        del ccc.x
+        self.assertFalse(hasattr(ccc, "x"))
 
-    >>> try:
-    ...     cc.no_setter = 33
-    ... except AttributeError as e:
-    ...     e.args[0]
-    ...
-    "property 'no_setter' of 'CC' object has no setter"
+    def test_no_getter(self):
+        cc = CC()
+        cc.x = 33
+        with self.assertRaises(AttributeError) as cm:
+            _ = cc.no_getter
+        self.assertEqual(str(cm.exception), "property 'no_getter' of 'CC' object has no getter")
 
-    >>> try:
-    ...     del cc.no_deleter
-    ... except AttributeError as e:
-    ...     e.args[0]
-    ...
-    "property 'no_deleter' of 'CC' object has no deleter"
+    def test_no_setter(self):
+        cc = CC()
+        with self.assertRaises(AttributeError) as cm:
+            cc.no_setter = 33
+        self.assertEqual(str(cm.exception), "property 'no_setter' of 'CC' object has no setter")
 
-    >>> CC.no_doc.__doc__ is None
-    True
-    """
+    def test_no_deleter(self):
+        cc = CC()
+        with self.assertRaises(AttributeError) as cm:
+            del cc.no_deleter
+        self.assertEqual(str(cm.exception), "property 'no_deleter' of 'CC' object has no deleter")
+
+    def test_no_doc(self):
+        self.assertIsNone(CC.no_doc.__doc__)
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod(optionflags=doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE)
+    unittest.main()
