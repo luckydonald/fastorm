@@ -1,4 +1,4 @@
-from typing import NewType, TypeVar, Union, Generic
+from typing import NewType, TypeVar, Union, Generic, TYPE_CHECKING, NotRequired
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -8,18 +8,30 @@ OtherTableDataType = TypeVar("OtherTableDataType", bound=BaseModel)
 AutoSupporting = int | UUID
 AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 
-
-class PK(Generic[PrimaryKeyDataType]):
+# Internal marker classes
+class _PK(Generic[PrimaryKeyDataType]):
     """Type marker for a Primary Key of type PrimaryKeyDataType."""
     pass
 
-class ForeignKey(Generic[OtherTableDataType]):
+class _ForeignKey(Generic[OtherTableDataType]):
     """Type marker for a Foreign Key referencing type OtherTableDataType."""
     pass
 
-class AutoPK(PK[AutoSupportingType]):
+class _AutoPK(_PK[AutoSupportingType]):
     """Type marker for a Primary Key that can be auto-incrementing or automatic UUID."""
     pass
+
+# User-facing type aliases for better IDE/type checker support
+if TYPE_CHECKING:
+    PK = Union[PrimaryKeyDataType, _PK[PrimaryKeyDataType]]
+    ForeignKey = Union[OtherTableDataType, _ForeignKey[OtherTableDataType]]
+    # noinspection PyTypedDict
+    AutoPK = NotRequired[Union[AutoSupportingType, _AutoPK[AutoSupportingType]]]
+else:
+    PK = _PK
+    ForeignKey = _ForeignKey
+    AutoPK = _AutoPK
+
 
 class AutoIncrementPK(AutoPK[int]):
     """Type marker for an auto-incrementing integer Primary Key."""
