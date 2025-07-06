@@ -1,4 +1,4 @@
-from typing import NewType, TypeVar, Union, Generic, TYPE_CHECKING, NotRequired, Annotated, Optional
+from typing import TypeVar, Generic, Annotated, Optional, Type
 from uuid import UUID
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -31,8 +31,12 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
         raise NotImplementedError("Subclasses must implement the pk property.")
     # end def
     @pk.annotater
-    def pk(self):
-        return tuple(field.annotation for field in self.__primary_keys__.values())
+    def pk(self) -> Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyDataType], ...]:
+        types = tuple(field.annotation for field in self.__primary_keys__.values())
+        if len(types) == 1:
+            return types[0]
+        # end if
+        return types
     # end def
 # end class
 
