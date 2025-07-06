@@ -94,6 +94,7 @@ class Property:
         # __get__ called: self=<__main__.Example object at 0x106802240>, obj=<__main__.MyClass object at 0x106802540>, objtype=<class '__main__.MyClass'>
         ```
         """
+        print(f'__get__ called: obj={obj}, objtype={objtype}')
         if obj is None:
             return self
         # end if
