@@ -23,6 +23,7 @@ class Property:
     fget: FGetType | None
     fset: FSetType | None
     fdel: FDelType | None
+    _doc: DocType
     _name: NameType
 
     def __init__(
@@ -35,7 +36,7 @@ class Property:
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
-        self.__doc__ = doc
+        self._doc = doc
         self._name = None
 
     def __set_name__(self, owner, name: NameType):
@@ -134,6 +135,27 @@ class Property:
         self.fdel(obj)
     # end def
 
+    @native_property
+    def __doc__(self) -> DocType:
+        if self._doc:
+            return self._doc
+        # end if
+        if self.fget is not None:
+            return self.fget.__doc__
+        # end if
+        return None
+    # end def
+
+    @__doc__.setter
+    def __doc__(self: PropSelf, doc: DocType) -> None:
+        self._doc = doc
+    # end def
+
+    @__doc__.deleter
+    def __doc__(self) -> None:
+        self._doc = None
+    # end def
+
     def _duplicate(
         self: PropSelf,
         fget: FGetType | None | UnsetType = Unset,
@@ -146,7 +168,7 @@ class Property:
             fget=self.fget if fget is Unset else fget,
             fset=self.fset if fset is Unset else fset,
             fdel=self.fdel if fdel is Unset else fdel,
-            doc=self.__doc__ if doc is Unset else doc,
+            doc=self._doc if doc is Unset else doc,
         )
         prop._name = self._name
         return prop
