@@ -29,8 +29,13 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     @Property
     def pk(self) -> PrimaryKeyDataTypeArg:
         """Returns the primary key of the model."""
-        raise NotImplementedError("Subclasses must implement the pk property.")
+        values = tuple(getattr(self, field_name) for field_name in self.__primary_keys__.keys())
+        if len(values) == 1:
+            return values[0]
+        # end if
+        return values
     # end def
+
     @pk.annotater
     def pk(self) -> Type[PrimaryKeyDataTypeArg]:
         types = tuple(field.annotation for field in self.__primary_keys__.values())
