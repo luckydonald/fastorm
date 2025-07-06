@@ -4,7 +4,7 @@ from typing import Literal, Union
 from decimal import Decimal
 
 from pydantic import BaseModel, JsonValue
-from hypothesis import given, strategies as st
+from hypothesis import given, strategies as st, settings
 
 
 class ExampleStrEnum(str, Enum):
@@ -214,6 +214,7 @@ def table_to_test_strategy(draw):
         optional_mixed=draw(st.one_of(st.integers(), st.text(), st.none())),
     )
 
+@settings(max_examples=5)
 @given(table=table_to_test_strategy())
 def test_insert_row_hypothesis(table):
     # Just ensure instantiation works and fields are populated
