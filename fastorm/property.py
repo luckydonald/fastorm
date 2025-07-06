@@ -1,5 +1,8 @@
 from typing import TypeVar, Any, Type, Callable
 
+from fastorm.unset import UnsetType, Unset
+
+
 native_property = property
 
 PropSelf = TypeVar('PropSelf', bound='Property')
@@ -132,21 +135,36 @@ class Property:
         self.fdel(obj)
     # end def
 
-    def getter(self: PropSelf, fget: FGetType | None) -> PropSelf:
-        prop = type(self)(fget, self.fset, self.fdel, self.__doc__)
+    def _duplicate(
+        self: PropSelf,
+        fget: FGetType | None | UnsetType = Unset,
+        fset: FSetType | None | UnsetType = Unset,
+        fdel: FDelType | None | UnsetType = Unset,
+        doc: DocType | UnsetType = Unset,
+    ) -> PropSelf:
+        """Create a duplicate of this property with the same attributes."""
+        prop = type(self)(
+            fget=self.fget if fget is Unset else fget,
+            fset=self.fset if fset is Unset else fset,
+            fdel=self.fdel if fdel is Unset else fdel,
+            doc=self.__doc__ if doc is Unset else doc,
+        )
         prop._name = self._name
+        return prop
+    # end def
+
+    def getter(self: PropSelf, fget: FGetType | None) -> PropSelf:
+        prop = self._duplicate(fget=fget)
         return prop
     # end def
 
     def setter(self: PropSelf, fset: FSetType | None) -> PropSelf:
-        prop = type(self)(self.fget, fset, self.fdel, self.__doc__)
-        prop._name = self._name
+        prop = self._duplicate(fset=fset)
         return prop
     # end def
 
     def deleter(self: PropSelf, fdel: FDelType | None) -> PropSelf:
-        prop = type(self)(self.fget, self.fset, fdel, self.__doc__)
-        prop._name = self._name
+        prop = self._duplicate(fdel=fdel)
         return prop
     # end def
 # end class
