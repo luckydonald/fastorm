@@ -1,5 +1,6 @@
 from typing import TypeVar, Any, Type
 
+native_property = property
 
 PropSelf = TypeVar('PropSelf', bound='Property')
 ObjectSelf = TypeVar('ObjectSelf', bound=object)
@@ -21,7 +22,7 @@ class Property:
     def __set_name__(self, owner, name):
         self._name = name
 
-    @property
+    @native_property
     def __name__(self):
         return self._name if self._name is not None else self.fget.__name__
 
