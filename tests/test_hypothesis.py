@@ -4,6 +4,7 @@ from typing import Literal, Union
 from decimal import Decimal
 
 from pydantic import BaseModel, JsonValue
+from hypothesis import given, strategies as st
 
 
 class ExampleStrEnum(str, Enum):
@@ -218,3 +219,7 @@ def test_insert_row_hypothesis(table):
     # Just ensure instantiation works and fields are populated
     assert isinstance(table, TableToTest)
     assert isinstance(table.pydantic_basemodel, ExampleBaseModel)
+    print(table.model_dump())
+
+if __name__ == "__main__":
+    test_insert_row_hypothesis()
