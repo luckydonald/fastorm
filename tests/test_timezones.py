@@ -2,11 +2,9 @@ import datetime
 import unittest
 import pytz
 
-from textwrap import dedent
-from typing import Optional, Union, Any, Type, List, Tuple, Dict
-from tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
+from tools_for_the_tests_of_fastorm import VerboseTestCase
 
-from fastorm import FastORM
+from fastorm.v1 import FastORM
 
 
 class TestTable(FastORM):

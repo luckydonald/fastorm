@@ -1,9 +1,8 @@
 import unittest
 
-from pydantic import BaseConfig
-from pydantic.fields import ModelField
+from pydantic.v1.fields import ModelField
 
-from fastorm import FastORM, FieldInfo, FieldItem
+from fastorm.v1 import FastORM, FieldInfo, FieldItem
 from tools_for_the_tests_of_fastorm import VerboseTestCase
 
 

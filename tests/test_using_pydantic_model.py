@@ -1,6 +1,6 @@
 import unittest
-from pydantic import BaseModel
-from fastorm import FastORM
+from pydantic.v1 import BaseModel
+from fastorm.v1 import FastORM
 from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
 
 

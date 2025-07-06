@@ -1,11 +1,11 @@
 import unittest
 from datetime import datetime
 from typing import Optional, Union, Any, Type, List, Tuple, Dict, ForwardRef
-from pydantic import dataclasses, BaseModel
-from pydantic.fields import ModelField, Undefined, Field
+from pydantic.v1 import dataclasses, BaseModel
+from pydantic.v1.fields import ModelField, Undefined, Field
 
-from fastorm import FastORM, Autoincrement, FieldInfo
-from fastorm.compat import get_type_hints_with_annotations
+from fastorm.v1 import FastORM, Autoincrement, FieldInfo
+from fastorm.v1.compat import get_type_hints_with_annotations
 from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
 
 

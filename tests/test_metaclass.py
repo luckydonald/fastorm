@@ -5,7 +5,7 @@ from typing import Union
 
 import pydantic
 import fastorm
-from fastorm import FastORM, IS_MIN_PYTHON_3_9, ModelMetaclassFastORM
+from fastorm.v1 import FastORM, IS_MIN_PYTHON_3_9, ModelMetaclassFastORM
 
 dict_type = dict if IS_MIN_PYTHON_3_9 else typing.Dict
 list_type = list if IS_MIN_PYTHON_3_9 else typing.List

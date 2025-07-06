@@ -1,9 +1,9 @@
 
-from pydantic import BaseConfig, BaseModel
+from pydantic.v1 import BaseModel
 from fastapi import FastAPI
 
 
-from fastorm import FastORM, In, SqlFieldMeta, FieldInfo, FieldItem
+from fastorm.v1 import FastORM, In, SqlFieldMeta, FieldInfo, FieldItem
 from tools_for_the_tests_of_fastorm import VerboseTestCase
 
 

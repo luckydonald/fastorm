@@ -1,7 +1,7 @@
 import unittest
 from textwrap import dedent
 
-from fastorm import FastORM
+from fastorm.v1 import FastORM
 
 
 class OtherTable(FastORM):

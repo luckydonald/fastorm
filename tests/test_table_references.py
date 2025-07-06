@@ -1,10 +1,10 @@
 import unittest
-from typing import Optional, Union, Any, Type, List, Tuple, Dict
+from typing import Optional, Union, Tuple
 
-from pydantic import BaseConfig
-from pydantic.fields import ModelField
+from pydantic.v1 import BaseConfig
+from pydantic.v1.fields import ModelField
 
-from fastorm import FastORM, FieldInfo, FieldItem
+from fastorm.v1 import FastORM, FieldInfo, FieldItem
 from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
 
 

@@ -2,10 +2,10 @@ import unittest
 from textwrap import dedent
 from typing import Optional, List
 
-from pydantic import BaseConfig
-from pydantic.fields import ModelField
+from pydantic.v1 import BaseConfig
+from pydantic.v1.fields import ModelField
 
-from fastorm import FastORM, In, SqlFieldMeta, FieldInfo, FieldItem
+from fastorm.v1 import FastORM, In, SqlFieldMeta, FieldInfo, FieldItem
 from tools_for_the_tests_of_fastorm import VerboseTestCase
 
 class SimpleTable(FastORM):

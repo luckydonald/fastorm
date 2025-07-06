@@ -1,4 +1,4 @@
-from fastorm import FastORM
+from fastorm.v1 import FastORM
 from tools_for_the_tests_of_fastorm import VerboseTestCase
 
 

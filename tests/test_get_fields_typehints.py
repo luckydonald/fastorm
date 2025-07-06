@@ -2,11 +2,7 @@ import contextlib
 import unittest.case
 from textwrap import dedent
 
-from pydantic import BaseConfig
-from pydantic.fields import ModelField
-
-from fastorm import FastORM
-from fastorm.classes import FieldInfo, FieldItem
+from fastorm.v1 import FastORM
 
 # noinspection PyUnresolvedReferences
 _subtest_msg_sentinel = unittest.case._subtest_msg_sentinel

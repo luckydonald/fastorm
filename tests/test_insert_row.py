@@ -2,9 +2,9 @@ __author__ = 'luckydonald'
 
 import unittest
 from textwrap import dedent
-from typing import Optional, Union, Any, Type, List, Tuple, Dict
+from typing import Union
 
-from fastorm import FastORM
+from fastorm.v1 import FastORM
 
 
 class Table1(FastORM):
