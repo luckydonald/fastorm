@@ -24,7 +24,7 @@ else:
 # end if
 
 
-def check_annotated_type(annotated_type: AnnotationType, marker: Type[Marker]) -> bool:
+def has_marker(annotated_type: AnnotationType, marker: Type[Marker]) -> bool:
     """Check if the annotated type is a valid primary key."""
     # 'Annotated' cannot be used with instance and class checks
     if not is_annotated(annotated_type):

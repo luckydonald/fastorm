@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 from fastorm.property import Property
-from fastorm.tools.annotations import Marker, check_annotated_type, AnnotationType
+from fastorm.tools.annotations import Marker, has_marker, AnnotationType
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
 
@@ -17,7 +17,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
         # iterate over the fields to find the primary key (Annotated with PKMarker)
         fields: dict[str, FieldInfo] = {}  # key: field_name, value: Annotation
         for field_name, field in self.model_fields.items():
-            if not check_annotated_type(field.annotation, PKMarker):
+            if not has_marker(field.annotation, PKMarker):
                 continue
             # end if
             fields[field_name] = field
