@@ -160,13 +160,12 @@ class Property:
         self.fdel(obj)
     # end def
 
-    @native_property
-    def __doc__(self) -> DocType:
+    def get_doc(self: PropSelf, obj: ObjectSelf = None) -> DocType:
         if self._doc:
             return self._doc
         # end if
         if self.fdoc is not None:
-            return self.fdoc(self)  # TODO: this `self` paramter should be the class we are in, not the property.
+            return self.fdoc(obj)  # TODO: this `self` paramter should be the class we are in, not the property.
         # end if
         if self.fget is not None:
             return self.fget.__doc__
@@ -174,15 +173,15 @@ class Property:
         return None
     # end def
 
-    @__doc__.setter
-    def __doc__(self: PropSelf, doc: DocType) -> None:
+    def set_doc(self: PropSelf, doc: DocType) -> None:
         self._doc = doc
     # end def
 
-    @__doc__.deleter
-    def __doc__(self) -> None:
+    def del_doc(self) -> None:
         self._doc = None
     # end def
+
+    __doc__ = native_property(get_doc, set_doc, del_doc, "The documentation string for the property.")
 
     def _duplicate(
         self: PropSelf,
