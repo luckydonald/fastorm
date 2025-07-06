@@ -164,6 +164,10 @@ class Property:
         if self._doc:
             return self._doc
         # end if
+        if obj is None and self.fget is not None and hasattr(self.fget, '__self__'):
+            # Get the bound instance from the fget method
+            obj = self.fget.__self__
+        # end if
         if self.fdoc is not None:
             return self.fdoc(obj)  # TODO: this `self` paramter should be the class we are in, not the property.
         # end if
