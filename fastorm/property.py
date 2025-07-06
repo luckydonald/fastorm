@@ -112,6 +112,7 @@ class Property:
             # This is useful for properties that are not directly accessible on the instance.
             pass
         # end class
+        # noinspection PyArgumentList
         proxied = ProxiedValue(result)
         proxied.prop = self
         proxied.instance = obj
