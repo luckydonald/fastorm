@@ -1,3 +1,4 @@
+from functools import partialmethod, partial
 from typing import TypeVar, Any, Type, Callable
 
 from fastorm.unset import UnsetType, Unset
@@ -104,7 +105,17 @@ class Property:
                 'object has no getter'
             )
         # end if
-        return PropertyInstanceProxy(self, obj)
+        result = self.fget(obj)
+        ResultType = type(result)
+        class ProxiedValue(PropertyInstanceProxy, ResultType):
+            # A proxy class that allows accessing the property as if it were the instance.
+            # This is useful for properties that are not directly accessible on the instance.
+            pass
+        # end class
+        proxied = ProxiedValue(result)
+        proxied.prop = self
+        proxied.instance = obj
+        return proxied
     # end def
 
     def __set__(self: PropSelf, obj: ObjectSelf, value: Any):
@@ -233,10 +244,8 @@ class Property:
 
 
 class PropertyInstanceProxy:
-    def __init__(self, prop: PropSelf, instance: ObjectSelf):
-        self.prop = prop
-        self.instance = instance
-    # end def
+    prop: PropSelf = None
+    instance: ObjectSelf = None
 
     def __get__(self, obj: ObjectSelf = None) -> PropSelf:
         print(f'Proxy: getting property {self.prop.__name__!r} (instance={self.instance!r})')
