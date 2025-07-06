@@ -25,12 +25,13 @@ import re
 from typing import List, Dict, Any, Optional, Tuple, Type, Union, TypeVar, Callable, Set
 from datetime import timezone
 
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, PrivateAttr, JsonValue
 from pydantic.v1 import BaseModel as BaseModelV1
 from pydantic._internal._model_construction import ModelMetaclass
-from pydantic.v1.fields import UndefinedType
+from pydantic.v1.fields import UndefinedType, Undefined
 from pydantic_core import PydanticUndefined
 
+from .field import Field
 
 class ModelField:
     pass
@@ -133,7 +134,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
         list_attributes: List[str],
     ) -> Dict[str, Union[List, Dict[str, Any]]]:
         """
-        Goes through the needed fields (`dict_attributes` and `list_attributes` in the base classes (`bases`),
+        Goes through the needed fields (`dict_attributes` and `list_attributes` in the base classes (`bases`)),
         as well at the current `namespace`, and collects them to a dict.
         The key is the field name as in those `*_attributes` list, the value is a merged `dict` or `list` as indicated
         by the `*_attributes` list you used.
@@ -164,7 +165,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
             for key in list_attributes:
                 if hasattr(base_cls, key):
-                    return_value[key].extend(getattr(base_cls, key))
+                    return_value[key].append(getattr(base_cls, key))
                 # end if
             # end for
         # end for
@@ -328,7 +329,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
     ) -> Dict[str, ModelField]:
         """
         Compare `original_annotations` and `new_annotations`.
-        For annotations that differ and we have to build a new pydantic representation for the new `__fields__`.
+        For annotations that differ, and we have to build a new pydantic representation for the new `__fields__`.
         as they need to be based on the new `__annotations__`.
         Otherwise, we can be cheap and simply copy the old ones over.
         """
@@ -339,7 +340,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
             new_annotation = new_annotations[key]
             original_annotation = original_annotations[key]
             is_equal = id(new_annotation) == id(original_annotation)
-            # basically we wanna check `new_annotation == original_annotation`,
+            # basically we want to check `new_annotation == original_annotation`,
             #
             # BUT in some cases that can lead to INFINITE RECURSION:
             # If for some reason the resolved version of the `ForwardRef` points to itself (Why?),
@@ -384,6 +385,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
 
             # now the tough part, mimicking pydantic's processing
             if annotations is None:
+                assert False, "Welp."
                 annotations = resolve_annotations(original_annotations, namespace.get('__module__', None))  # TODO: shouldn't this be the new annotations?!?
             # end if
 
@@ -401,6 +403,7 @@ class ModelMetaclassFastORM(ModelMetaclass):
                 config=generated_new_fields[key].model_config,
             )
         # end for
+        from pydantic import TypeAdapter
         return retrofitted_fields
     # end def
 
@@ -642,7 +645,7 @@ class _BaseFastORM(BaseModel):
                     )
                     if (
                         new_type_hint.type_ == new_type and
-                        ((type_hint.required == Undefined and new_type_hint.required is False) or (new_type_hint.required == type_hint.required)) and
+                        ((type_hint.required in (Undefined, PydanticUndefined) and new_type_hint.required is False) or (new_type_hint.required == type_hint.required)) and
                         new_type_hint.outer_type_ != type_hint.outer_type_ and
                         True
                     ):
