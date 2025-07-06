@@ -35,10 +35,10 @@
 # | Decimal             | Decimal("1.23")     |
 from datetime import datetime, timedelta, date, time
 from enum import Enum
-from typing import Literal
+from typing import Literal, Union
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue
 
 
 class ExampleStrEnum(str, Enum):
@@ -72,6 +72,15 @@ LiteralMixedEnum = Literal[ExampleMixedEnum.A, ExampleMixedEnum.B, ExampleMixedE
 LiteralMixed = Literal[1, "A", True, None, ExampleStrEnum.A, ExampleIntEnum.B, ExampleFloatEnum.A, ExampleMixedEnum.C]
 LiteralRecursiveLiteral = Literal[LiteralStrings, LiteralInts]
 LiteralRecursiveLiteralLevel2 = Literal[LiteralRecursiveLiteral, LiteralBool]
+
+class ExampleBaseModel(BaseModel):
+    example_str: str
+    example_bool: bool
+
+class ReferencedTable(BaseModel):
+    id: int
+    name: str
+    description: str
 
 
 class TableToTest(BaseModel):
@@ -125,7 +134,30 @@ class TableToTest(BaseModel):
     example_int_enum_field: ExampleIntEnum
     example_float_enum_field: LiteralFloatEnum
     example_mixed_enum_field: ExampleMixedEnum
+    # stuff I can think of:
     timedelta_field: timedelta
+    other_reference_required: ReferencedTable
+    other_reference_optional: ReferencedTable | None
+    self_reference: Union["TableToTest", None]
+    json_field: JsonValue
+    pydantic_basemodel: ExampleBaseModel
+    pydantic_generic_basemodel: BaseModel
+    int_list: list[int]
+    float_list: list[float]
+    str_list: list[str]
+    tuple_list: list[tuple[int, ...]]
+    datetime_list: list[datetime]
+    timedelta_list: list[timedelta]
+    # dicts
+    int_dict: dict[str, int]
+    float_dict: dict[str, float]
+    dict_dict: dict[str, dict[str, int | str]]
+    mixed_type_str_int: str | int
+    mixed_type_bool_str: bool | str
+    optional_str: str | None
+    optional_int: int | None
+    optional_float: float | None
+    optional_mixed: int | str | None
 
 
 def test_insert_row():
@@ -181,6 +213,27 @@ def test_insert_row():
         example_float_enum_field=ExampleFloatEnum.A,
         example_mixed_enum_field=ExampleMixedEnum.A,
         timedelta_field=datetime.timedelta(hours=2, minutes=3),
+        other_reference_required=ReferencedTable(id=2, name="Ref Name", description="Ref Desc"),
+        other_reference_optional=None,
+        self_reference=None,
+        json_field={"key": "value"},
+        pydantic_basemodel=ExampleBaseModel(example_str="abc", example_bool=False),
+        pydantic_generic_basemodel=ExampleBaseModel(example_str="def", example_bool=True),
+        int_list=[1, 2, 3],
+        float_list=[1.1, 2.2, 3.3],
+        str_list=["a", "b", "c"],
+        tuple_list=[(1, 2), (3, 4)],
+        datetime_list=[datetime.datetime.now()],
+        timedelta_list=[datetime.timedelta(minutes=5)],
+        int_dict={"a": 1, "b": 2},
+        float_dict={"a": 1.1, "b": 2.2},
+        dict_dict={"a": {"x": 1, "y": "foo"}},
+        mixed_type_str_int="string",
+        mixed_type_bool_str=True,
+        optional_str=None,
+        optional_int=None,
+        optional_float=None,
+        optional_mixed=None,
     )
 
 
