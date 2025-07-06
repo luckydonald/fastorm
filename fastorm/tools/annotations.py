@@ -6,6 +6,7 @@ from pydantic.fields import FieldInfo
 
 
 AnnotationType = type[Any] | None
+AnnotatedType = type(Annotated[str, "some metadata"])
 
 def is_annotated(annotated_type: AnnotationType) -> bool:
     return get_origin(annotated_type) is Annotated
