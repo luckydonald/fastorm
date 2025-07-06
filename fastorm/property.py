@@ -13,6 +13,7 @@ DocType = str | None
 FGetType = Callable[[ObjectSelf], Any]
 FSetType = Callable[[ObjectSelf, Any], None]
 FDelType = Callable[[ObjectSelf], None]
+FDocType = Callable[[ObjectSelf], DocType]
 
 
 # noinspection SpellCheckingInspection
@@ -23,6 +24,7 @@ class Property:
     fget: FGetType | None
     fset: FSetType | None
     fdel: FDelType | None
+    fdoc: FDocType | None
     _doc: DocType
     _name: NameType
 
@@ -32,10 +34,12 @@ class Property:
         fset: FSetType | None = None,
         fdel: FDelType | None = None,
         doc: DocType = None,
+        fdoc: FDocType | None = None,
     ) -> None:
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
+        self.fdoc = fdoc
         self._doc = doc
         self._name = None
 
@@ -140,6 +144,9 @@ class Property:
         if self._doc:
             return self._doc
         # end if
+        if self.fdoc is not None:
+            return self.fdoc(self)  # TODO: this `self` paramter should be the class we are in, not the property.
+        # end if
         if self.fget is not None:
             return self.fget.__doc__
         # end if
@@ -162,6 +169,7 @@ class Property:
         fset: FSetType | None | UnsetType = Unset,
         fdel: FDelType | None | UnsetType = Unset,
         doc: DocType | UnsetType = Unset,
+        fdoc: FDocType | None | UnsetType = Unset,
     ) -> PropSelf:
         """Create a duplicate of this property with the same attributes."""
         prop = type(self)(
@@ -169,6 +177,7 @@ class Property:
             fset=self.fset if fset is Unset else fset,
             fdel=self.fdel if fdel is Unset else fdel,
             doc=self._doc if doc is Unset else doc,
+            fdoc=self.fdoc if fdoc is Unset else fdoc,
         )
         prop._name = self._name
         return prop
@@ -184,6 +193,10 @@ class Property:
 
     def deleter(self: PropSelf, fdel: FDelType | None) -> PropSelf:
         return self._duplicate(fdel=fdel)
+    # end def
+
+    def documenter(self: PropSelf, fdoc) -> PropSelf:
+        return self._duplicate(fdoc=fdoc, doc=None)
     # end def
 # end class
 
