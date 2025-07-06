@@ -8,6 +8,7 @@ from fastorm.tools.annotations import Marker, has_marker, AnnotationType
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
 PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
+PrimaryKeyDataTypeArgType = Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyDataType], ...]
 
 
 class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
@@ -37,7 +38,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     # end def
 
     @pk.annotater
-    def pk(self) -> Type[PrimaryKeyDataTypeArg]:
+    def pk(self) -> PrimaryKeyDataTypeArgType:
         types = tuple(field.annotation for field in self.__primary_keys_fields__.values())
         if len(types) == 1:
             return types[0]
