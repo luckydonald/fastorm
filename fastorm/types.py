@@ -44,6 +44,21 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
         # end if
         return types
     # end def
+
+    def __init__(self, **kwargs):
+        # Ensure that the primary key is set if it is required.
+        for field_name, field in self.__primary_keys__:
+            if (
+                has_marker(field, PKMarker)
+                and has_marker(field.annotation, NotRequiredMarker)
+                and field_name not in kwargs
+            ):
+                kwargs[field_name] = None
+            # end if
+        # end for
+
+        super().__init__(**kwargs)
+    # end def
 # end class
 
 
@@ -53,6 +68,11 @@ AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 
 
 # Marker classes for Annotated metadata
+class NotRequiredMarker(Marker):
+    """Marker for Not Required fields."""
+    pass
+# end class
+
 class PKMarker(Generic[PrimaryKeyDataType], Marker):
     """Marker for Primary Key."""
     pass
@@ -64,6 +84,7 @@ class ForeignKeyMarker[PrimaryKeyDataType](OtherTableDataType[PrimaryKeyDataType
 class AutoMarker(Generic[AutoSupportingType], Marker):
     """Marker for Auto Primary Key (int or UUID)."""
     pass
+
 
 # Annotated types for user-facing API
 PK = Annotated[PrimaryKeyDataType, PKMarker[PrimaryKeyDataType]]
