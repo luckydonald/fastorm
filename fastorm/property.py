@@ -17,6 +17,23 @@ FDocType = Callable[[ObjectSelf], DocType]
 FAnnType = Callable[[ObjectSelf], Any]
 
 
+def log_call[FUNC: Callable | None](name: str, func: FUNC) -> FUNC:
+    """Decorator to log function calls."""
+    if func is None:
+        return None
+    # end def
+    if hasattr(func, '__name__'):
+        name = f"{name} ({func.__name__})"
+    # end if
+    def wrapper(*args, **kwargs):
+        print(f'Calling {name} ({func!r}) with args: {args!r}, kwargs: {kwargs!r}')
+        result = func(*args, **kwargs)
+        print(f'Called {name} ({func!r}) with result: {result!r}')
+        return result
+    return wrapper
+# end def
+
+
 # noinspection SpellCheckingInspection
 class Property:
     "Emulate PyProperty_Type() in Objects/descrobject.c"
@@ -39,11 +56,11 @@ class Property:
         fdoc: FDocType | None = None,
         fann: FDocType | None = None,
     ) -> None:
-        self.fget = fget
-        self.fset = fset
-        self.fdel = fdel
-        self.fdoc = fdoc
-        self.fann = fann
+        self.fget = log_call('fget', fget)
+        self.fset = log_call('fset', fset)
+        self.fdel = log_call('fdel', fdel)
+        self.fdoc = log_call('fdoc', fdoc)
+        self.fann = log_call('fann', fann)
         self._doc = doc
         self._name = None
 
