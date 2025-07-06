@@ -5,7 +5,7 @@ from pydantic.v1 import BaseConfig
 from pydantic.v1.fields import ModelField
 
 from fastorm.v1 import FastORM, FieldInfo, FieldItem
-from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
+from tests.v1.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring, VerboseTestCase
 
 
 class Table1(FastORM):

@@ -1,7 +1,7 @@
 from fastorm.v1 import FastORM
 from fastorm.v1 import FieldInfo, FieldItem
 
-from tests.tools_for_the_tests_of_fastorm import VerboseTestCase
+from tests.v1.tools_for_the_tests_of_fastorm import VerboseTestCase
 
 
 

@@ -6,7 +6,7 @@ from pydantic.v1 import dataclasses
 from pydantic.v1.fields import Undefined, Field
 
 from fastorm.v1 import FastORM, Autoincrement
-from tests.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring
+from tests.v1.tools_for_the_tests_of_fastorm import extract_create_and_reference_sql_from_docstring
 
 POSTGRES_DSN_URL = os.getenv('POSTGRES_DSN_URL', 'postgres://')  # default is to try localhost
 assert POSTGRES_DSN_URL is not None

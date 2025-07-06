@@ -5,7 +5,7 @@ import time
 
 __author__ = 'luckydonald'
 
-from tests.tools_for_the_tests_of_fastorm.TestRunner import main
+from tests.v1.tools_for_the_tests_of_fastorm.TestRunner import main
 
 logger = logging.getLogger(__name__)
 if __name__ == '__main__':
