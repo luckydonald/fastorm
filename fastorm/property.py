@@ -23,7 +23,6 @@ class Property:
     fget: FGetType | None
     fset: FSetType | None
     fdel: FDelType | None
-    _doc: DocType
     _name: NameType
 
     def __init__(
