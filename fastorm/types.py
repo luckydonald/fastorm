@@ -3,16 +3,28 @@ from uuid import UUID
 from pydantic import BaseModel
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
-OtherTableDataType = TypeVar("OtherTableDataType", bound=BaseModel)
+
+class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
+    """Base model class with a primary key."""
+    @property
+    def pk(self) -> PrimaryKeyDataType:
+        """Returns the primary key of the model."""
+        raise NotImplementedError("Subclasses must implement the pk property.")
+    # end def
+# end class
+
+
+type OtherTableDataType[PrimaryKeyDataType] = BaseModelWithPK[PrimaryKeyDataType]
 AutoSupporting = int | UUID
 AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
+
 
 # Marker classes for Annotated metadata
 class PKMarker(Generic[PrimaryKeyDataType]):
     """Marker for Primary Key."""
     pass
 
-class ForeignKeyMarker(Generic[OtherTableDataType]):
+class ForeignKeyMarker[PrimaryKeyDataType](OtherTableDataType[PrimaryKeyDataType]):
     """Marker for Foreign Key."""
     pass
 
@@ -22,7 +34,7 @@ class AutoMarker(Generic[AutoSupportingType]):
 
 # Annotated types for user-facing API
 PK = Annotated[PrimaryKeyDataType, PKMarker[PrimaryKeyDataType]]
-ForeignKey = Annotated[OtherTableDataType, ForeignKeyMarker[OtherTableDataType]]
+ForeignKey = Annotated[OtherTableDataType | PrimaryKeyDataType | tuple[PrimaryKeyDataType], ForeignKeyMarker[OtherTableDataType]]
 AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker[PrimaryKeyDataType]]]
 
 AutoIncrement = AutoPK[int]
