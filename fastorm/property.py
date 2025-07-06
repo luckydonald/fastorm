@@ -160,7 +160,7 @@ class Property:
         self.fdel(obj)
     # end def
 
-    def get_doc(self: PropSelf, obj: ObjectSelf = None) -> DocType:
+    def get_doc(self: PropSelf, obj: ObjectSelf) -> DocType:
         if self._doc:
             return self._doc
         # end if
@@ -173,11 +173,11 @@ class Property:
         return None
     # end def
 
-    def set_doc(self: PropSelf, doc: DocType) -> None:
+    def set_doc(self: PropSelf, obj: ObjectSelf, doc: DocType) -> None:
         self._doc = doc
     # end def
 
-    def del_doc(self) -> None:
+    def del_doc(self: PropSelf, obj: ObjectSelf) -> None:
         self._doc = None
     # end def
 
