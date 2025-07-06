@@ -1,5 +1,6 @@
 from typing import TypeVar, Any, Type, Callable
 
+from fastorm.tools.wrap import borrow_methods
 from fastorm.unset import UnsetType, Unset
 
 
@@ -104,7 +105,19 @@ class Property:
                 'object has no getter'
             )
         # end if
-        return PropertyInstanceProxy(self, obj)
+        result = self.fget(obj)  # Call the getter method, to see if it raises an exception.
+        # noinspection PyPep8Naming
+        ResultType = type(result)
+
+        @borrow_methods(ResultType)
+        class ResultWrapper(PropertyInstanceProxy, ResultType, object):
+            def __init__(self, value: ResultType, *args, prop: PropSelf, instance: ObjectSelf, **kwargs):
+                PropertyInstanceProxy.__init__(self, prop, instance)
+                ResultType.__init__(self, value, *args, **kwargs)
+            # end def
+        # end class
+
+        return ResultWrapper(result, prop=self, instance=obj)
     # end def
 
     def __set__(self: PropSelf, obj: ObjectSelf, value: Any):
