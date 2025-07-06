@@ -1,38 +1,3 @@
-# Python Types Table
-# | Python Type         | Example             |
-# |---------------------|---------------------|
-# | int                 | 1                   |
-# | float               | 1.0                 |
-# | str                 | "hello"             |
-# | bool                | True                |
-# | bytes               | b"abc"              |
-# | list                | [1, 2, 3]           |
-# | tuple               | (1, 2, 3)           |
-# | set                 | {1, 2, 3}           |
-# | frozenset           | frozenset([1, 2])   |
-# | dict                | {"a": 1}            |
-# | NoneType            | None                |
-# | complex             | 1+2j                |
-# | range               | range(5)            | NOT SUPPORTED IN Pydantic
-# | memoryview          | memoryview(b"abc")  | MOT SUPPORTED IN Pydantic
-# | bytearray           | bytearray(b"abc")   | USE bytes INSTEAD.
-# | object              | object()            |
-# | type                | type(1)             |
-# | callable            | lambda x: x         | NOT SUPPORTED IN Pydantic
-# | Any (typing)        | -                   |
-# | Optional (typing)   | Optional[int]       |
-# | Union (typing)      | Union[int, str]     |
-# | List (typing)       | List[int]           |
-# | Dict (typing)       | Dict[str, int]      |
-# | Set (typing)        | Set[int]            |
-# | Tuple (typing)      | Tuple[int, ...]     |
-# | Literal (typing)    | Literal[1, 2, 3]    |
-# | Enum                | Enum('A', 'B')      |
-# | datetime            | datetime.datetime() |
-# | date                | datetime.date()     |
-# | time                | datetime.time()     |
-# | timedelta           | datetime.timedelta(hours=2, minutes=3) |
-# | Decimal             | Decimal("1.23")     |
 from datetime import datetime, timedelta, date, time
 from enum import Enum
 from typing import Literal, Union
@@ -238,80 +203,56 @@ def test_insert_row():
 
 from hypothesis import given, strategies as st
 
-@given(
-    id=st.integers(),
-    name=st.text(),
-    description=st.text(),
-    int_field=st.integers(),
-    float_field=st.floats(allow_nan=False, allow_infinity=False),
-    str_field=st.text(),
-    bool_field=st.booleans(),
-    bytes_field=st.binary(),
-    list_field=st.lists(st.integers()),
-    tuple_field=st.tuples(st.integers(), st.integers(), st.integers()),
-    set_field=st.sets(st.integers()),
-    frozenset_field=st.builds(frozenset, st.lists(st.integers())),
-    dict_field=st.dictionaries(st.text(), st.integers()),
-    nonetype_field=st.none(),
-    complex_field=st.complex_numbers(allow_nan=False, allow_infinity=False),
-    bytearray_field=st.binary().map(bytearray),
-    object_field=st.just(object()),
-    type_field=st.just(int),
-    any_field=st.one_of(st.text(), st.integers(), st.none()),
-    optional_field=st.one_of(st.integers(), st.none()),
-    union_field=st.one_of(st.integers(), st.text()),
-    list_typing_field=st.lists(st.integers()),
-    dict_typing_field=st.dictionaries(st.text(), st.integers()),
-    set_typing_field=st.sets(st.integers()),
-    tuple_typing_field=st.tuples(st.integers(), st.integers(), st.integers()),
-    literal_field=st.just(1),
-    enum_field=st.just("A"),
-    datetime_field=st.datetimes(),
-    date_field=st.dates(),
-    time_field=st.times(),
-    decimal_field=st.decimals(allow_nan=False, allow_infinity=False),
-)
-def test_insert_row_hypothesis(
-    id, name, description, int_field, float_field, str_field, bool_field, bytes_field,
-    list_field, tuple_field, set_field, frozenset_field, dict_field, nonetype_field,
-    complex_field, bytearray_field, object_field, type_field, any_field, optional_field,
-    union_field, list_typing_field, dict_typing_field, set_typing_field, tuple_typing_field,
-    literal_field, enum_field, datetime_field, date_field, time_field, decimal_field
-):
-    # Only a subset of fields for demonstration; expand as needed.
-    TableToTest(
-        id=id,
-        name=name,
-        description=description,
-        int_field=int_field,
-        float_field=float_field,
-        str_field=str_field,
-        bool_field=bool_field,
-        bytes_field=bytes_field,
-        list_field=list_field,
-        tuple_field=tuple_field,
-        set_field=set_field,
-        frozenset_field=frozenset_field,
-        dict_field=dict_field,
-        nonetype_field=nonetype_field,
-        complex_field=complex_field,
-        bytearray_field=bytearray_field,
-        object_field=object_field,
-        type_field=type_field,
-        any_field=any_field,
-        optional_field=optional_field,
-        union_field=union_field,
-        list_typing_field=list_typing_field,
-        dict_typing_field=dict_typing_field,
-        set_typing_field=set_typing_field,
-        tuple_typing_field=tuple_typing_field,
-        literal_field=literal_field,
-        enum_field=enum_field,
-        datetime_field=datetime_field,
-        date_field=date_field,
-        time_field=time_field,
-        decimal_field=decimal_field,
-        # The rest of the fields can be filled with defaults or skipped for this test.
+@st.composite
+def example_base_model_strategy(draw):
+    return ExampleBaseModel(
+        example_str=draw(st.text()),
+        example_bool=draw(st.booleans())
+    )
+
+@st.composite
+def referenced_table_strategy(draw):
+    return ReferencedTable(
+        id=draw(st.integers()),
+        name=draw(st.text()),
+        description=draw(st.text())
+    )
+
+@st.composite
+def table_to_test_strategy(draw):
+    # For recursive/self-referencing fields, use None for simplicity
+    return TableToTest(
+        id=draw(st.integers()),
+        name=draw(st.text()),
+        description=draw(st.text()),
+        int_field=draw(st.integers()),
+        float_field=draw(st.floats(allow_nan=False, allow_infinity=False)),
+        str_field=draw(st.text()),
+        bool_field=draw(st.booleans()),
+        bytes_field=draw(st.binary()),
+        list_field=draw(st.lists(st.integers())),
+        tuple_field=draw(st.tuples(st.integers(), st.integers(), st.integers())),
+        set_field=draw(st.sets(st.integers())),
+        frozenset_field=draw(st.builds(frozenset, st.lists(st.integers()))),
+        dict_field=draw(st.dictionaries(st.text(), st.integers())),
+        nonetype_field=None,
+        complex_field=draw(st.complex_numbers(allow_nan=False, allow_infinity=False)),
+        bytearray_field=draw(st.binary().map(bytearray)),
+        object_field=object(),
+        type_field=int,
+        any_field=draw(st.one_of(st.text(), st.integers(), st.none())),
+        optional_field=draw(st.one_of(st.integers(), st.none())),
+        union_field=draw(st.one_of(st.integers(), st.text())),
+        list_typing_field=draw(st.lists(st.integers())),
+        dict_typing_field=draw(st.dictionaries(st.text(), st.integers())),
+        set_typing_field=draw(st.sets(st.integers())),
+        tuple_typing_field=draw(st.tuples(st.integers(), st.integers(), st.integers())),
+        literal_field=1,
+        enum_field="A",
+        datetime_field=draw(st.datetimes()),
+        date_field=draw(st.dates()),
+        time_field=draw(st.times()),
+        decimal_field=draw(st.decimals(allow_nan=False, allow_infinity=False)),
         literal_strings_field="A",
         literal_ints_field=1,
         literal_bool_field=True,
@@ -326,26 +267,32 @@ def test_insert_row_hypothesis(
         example_int_enum_field=ExampleIntEnum.A,
         example_float_enum_field=ExampleFloatEnum.A,
         example_mixed_enum_field=ExampleMixedEnum.A,
-        timedelta_field=timedelta(hours=2, minutes=3),
-        other_reference_required=ReferencedTable(id=2, name="Ref Name", description="Ref Desc"),
-        other_reference_optional=None,
+        timedelta_field=draw(st.timedeltas()),
+        other_reference_required=draw(referenced_table_strategy()),
+        other_reference_optional=draw(st.one_of(referenced_table_strategy(), st.none())),
         self_reference=None,
-        json_field={"key": "value"},
-        pydantic_basemodel=ExampleBaseModel(example_str="abc", example_bool=False),
-        pydantic_generic_basemodel=ExampleBaseModel(example_str="def", example_bool=True),
-        int_list=[1, 2, 3],
-        float_list=[1.1, 2.2, 3.3],
-        str_list=["a", "b", "c"],
-        tuple_list=[(1, 2), (3, 4)],
-        datetime_list=[datetime.now()],
-        timedelta_list=[timedelta(minutes=5)],
-        int_dict={"a": 1, "b": 2},
-        float_dict={"a": 1.1, "b": 2.2},
-        dict_dict={"a": {"x": 1, "y": "foo"}},
-        mixed_type_str_int="string",
-        mixed_type_bool_str=True,
-        optional_str=None,
-        optional_int=None,
-        optional_float=None,
-        optional_mixed=None,
+        json_field=draw(st.dictionaries(st.text(), st.integers())),
+        pydantic_basemodel=draw(example_base_model_strategy()),
+        pydantic_generic_basemodel=draw(example_base_model_strategy()),
+        int_list=draw(st.lists(st.integers())),
+        float_list=draw(st.lists(st.floats(allow_nan=False, allow_infinity=False))),
+        str_list=draw(st.lists(st.text())),
+        tuple_list=draw(st.lists(st.tuples(st.integers(), st.integers()))),
+        datetime_list=draw(st.lists(st.datetimes())),
+        timedelta_list=draw(st.lists(st.timedeltas())),
+        int_dict=draw(st.dictionaries(st.text(), st.integers())),
+        float_dict=draw(st.dictionaries(st.text(), st.floats(allow_nan=False, allow_infinity=False))),
+        dict_dict=draw(st.dictionaries(st.text(), st.dictionaries(st.text(), st.one_of(st.integers(), st.text())))),
+        mixed_type_str_int=draw(st.one_of(st.text(), st.integers())),
+        mixed_type_bool_str=draw(st.one_of(st.booleans(), st.text())),
+        optional_str=draw(st.one_of(st.text(), st.none())),
+        optional_int=draw(st.one_of(st.integers(), st.none())),
+        optional_float=draw(st.one_of(st.floats(allow_nan=False, allow_infinity=False), st.none())),
+        optional_mixed=draw(st.one_of(st.integers(), st.text(), st.none())),
     )
+
+@given(table=table_to_test_strategy())
+def test_insert_row_hypothesis(table):
+    # Just ensure instantiation works and fields are populated
+    assert isinstance(table, TableToTest)
+    assert isinstance(table.pydantic_basemodel, ExampleBaseModel)
