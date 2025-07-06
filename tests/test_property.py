@@ -1,7 +1,8 @@
 # Verify the Property() emulation
 from typing import ClassVar, AnyStr, Any
 
-from fastorm.property import Property
+from fastorm.property import Property, PropertyInstanceProxy
+
 
 class CC:
     doc_counter: ClassVar[int] = 0
@@ -88,6 +89,13 @@ class TestProperty(unittest.TestCase):
         print(repr(x.__doc__))
         self.assertEqual(x.__doc__, 'Doc call #123')
         self.assertEqual(ccc.x.__doc__, 'Doc call #123')
+
+    def test_property_isinstance(self):
+        ccc = CCC()
+        self.assertIsInstance(ccc, CCC)
+        ccc.x = 999
+        self.assertIsInstance(ccc.x, int)
+        self.assertIsInstance(ccc.x, PropertyInstanceProxy)
 
     def test_no_getter(self):
         cc = CC()
