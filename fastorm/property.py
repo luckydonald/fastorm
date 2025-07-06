@@ -154,18 +154,15 @@ class Property:
     # end def
 
     def getter(self: PropSelf, fget: FGetType | None) -> PropSelf:
-        prop = self._duplicate(fget=fget)
-        return prop
+        return self._duplicate(fget=fget)
     # end def
 
     def setter(self: PropSelf, fset: FSetType | None) -> PropSelf:
-        prop = self._duplicate(fset=fset)
-        return prop
+        return self._duplicate(fset=fset)
     # end def
 
     def deleter(self: PropSelf, fdel: FDelType | None) -> PropSelf:
-        prop = self._duplicate(fdel=fdel)
-        return prop
+        return self._duplicate(fdel=fdel)
     # end def
 # end class
 
