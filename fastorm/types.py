@@ -7,6 +7,7 @@ from fastorm.property import Property
 from fastorm.tools.annotations import Marker, has_marker, AnnotationType
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
+PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
 
 
 class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
@@ -26,12 +27,12 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     # end def
 
     @Property
-    def pk(self) -> PrimaryKeyDataType:
+    def pk(self) -> PrimaryKeyDataTypeArg:
         """Returns the primary key of the model."""
         raise NotImplementedError("Subclasses must implement the pk property.")
     # end def
     @pk.annotater
-    def pk(self) -> Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyDataType], ...]:
+    def pk(self) -> Type[PrimaryKeyDataTypeArg]:
         types = tuple(field.annotation for field in self.__primary_keys__.values())
         if len(types) == 1:
             return types[0]
