@@ -104,7 +104,7 @@ class Property:
                 'object has no getter'
             )
         # end if
-        return self.fget(obj)
+        return PropertyInstanceProxy(self, obj)
     # end def
 
     def __set__(self: PropSelf, obj: ObjectSelf, value: Any):
@@ -228,6 +228,44 @@ class Property:
 
     def annotater(self: PropSelf, fann) -> PropSelf:
         return self._duplicate(fann=fann)
+    # end def
+# end class
+
+
+class PropertyInstanceProxy:
+    def __init__(self, prop: PropSelf, instance: ObjectSelf):
+        self.prop = prop
+        self.instance = instance
+    # end def
+
+    def __get__(self, obj: ObjectSelf = None) -> PropSelf:
+        print(f'Proxy: getting property {self.prop.__name__!r} (instance={self.instance!r})')
+        if obj is None:
+            return self.prop
+        # end if
+        return self.prop.fget(self.instance)
+
+    def __getattribute__(self, name: str):
+        if name in ('prop', 'instance'):
+            return object.__getattribute__(self, name)
+        # end if
+        print(f'Proxy: forwarding attribute {name!r} (instance={self.instance!r})')
+        if name == '__doc__':
+            return self.prop.get_doc(self.instance)
+        # end if
+        return self.prop.fget(self.instance)
+    # end def
+
+    def __getattr__(self, name: str):
+        """
+        Fallback for attributes not found in the property.
+        This allows accessing the property as if it were the instance.
+        """
+        print(f'Proxy: accessing attribute {name!r} (instance={self.instance!r})')
+        if hasattr(self.instance, name):
+            return getattr(self.instance, name)
+        # end if
+        raise AttributeError(f"'{type(self.instance).__name__}' object has no attribute '{name}'")
     # end def
 # end class
 
