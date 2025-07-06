@@ -13,7 +13,7 @@ PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
 class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     """Base model class with a primary key."""
     @property
-    def __primary_keys__(self) -> dict[str, FieldInfo]:
+    def __primary_keys_fields__(self) -> dict[str, FieldInfo]:
         """Returns the primary key of the model."""
         # iterate over the fields to find the primary key (Annotated with PKMarker)
         fields: dict[str, FieldInfo] = {}  # key: field_name, value: Annotation
@@ -29,7 +29,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     @Property
     def pk(self) -> PrimaryKeyDataTypeArg:
         """Returns the primary key of the model."""
-        values = tuple(getattr(self, field_name) for field_name in self.__primary_keys__.keys())
+        values = tuple(getattr(self, field_name) for field_name in self.__primary_keys_fields__.keys())
         if len(values) == 1:
             return values[0]
         # end if
@@ -38,7 +38,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
 
     @pk.annotater
     def pk(self) -> Type[PrimaryKeyDataTypeArg]:
-        types = tuple(field.annotation for field in self.__primary_keys__.values())
+        types = tuple(field.annotation for field in self.__primary_keys_fields__.values())
         if len(types) == 1:
             return types[0]
         # end if
@@ -47,7 +47,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
 
     def __init__(self, **kwargs):
         # Ensure that the primary key is set if it is required.
-        for field_name, field in self.__primary_keys__:
+        for field_name, field in self.__primary_keys_fields__:
             if (
                 has_marker(field, PKMarker)
                 and has_marker(field.annotation, NotRequiredMarker)
