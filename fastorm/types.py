@@ -1,15 +1,38 @@
 from typing import NewType, TypeVar, Union, Generic, TYPE_CHECKING, NotRequired, Annotated, Optional
 from uuid import UUID
 from pydantic import BaseModel
+from pydantic.fields import FieldInfo
+
+from fastorm.property import Property
+from fastorm.tools.annotations import Marker, check_annotated_type, AnnotationType
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
+
 
 class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     """Base model class with a primary key."""
     @property
+    def __primary_keys__(self) -> dict[str, FieldInfo]:
+        """Returns the primary key of the model."""
+        # iterate over the fields to find the primary key (Annotated with PKMarker)
+        fields: dict[str, FieldInfo] = {}  # key: field_name, value: Annotation
+        for field_name, field in self.model_fields.items():
+            if not check_annotated_type(field.annotation, PKMarker):
+                continue
+            # end if
+            fields[field_name] = field
+        # end for
+        return fields
+    # end def
+
+    @Property
     def pk(self) -> PrimaryKeyDataType:
         """Returns the primary key of the model."""
         raise NotImplementedError("Subclasses must implement the pk property.")
+    # end def
+    @pk.annotater
+    def pk(self):
+        return tuple(field.annotation for field in self.__primary_keys__.values())
     # end def
 # end class
 
@@ -20,15 +43,15 @@ AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 
 
 # Marker classes for Annotated metadata
-class PKMarker(Generic[PrimaryKeyDataType]):
+class PKMarker(Generic[PrimaryKeyDataType], Marker):
     """Marker for Primary Key."""
     pass
 
-class ForeignKeyMarker[PrimaryKeyDataType](OtherTableDataType[PrimaryKeyDataType]):
+class ForeignKeyMarker[PrimaryKeyDataType](OtherTableDataType[PrimaryKeyDataType], Marker):
     """Marker for Foreign Key."""
     pass
 
-class AutoMarker(Generic[AutoSupportingType]):
+class AutoMarker(Generic[AutoSupportingType], Marker):
     """Marker for Auto Primary Key (int or UUID)."""
     pass
 
