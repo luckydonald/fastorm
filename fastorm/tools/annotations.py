@@ -2,6 +2,8 @@ import sys
 from types import UnionType
 from typing import get_origin, Annotated, TypeVar, Type, TypeAlias, Any
 
+from pydantic.fields import FieldInfo
+
 
 AnnotationType = type[Any] | None
 
@@ -24,9 +26,12 @@ else:
 # end if
 
 
-def has_marker(annotated_type: AnnotationType, marker: Type[Marker]) -> bool:
+def has_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker]) -> bool:
     """Check if the annotated type is a valid primary key."""
     # 'Annotated' cannot be used with instance and class checks
+    if isinstance(annotated_type, FieldInfo):
+        return has_marker(annotated_type.annotation, marker)
+    # end if
     if not is_annotated(annotated_type):
         return False
     # end if
