@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 from fastorm.property import Property
-from fastorm.tools.annotations import Marker, has_marker, AnnotationType
+from fastorm.tools.annotations import Marker, has_marker, AnnotationType, AnnotatedType
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
 PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
@@ -63,7 +63,6 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
 # end class
 
 
-type OtherTableDataType[PrimaryKeyDataType] = BaseModelWithPK[PrimaryKeyDataType]
 AutoSupporting = int | UUID
 AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 
@@ -78,7 +77,7 @@ class PKMarker(Generic[PrimaryKeyDataType], Marker):
     """Marker for Primary Key."""
     pass
 
-class ForeignKeyMarker[PrimaryKeyDataType](OtherTableDataType[PrimaryKeyDataType], Marker):
+class ForeignKeyMarker(Marker):
     """Marker for Foreign Key."""
     pass
 
@@ -88,9 +87,19 @@ class AutoMarker(Generic[AutoSupportingType], Marker):
 
 
 # Annotated types for user-facing API
-PK = Annotated[PrimaryKeyDataType, PKMarker[PrimaryKeyDataType]]
-ForeignKey = Annotated[OtherTableDataType | PrimaryKeyDataType | tuple[PrimaryKeyDataType], ForeignKeyMarker[OtherTableDataType]]
-AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker[PrimaryKeyDataType]]]
+TYPE = TypeVar("TYPE")
+PK = Annotated[TYPE, PKMarker()]
+
+
+# noinspection PyPep8Naming
+def ForeignKey(table: Type[BaseModelWithPK]) -> AnnotatedType:
+    pk_type: AnnotationType | tuple[AnnotationType, ...] = table.pk.__annotations__
+    return Annotated[table | pk_type, ForeignKeyMarker()]
+# end def
+
+
+AutoPK = Annotated[Optional[PK[PrimaryKeyDataType]], AutoMarker(), NotRequiredMarker()]
+type NotRequired[type] = Annotated[Optional[type], NotRequiredMarker()]
 
 AutoIncrement = AutoPK[int]
 AutoUUID = AutoPK[UUID]
@@ -130,11 +139,11 @@ class ExampleTableWithImplicitPK(BaseModel):
 class ExampleTableWithFK(BaseModel):
     name: str
     description: str
-    foreign_key_int: ForeignKey[ExampleTableWithIntPK]
-    foreign_key_str: ForeignKey[ExampleTableWithStrPK]
-    foreign_key_uuid: ForeignKey[ExampleTableWithUUIDPK]
-    foreign_key_two: ForeignKey[ExampleTableWithTwoPKs]
-    foreign_key_nullable: ForeignKey[ExampleTableWithIntPK] | None
+    foreign_key_int: ForeignKey(ExampleTableWithIntPK)
+    foreign_key_str: ForeignKey(ExampleTableWithStrPK)
+    foreign_key_uuid: ForeignKey(ExampleTableWithUUIDPK)
+    foreign_key_two: ForeignKey(ExampleTableWithTwoPKs)
+    foreign_key_nullable: ForeignKey(ExampleTableWithIntPK) | None
 
 
 def test_insert_row_manually() -> None:
