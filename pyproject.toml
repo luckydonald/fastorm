@@ -1,12 +1,11 @@
-[build-system]
-requires = ["flit_core >=2,<4"]
-build-backend = "flit_core.buildapi"
-
-[tool.flit.metadata]
-module = "fastorm"
-author = "luckydonald"
-author-email = "fastorm+code@luckydonald.de"
-home-page = "https://github.com/luckydonald/fastorm"
+[tool.poetry]
+name = "fastorm"
+version = "0.1.0"
+description = ""  # Optionally fill from README.md
+authors = ["luckydonald <fastorm+code@luckydonald.de>"]
+license = "MIT"
+homepage = "https://github.com/luckydonald/fastorm"
+readme = "README.md"
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
@@ -33,20 +32,20 @@ classifiers = [
 #    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
 #    "Topic :: Internet :: WWW/HTTP",
 ]
-requires = [
-    "asyncpg",
-    # "psycopg2-binary",
-    #   ^--- needed for escaping defaults on CREATE TABLE statements.
-    "luckydonald-utils>=0.83",
-    "typeguard",
-    "pydantic",
-]
-description-file = "README.md"
-requires-python = ">=3.10.0"
 
-[tool.flit.metadata.urls]
+[tool.poetry.dependencies]
+python = ">=3.10.0"
+asyncpg = "*"
+luckydonald-utils = ">=0.83"
+typeguard = "*"
+pydantic = "^2.0.0"
+
+[tool.poetry.extras]
+test = []
+
+[tool.poetry.urls]
 Documentation = "https://github.com/luckydonald/fastorm"
 
-[tool.flit.metadata.requires-extra]
-test = [
-]
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
