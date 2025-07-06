@@ -42,7 +42,7 @@ class CCC:
 
     @x.documenter
     def x(self):
-        return f'Doc call {self.__x}'
+        return f'Doc call #{self.__x}'
     # end def
 
     @x.setter
@@ -83,6 +83,10 @@ class TestProperty(unittest.TestCase):
     def test_property_decorator_docs(self):
         ccc = CCC()
         ccc.x = 123
+        x = ccc.x
+        print(repr(x))
+        print(repr(x.__doc__))
+        self.assertEqual(x.__doc__, 'Doc call #123')
         self.assertEqual(ccc.x.__doc__, 'Doc call #123')
 
     def test_no_getter(self):
