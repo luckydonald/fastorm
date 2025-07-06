@@ -14,6 +14,7 @@ FGetType = Callable[[ObjectSelf], Any]
 FSetType = Callable[[ObjectSelf, Any], None]
 FDelType = Callable[[ObjectSelf], None]
 FDocType = Callable[[ObjectSelf], DocType]
+FAnnType = Callable[[ObjectSelf], Any]
 
 
 # noinspection SpellCheckingInspection
@@ -25,6 +26,7 @@ class Property:
     fset: FSetType | None
     fdel: FDelType | None
     fdoc: FDocType | None
+    fann: FAnnType | None
     _doc: DocType
     _name: NameType
 
@@ -35,11 +37,13 @@ class Property:
         fdel: FDelType | None = None,
         doc: DocType = None,
         fdoc: FDocType | None = None,
+        fann: FDocType | None = None,
     ) -> None:
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
         self.fdoc = fdoc
+        self.fann = fann
         self._doc = doc
         self._name = None
 
@@ -170,6 +174,7 @@ class Property:
         fdel: FDelType | None | UnsetType = Unset,
         doc: DocType | UnsetType = Unset,
         fdoc: FDocType | None | UnsetType = Unset,
+        fann: FAnnType | None | UnsetType = Unset,
     ) -> PropSelf:
         """Create a duplicate of this property with the same attributes."""
         prop = type(self)(
@@ -178,6 +183,7 @@ class Property:
             fdel=self.fdel if fdel is Unset else fdel,
             doc=self._doc if doc is Unset else doc,
             fdoc=self.fdoc if fdoc is Unset else fdoc,
+            fann=self.fann if fann is Unset else fann,
         )
         prop._name = self._name
         return prop
@@ -197,6 +203,10 @@ class Property:
 
     def documenter(self: PropSelf, fdoc) -> PropSelf:
         return self._duplicate(fdoc=fdoc, doc=None)
+    # end def
+
+    def annotater(self: PropSelf, fann) -> PropSelf:
+        return self._duplicate(fann=fann)
     # end def
 # end class
 
