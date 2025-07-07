@@ -104,7 +104,8 @@ PK = Annotated[TYPE, PKMarker()]
 
 # noinspection PyPep8Naming
 def ForeignKey(table: Type[BaseModelWithPK]) -> AnnotatedType:
-    pk_type: AnnotationType | tuple[AnnotationType, ...] = table.pk.__annotations__
+    pk_type: AnnotationType | tuple[AnnotationType, ...] = table._pk_type.__annotations__
+    print(f"Getting foreign key type for {table.__name__}: {pk_type!r}")
     return Annotated[table | pk_type, ForeignKeyMarker()]
 # end def
 
