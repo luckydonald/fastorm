@@ -1,4 +1,5 @@
-from typing import TypeVar, Generic, Annotated, Optional, Type
+from abc import ABC
+from typing import TypeVar, Generic, Annotated, Optional, Type, Union
 from uuid import UUID
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -21,7 +22,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
         # iterate over the fields to find the primary key (Annotated with PKMarker)
         fields: dict[str, FieldInfo] = {}  # key: field_name, value: Annotation
         for field_name, field in cls.model_fields.items():
-            if not has_marker(field.annotation, PKMarker):
+            if not has_marker(field, PKMarker):
                 continue
             # end if
             fields[field_name] = field
@@ -32,10 +33,16 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     # noinspection PyMethodParameters
     @ClassProperty
     def _pk_type(cls) -> PrimaryKeyDataTypeArgType:
-        fields = cls.__primary_keys_fields__
-        values = list(dict(fields).values())
-        print(f"Getting primary key type for {cls.__name__}: {fields=!r}, {values=!r}")
+        all_fields = cls.__primary_keys_fields__
+        values = list(dict(all_fields).values())
+        print(f"Getting primary key type for {cls.__name__}: {all_fields=!r}, {values=!r}")
+        field: FieldInfo
+        print('Soon...')
+        for field in values:
+            print(f"  -> [{field.annotation}] {field}")
         types = tuple(field.annotation for field in values)
+        print(f"Got primary key type for {cls.__name__}: {types=!r}, {values=!r}")
+
         if len(types) == 1:
             return types[0]
         # end if
@@ -100,22 +107,47 @@ class AutoMarker(Generic[AutoSupportingType], Marker):
 # Annotated types for user-facing API
 TYPE = TypeVar("TYPE")
 
-def PK(column: AnnotationType) -> AnnotatedType:
-    """Annotates a field as a primary key."""
-    if not isinstance(column, type):
-        raise TypeError(f"Expected a type, got {column!r}")
-    # end if
-    print(f"Creating PK annotation for {column.__name__}")
-    return Annotated[column, PKMarker()]
-# end def
+
+class PK(ABC):
+    def __class_getitem__(cls, item):
+        """Allows PK to be used as a generic type."""
+        if not isinstance(item, type):
+            if isinstance(item, TypeVar):
+                return Annotated[item, PKMarker()]
+            # end if
+            raise TypeError(f"Expected a type, got {item!r}")
+        # end if
+        return Annotated[item, PKMarker()]
+    # end def
+# end class
 
 
-# noinspection PyPep8Naming
-def ForeignKey(table: Type[BaseModelWithPK]) -> AnnotatedType:
-    pk_type: AnnotationType | tuple[AnnotationType, ...] = table._pk_type.__annotations__
-    print(f"Getting foreign key type for {table.__name__}: {pk_type!r}")
-    return Annotated[table | pk_type, ForeignKeyMarker()]
-# end def
+class ForeignKey(ABC):
+    def __class_getitem__(cls, table: Type[BaseModelWithPK]) -> AnnotatedType:
+        """Allows PK to be used as a generic type."""
+        if not isinstance(table, type):
+            if isinstance(table, TypeVar):
+                return Annotated[table, ForeignKeyMarker()]
+            # end if
+            raise TypeError(f"Expected a type, got {table!r}")
+        # end if
+        if not issubclass(table, BaseModelWithPK):
+            raise TypeError(f"Expected a BaseModelWithPK, got {table!r}")
+        # end if
+        foo = table.__primary_keys_fields__
+        print(f"0. Getting foreign key type for {table.__name__}: {foo=!r}, {table=!r}")
+        _pk_type = table._pk_type
+        print(f"1. Getting foreign key type for {table.__name__}: {_pk_type=!r}, {table=!r}")
+
+        pk_type: AnnotationType | tuple[AnnotationType, ...] = table._pk_type.__annotations__
+        print(f"Getting foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
+        return Annotated[Union[table, pk_type], ForeignKeyMarker()]
+    # end def
+
+    def __new__(cls, table: Type[BaseModelWithPK]) -> AnnotatedType:
+        return cls.__class_getitem__(table)
+    # end def
+# end class
 
 
 AutoPK = Annotated[Optional[PK[PrimaryKeyDataType]], AutoMarker(), NotRequiredMarker()]
@@ -159,11 +191,11 @@ class ExampleTableWithImplicitPK(BaseModelWithPK):
 class ExampleTableWithFK(BaseModelWithPK):
     name: str
     description: str
-    foreign_key_int: ForeignKey(ExampleTableWithIntPK)
-    foreign_key_str: ForeignKey(ExampleTableWithStrPK)
-    foreign_key_uuid: ForeignKey(ExampleTableWithUUIDPK)
-    foreign_key_two: ForeignKey(ExampleTableWithTwoPKs)
-    foreign_key_nullable: ForeignKey(ExampleTableWithIntPK) | None
+    foreign_key_int: ForeignKey[ExampleTableWithIntPK]
+    foreign_key_str: ForeignKey[ExampleTableWithStrPK]
+    foreign_key_uuid: ForeignKey[ExampleTableWithUUIDPK]
+    foreign_key_two: ForeignKey[ExampleTableWithTwoPKs]
+    foreign_key_nullable: ForeignKey[ExampleTableWithIntPK] | None
 
 
 def test_insert_row_manually() -> None:

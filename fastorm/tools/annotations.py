@@ -31,14 +31,15 @@ def has_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker])
     """Check if the annotated type is a valid primary key."""
     # 'Annotated' cannot be used with instance and class checks
     if isinstance(annotated_type, FieldInfo):
-        return has_marker(annotated_type.annotation, marker)
+        metadata = annotated_type.metadata
+    else:
+        if not is_annotated(annotated_type):
+            return False
+        # end if
+        if not hasattr(annotated_type, "__metadata__"):
+            return False
+        # end if
+        metadata = getattr(annotated_type, '__metadata__', [])
     # end if
-    if not is_annotated(annotated_type):
-        return False
-    # end if
-    if not hasattr(annotated_type, "__metadata__"):
-        return False
-    # end if
-    metadata = getattr(annotated_type, '__metadata__', [])
     return any(isinstance(meta, marker) for meta in metadata)
 # end def
