@@ -3,7 +3,7 @@ from uuid import UUID
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from fastorm.property import Property
+from fastorm.property import Property, ClassProperty
 from fastorm.tools.annotations import Marker, has_marker, AnnotationType, AnnotatedType
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
@@ -13,18 +13,33 @@ PrimaryKeyDataTypeArgType = Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyData
 
 class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
     """Base model class with a primary key."""
-    @property
-    def __primary_keys_fields__(self) -> dict[str, FieldInfo]:
+
+    # noinspection PyMethodParameters
+    @ClassProperty
+    def __primary_keys_fields__(cls) -> dict[str, FieldInfo]:
         """Returns the primary key of the model."""
         # iterate over the fields to find the primary key (Annotated with PKMarker)
         fields: dict[str, FieldInfo] = {}  # key: field_name, value: Annotation
-        for field_name, field in self.model_fields.items():
+        for field_name, field in cls.model_fields.items():
             if not has_marker(field.annotation, PKMarker):
                 continue
             # end if
             fields[field_name] = field
         # end for
         return fields
+    # end def
+
+    # noinspection PyMethodParameters
+    @ClassProperty
+    def _pk_type(cls) -> PrimaryKeyDataTypeArgType:
+        fields = cls.__primary_keys_fields__
+        values = list(dict(fields).values())
+        print(f"Getting primary key type for {cls.__name__}: {fields=!r}, {values=!r}")
+        types = tuple(field.annotation for field in values)
+        if len(types) == 1:
+            return types[0]
+        # end if
+        return types
     # end def
 
     @Property
@@ -39,11 +54,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
 
     @pk.annotater
     def pk(self) -> PrimaryKeyDataTypeArgType:
-        types = tuple(field.annotation for field in self.__primary_keys_fields__.values())
-        if len(types) == 1:
-            return types[0]
-        # end if
-        return types
+        return self._pk_type()
     # end def
 
     def __init__(self, **kwargs):
