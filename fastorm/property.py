@@ -271,6 +271,25 @@ class Property(native_property):
 # end class
 
 
+class ClassProperty(Property):
+    """
+    A property that works on the class, not the instance.
+    Usage:
+        class Foo:
+            @ClassProperty
+            def bar(cls):
+                return cls.__name__
+            # end def
+        # end class
+
+        Foo.bar  # returns 'Foo'
+    """
+    def __get__(self: PropSelf, obj: ObjectSelf, objtype: Type[ObjectSelf] = None):
+        return super().__get__(obj=objtype, objtype=objtype)
+    # end def
+# end class
+
+
 class PropertyInstanceProxy:
     prop: PropSelf = None
     instance: ObjectSelf = None
@@ -311,3 +330,4 @@ class PropertyInstanceProxy:
 
 # noinspection PyShadowingBuiltins
 property = Property
+classproperty = ClassProperty
