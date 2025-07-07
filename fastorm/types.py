@@ -99,7 +99,15 @@ class AutoMarker(Generic[AutoSupportingType], Marker):
 
 # Annotated types for user-facing API
 TYPE = TypeVar("TYPE")
-PK = Annotated[TYPE, PKMarker()]
+
+def PK(column: AnnotationType) -> AnnotatedType:
+    """Annotates a field as a primary key."""
+    if not isinstance(column, type):
+        raise TypeError(f"Expected a type, got {column!r}")
+    # end if
+    print(f"Creating PK annotation for {column.__name__}")
+    return Annotated[column, PKMarker()]
+# end def
 
 
 # noinspection PyPep8Naming
