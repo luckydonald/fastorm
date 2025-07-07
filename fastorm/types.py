@@ -105,38 +105,38 @@ AutoIncrement = AutoPK[int]
 AutoUUID = AutoPK[UUID]
 
 
-class ExampleTableWithAutoincrement(BaseModel):
+class ExampleTableWithAutoincrement(BaseModelWithPK):
     id: AutoIncrement
     name: str
     description: str
 
-class ExampleTableWithIntPK(BaseModel):
+class ExampleTableWithIntPK(BaseModelWithPK):
     id: PK[int]
     name: str
     description: str
 
-class ExampleTableWithStrPK(BaseModel):
+class ExampleTableWithStrPK(BaseModelWithPK):
     id: PK[str]
     name: str
     description: str
 
-class ExampleTableWithUUIDPK(BaseModel):
+class ExampleTableWithUUIDPK(BaseModelWithPK):
     id: AutoPK[UUID]
     name: str
     description: str
 
-class ExampleTableWithTwoPKs(BaseModel):
+class ExampleTableWithTwoPKs(BaseModelWithPK):
     id1: PK[str]
     id2: PK[int]
     name: str
     description: str
 
-class ExampleTableWithImplicitPK(BaseModel):
+class ExampleTableWithImplicitPK(BaseModelWithPK):
     # Implicit primary key, so `id: AutoIncrementPK`
     name: str
     description: str
 
-class ExampleTableWithFK(BaseModel):
+class ExampleTableWithFK(BaseModelWithPK):
     name: str
     description: str
     foreign_key_int: ForeignKey(ExampleTableWithIntPK)
