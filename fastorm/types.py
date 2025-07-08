@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import TypeVar, Generic, Annotated, Optional, Type, Union
+from typing import TypeVar, Generic, Annotated, Optional, Type, Union, ClassVar, Iterable
 from uuid import UUID
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -11,13 +11,26 @@ PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
 PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
 PrimaryKeyDataTypeArgType = Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyDataType], ...]
 
+type MaybeTuple[T] = T | tuple[T, ...]
+type MaybeTypeType[T] = MaybeTuple[type[T]]
 
-class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
-    """Base model class with a primary key."""
 
-    # noinspection PyMethodParameters
-    @ClassProperty
-    def __primary_keys_fields__(cls) -> dict[str, FieldInfo]:
+def unpack_single[t](many: tuple[t]) -> MaybeTuple[t]:
+    """Unpack a single-element tuple to its element."""
+    if len(tuple) == 1:
+        return tuple[0]
+    # end if
+    return tuple
+# end def
+
+# noinspection PyMethodParameters
+class FastOrmMeta(type(BaseModel)):
+    """
+    Meta class for FastORM models.
+    This class is used to store metadata about the model, such as the primary key fields and their types
+    """
+    @property
+    def __primary_keys_fields__(cls: BaseModel) -> dict[str, FieldInfo]:
         """Returns the primary key of the model."""
         # iterate over the fields to find the primary key (Annotated with PKMarker)
         fields: dict[str, FieldInfo] = {}  # key: field_name, value: Annotation
@@ -30,43 +43,52 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType]):
         return fields
     # end def
 
-    # noinspection PyMethodParameters
-    @ClassProperty
-    def _pk_type(cls) -> PrimaryKeyDataTypeArgType:
-        all_fields = cls.__primary_keys_fields__
-        values = list(dict(all_fields).values())
-        print(f"Getting primary key type for {cls.__name__}: {all_fields=!r}, {values=!r}")
-        field: FieldInfo
-        print('Soon...')
-        for field in values:
-            print(f"  -> [{field.annotation}] {field}")
-        types = tuple(field.annotation for field in values)
-        print(f"Got primary key type for {cls.__name__}: {types=!r}, {values=!r}")
-
-        if len(types) == 1:
-            return types[0]
-        # end if
-        return types
+    @property
+    def __primary_keys_field_info__(cls) -> tuple[FieldInfo]:
+        return tuple(cls.__primary_keys_fields__.values())
     # end def
+
+    @property
+    def __primary_keys_type__(cls) -> tuple[AnnotationType]:
+        infos = cls.__primary_keys_field_info__
+        print(f"Getting primary key type for {cls.__name__}: {infos=!r}")
+        return tuple(field.annotation for field in infos)
+    # end def
+
+    @property
+    def __primary_keys_name__(cls) -> tuple[str]:
+        infos = cls.__primary_keys_fields__.keys()
+        print(f"Getting primary key type for {cls.__name__}: {infos=!r}")
+        return tuple(infos)
+    # end def
+# end class
+
+
+class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], metaclass=FastOrmMeta):
+    """Base model class with a primary key."""
+
+    __primary_keys_fields__: ClassVar[dict[str, FieldInfo]]
+    __primary_keys_field_info__: ClassVar[tuple[FieldInfo]]
+    __primary_keys_type__: ClassVar[tuple[str]]
 
     @Property
     def pk(self) -> PrimaryKeyDataTypeArg:
         """Returns the primary key of the model."""
-        values = tuple(getattr(self, field_name) for field_name in self.__primary_keys_fields__.keys())
-        if len(values) == 1:
-            return values[0]
-        # end if
-        return values
-    # end def
+        return tuple(
+            getattr(self, field_name)
+            for field_name in
+            self.__class__.__primary_keys_fields__.keys()
+        )
+
 
     @pk.annotater
     def pk(self) -> PrimaryKeyDataTypeArgType:
-        return self._pk_type()
+        return self.__class__.__primary_keys_fields__
     # end def
 
     def __init__(self, **kwargs):
         # Ensure that the primary key is set if it is required.
-        for field_name, field in self.__primary_keys_fields__:
+        for field_name, field in self.__class__.__primary_keys_fields__:
             if (
                 has_marker(field, PKMarker)
                 and has_marker(field.annotation, NotRequiredMarker)
@@ -134,14 +156,9 @@ class ForeignKey(ABC):
         if not issubclass(table, BaseModelWithPK):
             raise TypeError(f"Expected a BaseModelWithPK, got {table!r}")
         # end if
-        foo = table.__primary_keys_fields__
-        print(f"0. Getting foreign key type for {table.__name__}: {foo=!r}, {table=!r}")
-        _pk_type = table._pk_type
-        print(f"1. Getting foreign key type for {table.__name__}: {_pk_type=!r}, {table=!r}")
-
-        pk_type: AnnotationType | tuple[AnnotationType, ...] = table._pk_type.__annotations__
-        print(f"Getting foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
-        return Annotated[Union[table, pk_type], ForeignKeyMarker()]
+        pk_type = table.__primary_keys_type__
+        print(f"1. Getting foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
+        return Annotated[Union[table, *pk_type], ForeignKeyMarker()]
     # end def
 
     def __new__(cls, table: Type[BaseModelWithPK]) -> AnnotatedType:
