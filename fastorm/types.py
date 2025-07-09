@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import TypeVar, Generic, Annotated, Optional, Type, Union, ClassVar, Iterable
+from typing import TypeVar, Generic, Annotated, Optional, Type, Union, ClassVar, Iterable, Any
 from uuid import UUID
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -14,6 +14,10 @@ PrimaryKeyDataTypeArgType = Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyData
 type MaybeTuple[T] = T | tuple[T, ...]
 type MaybeTypeType[T] = MaybeTuple[type[T]]
 
+class UseDefault:
+    pass
+UseDefaultType = TypeVar("UseDefaultType", bound=UseDefault)
+UseDefault = UseDefault()
 
 def unpack_single[t](many: tuple[t]) -> MaybeTuple[t]:
     """Unpack a single-element tuple to its element."""
@@ -23,12 +27,65 @@ def unpack_single[t](many: tuple[t]) -> MaybeTuple[t]:
     return tuple
 # end def
 
+
+type _Namespace = dict[str, object]  # Class attributes/methods
+
+
 # noinspection PyMethodParameters
 class FastOrmMeta(type(BaseModel)):
     """
     Meta class for FastORM models.
-    This class is used to store metadata about the model, such as the primary key fields and their types
+    This class is used to store metadata about the model, such as the primary key fields and their types.
+    Also it creates a `id: AutoIncrement` field if no primary key is defined.
     """
+
+    @staticmethod
+    def _write_variable_to_namespace(
+        namespace: _Namespace, key: str,
+        *,
+        annotation: Any = UseDefault,
+        default: Any = UseDefault,
+    ) -> None:
+        """
+        Writes the variable to the namespace.
+        This is a workaround for Python 3.8 and earlier, where `__annotations__` is not writable.
+        """
+        namespace['__annotations__'] = dict(namespace.get('__annotations__', {}))
+
+        if default is not UseDefault:
+            namespace[key] = default
+        # end if
+        if annotation is not UseDefault:
+            namespace['__annotations__'][key] = annotation
+        # end if
+    # end def
+
+    def __new__(
+        mcs: type,  # The metaclass itself
+        name: str,  # Name of the class being created
+        bases: tuple[type, ...],  # Base classes of the new class
+        namespace: _Namespace, # Class attributes/methods
+    ) -> type["BaseModelWithPK"]:
+        # Check if the model has a primary key defined.
+        has_primary_key = any(
+            has_marker(field, PKMarker)
+            for field in namespace.values()
+            if isinstance(field, FieldInfo)
+        )
+        if not has_primary_key:
+            # If no primary key is defined, add an `id: AutoIncrement` field.
+            print(f"Adding implicit primary key to {name}: id: AutoIncrement")
+            assert 'id' not in namespace, f"Implicit primary key 'id' already exists in {name}, but you didn't provide any PK yourself."
+            FastOrmMeta._write_variable_to_namespace(
+                namespace,
+                key='id',
+                default=None,
+                annotation=AutoIncrement,
+            )
+        # end if
+
+        # Create the class
+        return super().__new__(mcs, name, bases, namespace)
     @property
     def __primary_keys_fields__(cls: BaseModel) -> dict[str, FieldInfo]:
         """Returns the primary key of the model."""
