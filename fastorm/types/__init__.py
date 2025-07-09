@@ -8,7 +8,7 @@ from pydantic.fields import FieldInfo
 from ..property import Property
 from ..tools.annotations import Marker, has_marker, AnnotationType
 
-from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker
+from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker, AutoMarker
 from .fields import AutoPK, AutoIncrement, PrimaryKeyDataType, PK, ForeignKey
 from .basics import MaybeTuple, AutoSupporting, PrimaryKeyDataTypeArg, PrimaryKeyDataTypeArgType
 
@@ -66,11 +66,11 @@ class FastOrmMeta(type(BaseModel)):
         bases: tuple[type, ...],  # Base classes of the new class
         namespace: _Namespace, # Class attributes/methods
     ) -> type["BaseModelWithPK"]:
+        __annotations__: dict[str, Any] = namespace.get('__annotations__', {})
         # Check if the model has a primary key defined.
         has_primary_key = any(
             has_marker(field, PKMarker)
-            for field in namespace.values()
-            if isinstance(field, FieldInfo)
+            for field in list(__annotations__.values())
         )
         if not has_primary_key:
             # If no primary key is defined, add an `id: AutoIncrement` field.
@@ -79,15 +79,27 @@ class FastOrmMeta(type(BaseModel)):
             FastOrmMeta._write_variable_to_namespace(
                 namespace,
                 key='id',
-                default=None,
                 annotation=AutoIncrement,
             )
         # end if
 
+        # set `default = None` for all AutoMarker
+        for field_name, field in __annotations__.items():
+            if not has_marker(field, AutoMarker):
+                continue
+            # end if
+            print(f"Setting default=None for {name}.{field_name} (AutoMarker)")
+            FastOrmMeta._write_variable_to_namespace(
+                namespace,
+                key=field_name,
+                default=None,
+            )
+            # end if
+
         # Create the class
         return super().__new__(mcs, name, bases, namespace)
     @property
-    def __primary_keys_fields__(cls: BaseModel) -> dict[str, FieldInfo]:
+    def __primary_keys_info_dict__(cls: BaseModel) -> dict[str, FieldInfo]:
         """Returns the primary key of the model."""
         # iterate over the fields to find the primary key (Annotated with PKMarker)
         fields: dict[str, FieldInfo] = {}  # key: field_name, value: Annotation
@@ -101,12 +113,18 @@ class FastOrmMeta(type(BaseModel)):
     # end def
 
     @property
-    def __primary_keys_field_info__(cls) -> tuple[FieldInfo]:
-        return tuple(cls.__primary_keys_fields__.values())
+    def __primary_keys_field_info__(cls) -> tuple[FieldInfo, ...]:
+        return tuple(cls.__primary_keys_info_dict__.values())
+    # end def
+
+
+    @property
+    def __primary_keys_names__(cls) -> tuple[str, ...]:
+        return tuple(cls.__primary_keys_info_dict__.keys())
     # end def
 
     @property
-    def __primary_keys_type__(cls) -> tuple[AnnotationType]:
+    def __primary_keys_type__(cls) -> tuple[AnnotationType, ...]:
         infos = cls.__primary_keys_field_info__
         print(f"Getting primary key type for {cls.__name__}: {infos=!r}")
         return tuple(field.annotation for field in infos)
@@ -114,7 +132,7 @@ class FastOrmMeta(type(BaseModel)):
 
     @property
     def __primary_keys_name__(cls) -> tuple[str]:
-        infos = cls.__primary_keys_fields__.keys()
+        infos = cls.__primary_keys_names__
         print(f"Getting primary key type for {cls.__name__}: {infos=!r}")
         return tuple(infos)
     # end def
@@ -124,8 +142,9 @@ class FastOrmMeta(type(BaseModel)):
 class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], metaclass=FastOrmMeta):
     """Base model class with a primary key."""
 
-    __primary_keys_fields__: ClassVar[dict[str, FieldInfo]]
     __primary_keys_field_info__: ClassVar[tuple[FieldInfo]]
+    __primary_keys_info_dict__: ClassVar[dict[str, FieldInfo]]
+    __primary_keys_names__: ClassVar[tuple[str,]]
     __primary_keys_type__: ClassVar[tuple[str]]
 
     @Property
@@ -134,28 +153,16 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], metaclass=FastOrmM
         return tuple(
             getattr(self, field_name)
             for field_name in
-            self.__class__.__primary_keys_fields__.keys()
+            self.__class__.__primary_keys_names__
         )
 
 
     @pk.annotater
     def pk(self) -> PrimaryKeyDataTypeArgType:
-        return self.__class__.__primary_keys_fields__
-    # end def
-
-    def __init__(self, **kwargs):
-        # Ensure that the primary key is set if it is required.
-        for field_name, field in self.__class__.__primary_keys_fields__:
-            if (
-                has_marker(field, PKMarker)
-                and has_marker(field.annotation, NotRequiredMarker)
-                and field_name not in kwargs
-            ):
-                kwargs[field_name] = None
-            # end if
-        # end for
-
-        super().__init__(**kwargs)
+        if not isinstance(self.pk, BaseModelWithPK):  # if it's called statically on the class itself, not an instance
+            return self.__primary_keys_type__
+        # end if
+        return self.__class__.__primary_keys_type__
     # end def
 # end class
 
