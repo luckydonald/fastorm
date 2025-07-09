@@ -7,6 +7,8 @@ from pydantic.fields import FieldInfo
 from fastorm.property import Property, ClassProperty
 from fastorm.tools.annotations import Marker, has_marker, AnnotationType, AnnotatedType
 
+from .marker import Marker, NotRequiredMarker, ForeignKeyMarker
+
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
 PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
 PrimaryKeyDataTypeArgType = Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyDataType], ...]
@@ -164,19 +166,10 @@ AutoSupporting = int | UUID
 AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 
 
-# Marker classes for Annotated metadata
-class NotRequiredMarker(Marker):
-    """Marker for Not Required fields."""
-    pass
-# end class
-
 class PKMarker(Generic[PrimaryKeyDataType], Marker):
     """Marker for Primary Key."""
     pass
 
-class ForeignKeyMarker(Marker):
-    """Marker for Foreign Key."""
-    pass
 
 class AutoMarker(Generic[AutoSupportingType], Marker):
     """Marker for Auto Primary Key (int or UUID)."""
