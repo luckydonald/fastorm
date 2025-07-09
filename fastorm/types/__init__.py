@@ -1,22 +1,20 @@
 from abc import ABC
 from typing import TypeVar, Generic, Annotated, Optional, Type, Union, ClassVar, Iterable, Any
 from uuid import UUID
+
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from fastorm.property import Property, ClassProperty
-from fastorm.tools.annotations import Marker, has_marker, AnnotationType, AnnotatedType
+from ..property import Property
+from ..tools.annotations import Marker, has_marker, AnnotationType
 
-from .marker import Marker, NotRequiredMarker, ForeignKeyMarker
+from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker
+from .fields import AutoPK, AutoIncrement, PrimaryKeyDataType, PK, ForeignKey
+from .basics import MaybeTuple, AutoSupporting, PrimaryKeyDataTypeArg, PrimaryKeyDataTypeArgType
 
-PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
-PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
-PrimaryKeyDataTypeArgType = Type[PrimaryKeyDataType] | tuple[Type[PrimaryKeyDataType], ...]
-
-type MaybeTuple[T] = T | tuple[T, ...]
-type MaybeTypeType[T] = MaybeTuple[type[T]]
 
 class UseDefault:
+    pass
     pass
 UseDefaultType = TypeVar("UseDefaultType", bound=UseDefault)
 UseDefault = UseDefault()
@@ -162,66 +160,10 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], metaclass=FastOrmM
 # end class
 
 
-AutoSupporting = int | UUID
-AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
-
-
-class PKMarker(Generic[PrimaryKeyDataType], Marker):
-    """Marker for Primary Key."""
-    pass
-
-
-class AutoMarker(Generic[AutoSupportingType], Marker):
-    """Marker for Auto Primary Key (int or UUID)."""
-    pass
-
-
 # Annotated types for user-facing API
 TYPE = TypeVar("TYPE")
 
 
-class PK(ABC):
-    def __class_getitem__(cls, item):
-        """Allows PK to be used as a generic type."""
-        if not isinstance(item, type):
-            if isinstance(item, TypeVar):
-                return Annotated[item, PKMarker()]
-            # end if
-            raise TypeError(f"Expected a type, got {item!r}")
-        # end if
-        return Annotated[item, PKMarker()]
-    # end def
-# end class
-
-
-class ForeignKey(ABC):
-    def __class_getitem__(cls, table: Type[BaseModelWithPK]) -> AnnotatedType:
-        """Allows PK to be used as a generic type."""
-        if not isinstance(table, type):
-            if isinstance(table, TypeVar):
-                return Annotated[table, ForeignKeyMarker()]
-            # end if
-            raise TypeError(f"Expected a type, got {table!r}")
-        # end if
-        if not issubclass(table, BaseModelWithPK):
-            raise TypeError(f"Expected a BaseModelWithPK, got {table!r}")
-        # end if
-        pk_type = table.__primary_keys_type__
-        print(f"1. Getting foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
-        return Annotated[Union[table, *pk_type], ForeignKeyMarker()]
-    # end def
-
-    def __new__(cls, table: Type[BaseModelWithPK]) -> AnnotatedType:
-        return cls.__class_getitem__(table)
-    # end def
-# end class
-
-
-AutoPK = Annotated[Optional[PK[PrimaryKeyDataType]], AutoMarker(), NotRequiredMarker()]
-type NotRequired[type] = Annotated[Optional[type], NotRequiredMarker()]
-
-AutoIncrement = AutoPK[int]
-AutoUUID = AutoPK[UUID]
 
 
 class ExampleTableWithAutoincrement(BaseModelWithPK):

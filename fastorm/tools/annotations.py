@@ -4,7 +4,6 @@ from pydantic.fields import FieldInfo
 
 from ..types.marker import Marker
 
-
 AnnotationType = type[Any] | None
 AnnotatedType = type(Annotated[str, "some metadata"])
 
