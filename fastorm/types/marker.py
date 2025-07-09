@@ -1,5 +1,5 @@
 from sys import version_info
-from types import UnionType
+from . import UnionType
 from typing import TypeAlias
 
 

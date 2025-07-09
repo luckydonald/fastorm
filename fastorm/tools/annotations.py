@@ -1,6 +1,4 @@
-import sys
-from types import UnionType
-from typing import get_origin, Annotated, TypeVar, Type, TypeAlias, Any
+from typing import get_origin, Annotated, Type, Any
 
 from pydantic.fields import FieldInfo
 
