@@ -1,5 +1,4 @@
 from sys import version_info
-from . import UnionType
 from typing import TypeAlias
 
 
@@ -10,6 +9,7 @@ class Marker:
 
 MarkerClass = type[Marker]
 if version_info >= (3, 10):
+    from types import UnionType
     MarkerInfo: TypeAlias = MarkerClass | UnionType | tuple[MarkerClass] | tuple['MarkerInfo', ...]
 else:
     MarkerInfo: TypeAlias = MarkerClass | tuple[MarkerClass] | tuple['MarkerInfo', ...]
