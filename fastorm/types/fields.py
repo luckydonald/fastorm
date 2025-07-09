@@ -44,8 +44,9 @@ class ForeignKey(ABC):
 # end class
 
 
-AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker(), NotRequiredMarker()]]
 type NotRequired[type] = Optional[Annotated[type, NotRequiredMarker()]]
+
+AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker(), NotRequiredMarker()]]
 
 AutoIncrement = AutoPK[int]
 AutoUUID = AutoPK[UUID]

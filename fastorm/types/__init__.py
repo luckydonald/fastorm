@@ -66,12 +66,23 @@ class FastOrmMeta(type(BaseModel)):
         bases: tuple[type, ...],  # Base classes of the new class
         namespace: _Namespace, # Class attributes/methods
     ) -> type["BaseModelWithPK"]:
+        # TODO: figure out way to not hardcode that string:
+        if name == 'BaseModelWithPK' and bases in (
+                (BaseModel,),
+                (BaseModel, Generic),
+        ):
+            # go directly to start, don't draw 200 bits
+            # skip the root class itself.
+            return super().__new__(mcs, name, bases, namespace)
+        # end if
         __annotations__: dict[str, Any] = namespace.get('__annotations__', {})
         # Check if the model has a primary key defined.
         has_primary_key = any(
             has_marker(field, PKMarker)
             for field in list(__annotations__.values())
         )
+        # (<class 'pydantic.main.BaseModel'>, <class 'typing.Generic'>)
+        # (<class 'fastorm.types.BaseModelWithPK'>,)
         if not has_primary_key:
             # If no primary key is defined, add an `id: AutoIncrement` field.
             print(f"Adding implicit primary key to {name}: id: AutoIncrement")
