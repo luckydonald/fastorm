@@ -28,6 +28,9 @@ class FastOrmModelTypehints(ABC):
 # end class
 
 
+type FastORMT = 'FastORM'
+
+
 # noinspection PyMethodParameters
 class FastOrmMeta(type(BaseModel)):
     """
@@ -66,7 +69,7 @@ class FastOrmMeta(type(BaseModel)):
         name: str,  # Name of the class being created
         bases: tuple[type, ...],  # Base classes of the new class
         namespace: _Namespace, # Class attributes/methods
-    ) -> type["FastORM"]:
+    ) -> type['FastORM']:
         # TODO: figure out way to not hardcode that string:
         if name == 'FastORM' and bases in (
                 (BaseModel,),
@@ -189,3 +192,5 @@ class FastORM(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehints, met
     # end def
 # end class
 
+
+type FastORMT = FastORM

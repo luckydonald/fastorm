@@ -1,9 +1,15 @@
 from abc import ABC
 from uuid import UUID
-from typing import Annotated, Optional, Union, TypeVar
+from typing import Annotated, Optional, Union, TypeVar, TYPE_CHECKING
 
 from .marker import NotRequiredMarker, AutoMarker, ForeignKeyMarker, PKMarker
 from .basics import AnnotatedType, PrimaryKeyDataType, PrimaryKeyDataTypeArg
+
+if TYPE_CHECKING:
+    from .models import FastORM as FastORMT
+else:
+    type FastORMT = 'FastORM'
+# end if
 
 
 __all__ = (
@@ -27,9 +33,6 @@ class PK(ABC):
         return Annotated[item, PKMarker()]
     # end def
 # end class
-
-
-type FastORMT = 'FastORM'
 
 
 class ForeignKey(ABC):
