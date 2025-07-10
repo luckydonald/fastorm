@@ -68,7 +68,7 @@ class FastOrmMeta(type(BaseModel)):
         namespace: _Namespace, # Class attributes/methods
     ) -> type["FastORM"]:
         # TODO: figure out way to not hardcode that string:
-        if name == 'BaseModelWithPK' and bases in (
+        if name == 'FastORM' and bases in (
                 (BaseModel,),
                 (BaseModel, Generic),
                 (BaseModel, Generic, FastOrmModelTypehints),
@@ -85,7 +85,7 @@ class FastOrmMeta(type(BaseModel)):
             for field in list(__annotations__.values())
         )
         # (<class 'pydantic.main.BaseModel'>, <class 'typing.Generic'>)
-        # (<class 'fastorm.types.BaseModelWithPK'>,)
+        # (<class 'fastorm.types.FastORM'>,)
         if not has_primary_key:
             # If no primary key is defined, add an `id: AutoIncrement` field.
             print(f"Adding implicit primary key to {name}: id: AutoIncrement")

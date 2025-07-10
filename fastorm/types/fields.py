@@ -29,8 +29,11 @@ class PK(ABC):
 # end class
 
 
+type FastORMT = 'FastORM'
+
+
 class ForeignKey(ABC):
-    def __class_getitem__(cls, table: type['BaseModelWithPK']) -> AnnotatedType:
+    def __class_getitem__(cls, table: type[FastORMT]) -> AnnotatedType:
         from . import FastORM
         """Allows PK to be used as a generic type."""
         if not isinstance(table, type):
@@ -40,7 +43,7 @@ class ForeignKey(ABC):
             raise TypeError(f"Expected a type, got {table!r}")
         # end if
         if not issubclass(table, FastORM):
-            raise TypeError(f"Expected a BaseModelWithPK, got {table!r}")
+            raise TypeError(f"Expected a {FastORM.__name__} instance, got {table!r}")
         # end if
         pk_type = table.__primary_keys_type__
         assert isinstance(pk_type, tuple), f"Primary keys type for {table.__name__} should be a tuple, got {pk_type=!r}"
@@ -57,7 +60,7 @@ class ForeignKey(ABC):
         return Annotated[Union[table, pk_type], ForeignKeyMarker()]
     # end def
 
-    def __new__(cls, table: type['BaseModelWithPK']) -> AnnotatedType:
+    def __new__(cls, table: type[FastORMT]) -> AnnotatedType:
         return cls.__class_getitem__(table)
     # end def
 # end class
