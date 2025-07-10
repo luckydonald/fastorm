@@ -13,6 +13,13 @@ from .basics import PrimaryKeyDataTypeArgType, Namespace as _Namespace
 from .default import UseDefault
 
 
+__all__ = (
+    'FastOrmModelTypehints',
+    'FastOrmMeta',
+    'BaseModelWithPK',
+)
+
+
 class FastOrmModelTypehints(ABC):
     __primary_keys_field_info__: ClassVar[tuple[FieldInfo]]
     __primary_keys_info_dict__: ClassVar[dict[str, FieldInfo]]
@@ -182,6 +189,3 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehi
     # end def
 # end class
 
-
-# Annotated types for user-facing API
-TYPE = TypeVar("TYPE")

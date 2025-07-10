@@ -3,6 +3,16 @@ from typing import TypeAlias, Generic
 
 from .basics import AutoSupportingType, PrimaryKeyDataType, AType
 
+__all__ = (
+    'Marker',
+    'MarkerClass',
+    'MarkerInfo',
+    'NotRequiredMarker',
+    'ForeignKeyMarker',
+    'PKMarker',
+    'DefaultMarker',
+    'AutoMarker',
+)
 
 class Marker:
     """Base class for markers"""
@@ -16,6 +26,8 @@ class Marker:
 # end class
 
 MarkerClass = type[Marker]
+
+# Type alias for MarkerInfo, which can be a MarkerClass, UnionType, or a tuple of MarkerClasses
 if version_info >= (3, 10):
     from types import UnionType
     MarkerInfo: TypeAlias = MarkerClass | UnionType | tuple[MarkerClass] | tuple['MarkerInfo', ...]
