@@ -3,6 +3,8 @@ from uuid import UUID
 
 AType = TypeVar("AType")
 
+type Namespace = dict[str, object]  # Class attributes/methods
+
 AutoSupporting = int | UUID
 AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 

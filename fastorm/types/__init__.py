@@ -11,11 +11,8 @@ from ..tools.iterators import unpack_single
 
 from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker, AutoMarker, DefaultMarker
 from .fields import AutoPK, AutoIncrement, PrimaryKeyDataType, PK, ForeignKey
-from .basics import MaybeTuple, AutoSupporting, PrimaryKeyDataTypeArg, PrimaryKeyDataTypeArgType
+from .basics import MaybeTuple, AutoSupporting, PrimaryKeyDataTypeArg, PrimaryKeyDataTypeArgType, Namespace as _Namespace
 from .default import UseDefaultType, UseDefault
-
-
-type _Namespace = dict[str, object]  # Class attributes/methods
 
 
 class FastOrmModelTypehints(ABC):
