@@ -104,3 +104,10 @@ await auction.update()
 ```py
 await user.delete()
 ```
+
+
+# Tests
+
+```bash
+python -m unittest discover --pattern="*_tests.py" --start-directory tests --locals
+```
