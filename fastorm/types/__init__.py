@@ -45,12 +45,15 @@ class FastOrmMeta(type(BaseModel)):
         *,
         annotation: Any = UseDefault,
         default: Any = UseDefault,
-    ) -> None:
+    ) -> _Namespace:
         """
         Writes the variable to the namespace.
         This is a workaround for Python 3.8 and earlier, where `__annotations__` is not writable.
         """
-        namespace['__annotations__'] = dict(namespace.get('__annotations__', {}))
+        if not '__annotations__' in namespace and not isinstance(annotation, dict):
+            # only destroy possible references if we are not using a dict
+            namespace['__annotations__'] = dict(namespace.get('__annotations__', {}))
+        # end if
 
         if default is not UseDefault:
             namespace[key] = default
@@ -58,6 +61,7 @@ class FastOrmMeta(type(BaseModel)):
         if annotation is not UseDefault:
             namespace['__annotations__'][key] = annotation
         # end if
+        return namespace
     # end def
 
     def __new__(
@@ -76,6 +80,7 @@ class FastOrmMeta(type(BaseModel)):
             return super().__new__(mcs, name, bases, namespace)
         # end if
         __annotations__: dict[str, Any] = namespace.get('__annotations__', {})
+        namespace['__annotations__'] = __annotations__
         # Check if the model has a primary key defined.
         has_primary_key = any(
             has_marker(field, PKMarker)
@@ -87,11 +92,12 @@ class FastOrmMeta(type(BaseModel)):
             # If no primary key is defined, add an `id: AutoIncrement` field.
             print(f"Adding implicit primary key to {name}: id: AutoIncrement")
             assert 'id' not in namespace, f"Implicit primary key 'id' already exists in {name}, but you didn't provide any PK yourself."
-            FastOrmMeta._write_variable_to_namespace(
+            namespace = FastOrmMeta._write_variable_to_namespace(
                 namespace,
                 key='id',
                 annotation=AutoIncrement,
             )
+
         # end if
 
         # set `default = None` for all AutoMarker
@@ -100,7 +106,7 @@ class FastOrmMeta(type(BaseModel)):
                 continue
             # end if
             print(f"Setting default=None for {name}.{field_name} (AutoMarker)")
-            FastOrmMeta._write_variable_to_namespace(
+            namespace = FastOrmMeta._write_variable_to_namespace(
                 namespace,
                 key=field_name,
                 default=None,
