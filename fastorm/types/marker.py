@@ -1,7 +1,7 @@
 from sys import version_info
 from typing import TypeAlias, Generic
 
-from .basics import AutoSupportingType, PrimaryKeyDataType
+from .basics import AutoSupportingType, PrimaryKeyDataType, AType
 
 
 class Marker:
@@ -35,8 +35,19 @@ class ForeignKeyMarker(Marker):
 class PKMarker(Generic[PrimaryKeyDataType], Marker):
     """Marker for Primary Key."""
     pass
+# end class
 
 
-class AutoMarker(Generic[AutoSupportingType], Marker):
+class DefaultMarker(Generic[AType], Marker):
+    def __init__(self, default: AType):
+        self.default = default
+    # end def
+# end class
+
+
+class AutoMarker(DefaultMarker[AutoSupportingType], Marker):
     """Marker for Auto Primary Key (int or UUID)."""
-    pass
+    def __init__(self, default: AType = None):
+        super().__init__(default)
+    # end def
+# end class
