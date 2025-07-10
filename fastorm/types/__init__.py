@@ -82,6 +82,7 @@ class FastOrmMeta(type(BaseModel)):
         if name == 'BaseModelWithPK' and bases in (
                 (BaseModel,),
                 (BaseModel, Generic),
+                (BaseModel, Generic, FastOrmModelTypehints),
         ):
             # go directly to start, don't draw 200 bits
             # skip the root class itself.
@@ -317,7 +318,7 @@ def test_insert_row_manually() -> None:
         description="This is an example description.",
         foreign_key_int=123,
         foreign_key_str=str_set,
-        foreign_key_uuid="example_id",
+        foreign_key_uuid="550e8400-e29b-11d4-a716-446655440000",  # the one from wikipedia.
         foreign_key_two=("part1", 456),
         foreign_key_nullable=123,
     )

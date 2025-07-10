@@ -39,6 +39,9 @@ class ForeignKey(ABC):
         if len(pk_type) == 1:
             # single primary key, no tuple -> unpack tuple
             pk_type = pk_type[0]
+        else:
+            # multiple primary keys, needs to be a tuple typehint
+            pk_type = tuple[*pk_type]
         # end if
         pk_type: PrimaryKeyDataTypeArg = pk_type
         print(f"1. Got foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
