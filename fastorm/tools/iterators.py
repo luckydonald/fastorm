@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from ..types.basics import AType
+from ..types.basics import AType, MaybeTuple
 
 
 def must_be_none_or_one(items: Iterable[AType]) -> AType | None:
