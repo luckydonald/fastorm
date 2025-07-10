@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import TypeVar, Generic, Annotated, Optional, Type, Union, ClassVar, Iterable, Any
+from typing import TypeVar, Generic, ClassVar, Any
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -7,7 +7,6 @@ from pydantic.fields import FieldInfo
 
 from ..property import Property
 from ..tools.annotations import Marker, has_marker, AnnotationType, get_marker
-from ..tools.iterators import unpack_single
 
 from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker, AutoMarker, DefaultMarker
 from .fields import AutoPK, AutoIncrement, PrimaryKeyDataType, PK, ForeignKey
