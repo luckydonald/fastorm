@@ -11,13 +11,8 @@ from ..tools.annotations import Marker, has_marker, AnnotationType, get_marker
 from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker, AutoMarker, DefaultMarker
 from .fields import AutoPK, AutoIncrement, PrimaryKeyDataType, PK, ForeignKey
 from .basics import MaybeTuple, AutoSupporting, PrimaryKeyDataTypeArg, PrimaryKeyDataTypeArgType
+from .default import UseDefaultType, UseDefault
 
-
-class UseDefault:
-    pass
-    pass
-UseDefaultType = TypeVar("UseDefaultType", bound=UseDefault)
-UseDefault = UseDefault()
 
 def unpack_single[t](many: tuple[t]) -> MaybeTuple[t]:
     """Unpack a single-element tuple to its element."""
