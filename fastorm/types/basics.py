@@ -1,4 +1,4 @@
-from typing import TypeVar, Any, Annotated
+from typing import TypeVar, Any, Annotated, Union
 from uuid import UUID
 
 AType = TypeVar("AType")
@@ -15,5 +15,5 @@ AnnotationType = type[Any] | None
 AnnotatedType = type(Annotated[str, "some metadata"])
 
 PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
-PrimaryKeyDataTypeArg = PrimaryKeyDataType | tuple[PrimaryKeyDataType, ...]
+PrimaryKeyDataTypeArg = Union[PrimaryKeyDataType, tuple[PrimaryKeyDataType, ...]]
 PrimaryKeyDataTypeArgType = type[PrimaryKeyDataType] | tuple[type[PrimaryKeyDataType], ...]
