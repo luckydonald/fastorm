@@ -3,6 +3,7 @@ from typing import get_origin, Annotated, Type, Any, get_args, Union
 from pydantic.fields import FieldInfo
 from sqlalchemy.util.typing import is_optional_union
 
+from .iterators import must_be_none_or_one
 from ..types.marker import Marker
 
 AnnotationType = type[Any] | None
@@ -28,8 +29,7 @@ def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker])
     if is_optional(annotated_type):
         markers = [get_marker(sub, marker) for sub in get_args(annotated_type)]
         markers = [m for m in markers if m is not None]
-        assert len(markers) <= 1, f"Optional should only have one marker, but got {len(markers)}: {markers=!r}"
-        return markers[0] if markers else None
+        return must_be_none_or_one(markers)
     # end if
     if isinstance(annotated_type, FieldInfo):
         metadata = annotated_type.metadata
@@ -44,5 +44,5 @@ def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker])
     # end if
     markers = [isinstance(meta, marker) for meta in metadata]
     assert len(markers) <= 1, f"Optional should only have one marker, but got {len(markers)}: {markers=!r}"
-    return markers[0] if markers else None
+    return must_be_none_or_one(markers)
 # end def
