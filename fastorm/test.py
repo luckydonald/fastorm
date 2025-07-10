@@ -1,3 +1,3 @@
-from fastorm.types import test_insert_row_manually
+from fastorm.types import test_instance_creation
 
-test_insert_row_manually()
+test_instance_creation()

@@ -254,7 +254,7 @@ class ExampleTableWithFK(BaseModelWithPK):
     foreign_key_nullable: ForeignKey[ExampleTableWithIntPK] | None
 
 
-def test_insert_row_manually() -> None:
+def test_instance_creation() -> None:
     auto_auto = ExampleTableWithAutoincrement(
         name="Example Name",
         description="This is an example description."
@@ -325,4 +325,5 @@ def test_insert_row_manually() -> None:
 # end def
 
 if __name__ == "__main__":
-    test_insert_row_manually()
+    test_instance_creation()
+# end if
