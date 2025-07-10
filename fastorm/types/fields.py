@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import Annotated, Optional, Union, TypeVar
 
 from .marker import NotRequiredMarker, AutoMarker, ForeignKeyMarker, PKMarker
-from .basics import AnnotatedType, PrimaryKeyDataType
+from .basics import AnnotatedType, PrimaryKeyDataType, PrimaryKeyDataTypeArg
 
 
 class PK(ABC):
@@ -34,8 +34,15 @@ class ForeignKey(ABC):
             raise TypeError(f"Expected a BaseModelWithPK, got {table!r}")
         # end if
         pk_type = table.__primary_keys_type__
-        print(f"1. Getting foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
-        return Annotated[Union[table, *pk_type], ForeignKeyMarker()]
+        assert isinstance(pk_type, tuple), f"Primary keys type for {table.__name__} should be a tuple, got {pk_type=!r}"
+        assert len(pk_type) > 0, f"Primary keys type for {table.__name__} should not be empty, got {pk_type=!r}"
+        if len(pk_type) == 1:
+            # single primary key, no tuple -> unpack tuple
+            pk_type = pk_type[0]
+        # end if
+        pk_type: PrimaryKeyDataTypeArg = pk_type
+        print(f"1. Got foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
+        return Annotated[Union[table, pk_type], ForeignKeyMarker()]
     # end def
 
     def __new__(cls, table: type['BaseModelWithPK']) -> AnnotatedType:

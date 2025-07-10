@@ -134,6 +134,8 @@ class FastOrmMeta(type(BaseModel)):
 
         # Create the class
         return super().__new__(mcs, name, bases, namespace)
+    # end def
+
     @property
     def __primary_keys_info_dict__(cls: BaseModel) -> dict[str, FieldInfo]:
         """Returns the primary key of the model."""
@@ -179,14 +181,14 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehi
     """Base model class with a primary key."""
 
     @Property
-    def pk(self) -> PrimaryKeyDataTypeArg:
+    def pk(self) -> tuple[PrimaryKeyDataType, ...]:
         """Returns the primary key of the model."""
         return tuple(
             getattr(self, field_name)
             for field_name in
             self.__class__.__primary_keys_names__
         )
-
+    # end def
 
     @pk.annotater
     def pk(self) -> PrimaryKeyDataTypeArgType:
@@ -234,6 +236,12 @@ class ExampleTableWithImplicitPK(BaseModelWithPK):
     # Implicit primary key, so `id: AutoIncrementPK`
     name: str
     description: str
+
+class ExampleTableWithOneFK(BaseModelWithPK):
+    name: str
+    description: str
+    foreign_key: ForeignKey[ExampleTableWithAutoincrement]
+
 
 class ExampleTableWithFK(BaseModelWithPK):
     name: str
@@ -283,6 +291,17 @@ def test_insert_row_manually() -> None:
     implicit_pk_set = ExampleTableWithImplicitPK(
         name="Implicit PK Name",
         description="This is an implicit primary key example."
+    )
+    auto_auto.id = 1  # Set the ID manually for the autoincrement table
+    fk_auto = ExampleTableWithOneFK(
+        name="Example Name",
+        description="This is an example description.",
+        foreign_key=auto_auto,
+    )
+    fk_set = ExampleTableWithOneFK(
+        name="Example Name",
+        description="This is an example description.",
+        foreign_key=1,
     )
     fk_set_1 = ExampleTableWithFK(
         name="Example Name",

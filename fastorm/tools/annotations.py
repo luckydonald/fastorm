@@ -33,6 +33,11 @@ def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker])
     # end if
     if isinstance(annotated_type, FieldInfo):
         metadata = annotated_type.metadata
+        if not metadata:
+            # In the case of a Union, the metadata is not available directly, instead the annotation is left as is,
+            # therefore, we process it as if it were an Annotated type - because it is.
+            return get_marker(annotated_type.annotation, marker)
+        # end if
     else:
         if not is_annotated(annotated_type):
             return None
