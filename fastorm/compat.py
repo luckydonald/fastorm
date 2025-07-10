@@ -5,15 +5,10 @@ __author__ = 'luckydonald'
 import inspect
 import sys
 from typing import Any, Union, Dict, Type
-try:
-    from pydantic.fields import ModelField
-except ImportError:
-    from pydantic.v1.fields import ModelField
-# end try
+from pydantic.fields import FieldInfo
 
 
-
-TYPEHINT_TYPE = Union[Type, ModelField]
+TYPEHINT_TYPE = Union[Type, FieldInfo]
 
 IS_MIN_PYTHON_3_7 = sys.version_info[:3] >= (3, 7, 0)
 IS_MIN_PYTHON_3_9 = sys.version_info[:3] >= (3, 9, 0)
