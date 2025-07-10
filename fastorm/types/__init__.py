@@ -6,9 +6,9 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 from ..property import Property
-from ..tools.annotations import Marker, has_marker, AnnotationType
+from ..tools.annotations import Marker, has_marker, AnnotationType, get_marker
 
-from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker, AutoMarker
+from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker, AutoMarker, DefaultMarker
 from .fields import AutoPK, AutoIncrement, PrimaryKeyDataType, PK, ForeignKey
 from .basics import MaybeTuple, AutoSupporting, PrimaryKeyDataTypeArg, PrimaryKeyDataTypeArgType
 
@@ -102,16 +102,23 @@ class FastOrmMeta(type(BaseModel)):
 
         # set `default = None` for all AutoMarker
         for field_name, field in __annotations__.items():
-            if not has_marker(field, AutoMarker):
+            marker: DefaultMarker | None = get_marker(field, DefaultMarker)
+            if not marker:
                 continue
             # end if
-            print(f"Setting default=None for {name}.{field_name} (AutoMarker)")
+            marker_name = marker.__class__.__name__
+            if type(marker) != DefaultMarker:
+                # it's a subclass of AutoMarker
+                marker_name = f"{marker_name}, a DefaultMarker"
+            # end if
+            print(f" Setting default=None for {name}.{field_name} ({marker_name})")
             namespace = FastOrmMeta._write_variable_to_namespace(
                 namespace,
                 key=field_name,
-                default=None,
+                default=marker.default,
             )
             # end if
+        # end for
 
         # Create the class
         return super().__new__(mcs, name, bases, namespace)
