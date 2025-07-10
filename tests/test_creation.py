@@ -1,7 +1,7 @@
 from uuid import UUID
 import unittest
 
-from fastorm.types import BaseModelWithPK, AutoIncrement, PK, AutoPK, ForeignKey
+from fastorm import BaseModelWithPK, AutoIncrement, PK, AutoPK, ForeignKey
 
 
 class ExampleTableWithAutoincrement(BaseModelWithPK):
