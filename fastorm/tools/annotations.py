@@ -42,7 +42,6 @@ def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker])
         # end if
         metadata = getattr(annotated_type, '__metadata__', [])
     # end if
-    markers = [isinstance(meta, marker) for meta in metadata]
-    assert len(markers) <= 1, f"Optional should only have one marker, but got {len(markers)}: {markers=!r}"
+    markers = [meta for meta in metadata if isinstance(meta, marker)]
     return must_be_none_or_one(markers)
 # end def
