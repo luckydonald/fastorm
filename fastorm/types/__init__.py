@@ -322,6 +322,7 @@ def test_instance_creation() -> None:
         foreign_key_two=("part1", 456),
         foreign_key_nullable=123,
     )
+    pass
 # end def
 
 if __name__ == "__main__":

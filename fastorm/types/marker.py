@@ -6,7 +6,13 @@ from .basics import AutoSupportingType, PrimaryKeyDataType, AType
 
 class Marker:
     """Base class for markers"""
-    pass
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+    # end def
+
+    def __str__(self):
+        return f"{self.__class__.__name__}"
+    # end def
 # end class
 
 MarkerClass = type[Marker]
@@ -41,6 +47,15 @@ class PKMarker(Generic[PrimaryKeyDataType], Marker):
 class DefaultMarker(Generic[AType], Marker):
     def __init__(self, default: AType):
         self.default = default
+    # end def
+
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(default={self.default!r})"
+    # end def
+
+    def __str__(self):
+        return f"{self.__class__.__name__} with default={self.default!r}"
     # end def
 # end class
 
