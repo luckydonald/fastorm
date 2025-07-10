@@ -31,6 +31,14 @@ def unpack_single[t](many: tuple[t]) -> MaybeTuple[t]:
 type _Namespace = dict[str, object]  # Class attributes/methods
 
 
+class FastOrmModelTypehints(ABC):
+    __primary_keys_field_info__: ClassVar[tuple[FieldInfo]]
+    __primary_keys_info_dict__: ClassVar[dict[str, FieldInfo]]
+    __primary_keys_names__: ClassVar[tuple[str,]]
+    __primary_keys_type__: ClassVar[tuple[str]]
+# end class
+
+
 # noinspection PyMethodParameters
 class FastOrmMeta(type(BaseModel)):
     """
@@ -120,6 +128,10 @@ class FastOrmMeta(type(BaseModel)):
             # end if
         # end for
 
+        # Fill in the `__primary_keys_*` properties
+        # merge __annotations__ with FastOrmModelTypehints.__annotations__
+        namespace['__annotations__'] |= FastOrmModelTypehints.__annotations__
+
         # Create the class
         return super().__new__(mcs, name, bases, namespace)
     @property
@@ -163,13 +175,8 @@ class FastOrmMeta(type(BaseModel)):
 # end class
 
 
-class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], metaclass=FastOrmMeta):
+class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehints, metaclass=FastOrmMeta):
     """Base model class with a primary key."""
-
-    __primary_keys_field_info__: ClassVar[tuple[FieldInfo]]
-    __primary_keys_info_dict__: ClassVar[dict[str, FieldInfo]]
-    __primary_keys_names__: ClassVar[tuple[str,]]
-    __primary_keys_type__: ClassVar[tuple[str]]
 
     @Property
     def pk(self) -> PrimaryKeyDataTypeArg:
