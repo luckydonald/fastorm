@@ -69,8 +69,6 @@ class ForeignKey(ABC):
 # end class
 
 
-type NotRequired[type] = Optional[Annotated[type, NotRequiredMarker()]]
-
 AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker(), NotRequiredMarker()]]
 
 AutoIncrement = AutoPK[int]
