@@ -1,47 +1,47 @@
 from uuid import UUID
 import unittest
 
-from fastorm import BaseModelWithPK, AutoIncrement, PK, AutoPK, ForeignKey
+from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey
 
 
-class ExampleTableWithAutoincrement(BaseModelWithPK):
+class ExampleTableWithAutoincrement(FastORM):
     id: AutoIncrement
     name: str
     description: str
 
-class ExampleTableWithIntPK(BaseModelWithPK):
+class ExampleTableWithIntPK(FastORM):
     id: PK[int]
     name: str
     description: str
 
-class ExampleTableWithStrPK(BaseModelWithPK):
+class ExampleTableWithStrPK(FastORM):
     id: PK[str]
     name: str
     description: str
 
-class ExampleTableWithUUIDPK(BaseModelWithPK):
+class ExampleTableWithUUIDPK(FastORM):
     id: AutoPK[UUID]
     name: str
     description: str
 
-class ExampleTableWithTwoPKs(BaseModelWithPK):
+class ExampleTableWithTwoPKs(FastORM):
     id1: PK[str]
     id2: PK[int]
     name: str
     description: str
 
-class ExampleTableWithImplicitPK(BaseModelWithPK):
+class ExampleTableWithImplicitPK(FastORM):
     # Implicit primary key, so `id: AutoIncrementPK`
     name: str
     description: str
 
-class ExampleTableWithOneFK(BaseModelWithPK):
+class ExampleTableWithOneFK(FastORM):
     name: str
     description: str
     foreign_key: ForeignKey[ExampleTableWithAutoincrement]
 
 
-class ExampleTableWithFK(BaseModelWithPK):
+class ExampleTableWithFK(FastORM):
     name: str
     description: str
     foreign_key_int: ForeignKey[ExampleTableWithIntPK]

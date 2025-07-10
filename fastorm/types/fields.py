@@ -31,7 +31,7 @@ class PK(ABC):
 
 class ForeignKey(ABC):
     def __class_getitem__(cls, table: type['BaseModelWithPK']) -> AnnotatedType:
-        from . import BaseModelWithPK
+        from . import FastORM
         """Allows PK to be used as a generic type."""
         if not isinstance(table, type):
             if isinstance(table, TypeVar):
@@ -39,7 +39,7 @@ class ForeignKey(ABC):
             # end if
             raise TypeError(f"Expected a type, got {table!r}")
         # end if
-        if not issubclass(table, BaseModelWithPK):
+        if not issubclass(table, FastORM):
             raise TypeError(f"Expected a BaseModelWithPK, got {table!r}")
         # end if
         pk_type = table.__primary_keys_type__

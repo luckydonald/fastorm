@@ -16,7 +16,7 @@ from .default import UseDefault
 __all__ = (
     'FastOrmModelTypehints',
     'FastOrmMeta',
-    'BaseModelWithPK',
+    'FastORM',
 )
 
 
@@ -66,7 +66,7 @@ class FastOrmMeta(type(BaseModel)):
         name: str,  # Name of the class being created
         bases: tuple[type, ...],  # Base classes of the new class
         namespace: _Namespace, # Class attributes/methods
-    ) -> type["BaseModelWithPK"]:
+    ) -> type["FastORM"]:
         # TODO: figure out way to not hardcode that string:
         if name == 'BaseModelWithPK' and bases in (
                 (BaseModel,),
@@ -167,7 +167,7 @@ class FastOrmMeta(type(BaseModel)):
 # end class
 
 
-class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehints, metaclass=FastOrmMeta):
+class FastORM(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehints, metaclass=FastOrmMeta):
     """Base model class with a primary key."""
 
     @Property
@@ -182,7 +182,7 @@ class BaseModelWithPK(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehi
 
     @pk.annotater
     def pk(self) -> PrimaryKeyDataTypeArgType:
-        if not isinstance(self.pk, BaseModelWithPK):  # if it's called statically on the class itself, not an instance
+        if not isinstance(self.pk, FastORM):  # if it's called statically on the class itself, not an instance
             return self.__primary_keys_type__
         # end if
         return self.__class__.__primary_keys_type__
