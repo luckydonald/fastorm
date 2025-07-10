@@ -7,20 +7,12 @@ from pydantic.fields import FieldInfo
 
 from ..property import Property
 from ..tools.annotations import Marker, has_marker, AnnotationType, get_marker
+from ..tools.iterators import unpack_single
 
 from .marker import Marker, NotRequiredMarker, ForeignKeyMarker, PKMarker, AutoMarker, DefaultMarker
 from .fields import AutoPK, AutoIncrement, PrimaryKeyDataType, PK, ForeignKey
 from .basics import MaybeTuple, AutoSupporting, PrimaryKeyDataTypeArg, PrimaryKeyDataTypeArgType
 from .default import UseDefaultType, UseDefault
-
-
-def unpack_single[t](many: tuple[t]) -> MaybeTuple[t]:
-    """Unpack a single-element tuple to its element."""
-    if len(tuple) == 1:
-        return tuple[0]
-    # end if
-    return tuple
-# end def
 
 
 type _Namespace = dict[str, object]  # Class attributes/methods
