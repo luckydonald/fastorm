@@ -6,6 +6,8 @@ from decimal import Decimal
 from pydantic import BaseModel, JsonValue
 from hypothesis import given, strategies as st, settings
 
+from fastorm import FastORM as FastOrmModel
+
 
 class ExampleStrEnum(str, Enum):
     A = "A"
@@ -43,13 +45,13 @@ class ExampleBaseModel(BaseModel):
     example_str: str
     example_bool: bool
 
-class ReferencedTable(BaseModel):
+class ReferencedTable(FastOrmModel):
     id: int
     name: str
     description: str
 
 
-class TableToTest(BaseModel):
+class ToTestTable(FastOrmModel):
     id: int
     name: str
     description: str
@@ -104,7 +106,7 @@ class TableToTest(BaseModel):
     timedelta_field: timedelta
     other_reference_required: ReferencedTable
     other_reference_optional: ReferencedTable | None
-    self_reference: Union["TableToTest", None]
+    self_reference: Union["ToTestTable", None]
     json_field: JsonValue
     pydantic_basemodel: ExampleBaseModel
     pydantic_generic_basemodel: BaseModel
@@ -144,7 +146,7 @@ def referenced_table_strategy(draw):
 @st.composite
 def table_to_test_strategy(draw):
     # For recursive/self-referencing fields, use None for simplicity
-    return TableToTest(
+    return ToTestTable(
         id=draw(st.integers()),
         name=draw(st.text()),
         description=draw(st.text()),
@@ -218,7 +220,7 @@ def table_to_test_strategy(draw):
 @given(table=table_to_test_strategy())
 def test_insert_row_hypothesis(table):
     # Just ensure instantiation works and fields are populated
-    assert isinstance(table, TableToTest)
+    assert isinstance(table, ToTestTable)
     assert isinstance(table.pydantic_basemodel, ExampleBaseModel)
     print(table.model_dump())
 
