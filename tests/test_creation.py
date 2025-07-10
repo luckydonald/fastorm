@@ -201,3 +201,7 @@ class TestInstanceCreation(unittest.TestCase):
     # end def
 # end class
 
+
+if __name__ == '__main__':
+    unittest.main()
+# end if
