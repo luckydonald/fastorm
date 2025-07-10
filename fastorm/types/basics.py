@@ -1,6 +1,8 @@
 from typing import TypeVar, Any, Annotated
 from uuid import UUID
 
+AType = TypeVar("AType")
+
 AutoSupporting = int | UUID
 AutoSupportingType = TypeVar("AutoSupportingType", bound=AutoSupporting)
 
