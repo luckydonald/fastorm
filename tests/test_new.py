@@ -33,6 +33,7 @@
 # | time                | datetime.time()     |
 # | timedelta           | datetime.timedelta(hours=2, minutes=3) |
 # | Decimal             | Decimal("1.23")     |
+
 from datetime import datetime, timedelta, date, time
 from enum import Enum
 from typing import Literal, Union
@@ -40,6 +41,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, JsonValue
 
+from fastorm import FastORM as FastOrmModel
 
 class ExampleStrEnum(str, Enum):
     A = "A"
@@ -77,13 +79,13 @@ class ExampleBaseModel(BaseModel):
     example_str: str
     example_bool: bool
 
-class ReferencedTable(BaseModel):
+class ReferencedTable(FastOrmModel):
     id: int
     name: str
     description: str
 
 
-class TableToTest(BaseModel):
+class ToTestTable(FastOrmModel):
     id: int
     name: str
     description: str
@@ -138,7 +140,7 @@ class TableToTest(BaseModel):
     timedelta_field: timedelta
     other_reference_required: ReferencedTable
     other_reference_optional: ReferencedTable | None
-    self_reference: Union["TableToTest", None]
+    self_reference: Union["ToTestTable", None]
     json_field: JsonValue
     pydantic_basemodel: ExampleBaseModel
     pydantic_generic_basemodel: BaseModel
@@ -163,7 +165,7 @@ class TableToTest(BaseModel):
 def test_insert_row():
     import datetime
     from decimal import Decimal
-    table = TableToTest(
+    table = ToTestTable(
         id=1,
         name="Test Name",
         description="Test Description",
@@ -279,7 +281,7 @@ def test_insert_row_hypothesis(
     literal_field, enum_field, datetime_field, date_field, time_field, decimal_field
 ):
     # Only a subset of fields for demonstration; expand as needed.
-    TableToTest(
+    ToTestTable(
         id=id,
         name=name,
         description=description,
