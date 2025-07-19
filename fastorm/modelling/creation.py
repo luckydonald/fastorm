@@ -1,5 +1,4 @@
 from typing import Type
-from pydantic import BaseModel
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, BigInteger, Float, Boolean, DateTime, Date, Time, Text, LargeBinary, Interval, String
 import datetime
@@ -34,6 +33,7 @@ def pydantic_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str =
     Create a SQLAlchemy model class from a Pydantic BaseModel, using the largest reasonable datatypes.
     """
     attrs = {}
+    pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
     for name, info in fastorm_model.__primary_keys_info_dict__.items():
         field_type = get_actual_type(info)
         # Map to SQLAlchemy type, default to Text if unknown
@@ -51,9 +51,9 @@ def pydantic_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str =
             raise TypeError(
                 f"Unsupported field type {field_type} for {name} in {fastorm_model.__name__}. "
                 "Please define a custom mapping for this type."
-            )  # TODO: allow custom mapping, lol
-        # end for
-        attrs[name] = Column(column_type)
+            )
+        # end try
+        attrs[name] = Column(column_type, primary_key=(name in pk_names))
     # Optionally set __tablename__
     attrs['__tablename__'] = table_name or fastorm_model.__name__.lower()
     # Create the model class
