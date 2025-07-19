@@ -116,7 +116,7 @@ class Property(native_property):
             pass
         # end class
         # noinspection PyArgumentList
-        proxied = ProxiedValue(result, prop=self, instance=obj)
+        proxied = ProxiedValue(result)
         proxied.prop = self
         proxied.instance = obj
         return proxied
