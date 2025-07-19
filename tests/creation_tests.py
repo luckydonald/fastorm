@@ -211,22 +211,6 @@ class TestSqlalchemyCreation(unittest.TestCase):
         # Setup in-memory SQLite DB and session
         cls.engine = create_engine("sqlite:///:memory:")
         cls.Session = sessionmaker(bind=cls.engine)
-        # Create all tables for all test models
-        cls.sqlalchemy_models = {}
-        for model in [
-            ExampleTableWithAutoincrement,
-            ExampleTableWithIntPK,
-            ExampleTableWithStrPK,
-            ExampleTableWithUUIDPK,
-            ExampleTableWithTwoPKs,
-            ExampleTableWithImplicitPK,
-            ExampleTableWithOneFK,
-            ExampleTableWithFK,
-        ]:
-            sqla_model = pydantic_to_sqlalchemy_model(model)
-            cls.sqlalchemy_models[model.__name__] = sqla_model
-            sqla_model.metadata.create_all(cls.engine)
-        # end for
     # end def
 
     def setUp(self):
@@ -239,17 +223,33 @@ class TestSqlalchemyCreation(unittest.TestCase):
 
     # Example: override one test to check SQLAlchemy model creation
     def test_sqlalchemy_model_creation(self):
+        # Create all tables for all test models
+        sqlalchemy_models = {}
         # Pick one model to test
-        sqla_model = self.sqlalchemy_models["ExampleTableWithAutoincrement"]
-        # Create an instance and add to session
-        obj = sqla_model(name="SQLA Name", description="SQLAlchemy test row")
-        self.session.add(obj)
-        self.session.commit()
-        # Query back
-        result = self.session.query(sqla_model).filter_by(name="SQLA Name").first()
-        self.assertIsNotNone(result)
-        self.assertEqual(result.name, "SQLA Name")
-        self.assertEqual(result.description, "SQLAlchemy test row")
+        for model in [
+            ExampleTableWithAutoincrement,
+            ExampleTableWithIntPK,
+            ExampleTableWithStrPK,
+            ExampleTableWithUUIDPK,
+            ExampleTableWithTwoPKs,
+            ExampleTableWithImplicitPK,
+            ExampleTableWithOneFK,
+            ExampleTableWithFK,
+        ]:
+            with self.subTest(model.__name__):
+                sqla_model = pydantic_to_sqlalchemy_model(model)
+                sqla_model.metadata.create_all(self.engine)
+                # Create an instance and add to session
+                obj = sqla_model(name="SQLA Name", description="SQLAlchemy test row")
+                self.session.add(obj)
+                self.session.commit()
+                # Query back
+                result = self.session.query(sqla_model).filter_by(name="SQLA Name").first()
+                self.assertIsNotNone(result)
+                self.assertEqual(result.name, "SQLA Name")
+                self.assertEqual(result.description, "SQLAlchemy test row")
+            # end with
+        # end for
     # end def
 
     # You can add more tests for other models as needed, or call super().test_* if you want to reuse logic.
