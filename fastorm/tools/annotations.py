@@ -24,6 +24,32 @@ def has_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker])
 # end def
 
 
+def get_actual_type(annotated_type: AnnotationType | FieldInfo) -> AnnotationType:
+    """Get the actual type from an annotated type."""
+    if is_optional(annotated_type):
+        args = get_args(annotated_type)
+        if len(args) == 2 and args[1] is type(None):
+            return get_actual_type(args[0])
+        # end if
+        return get_actual_type(must_be_none_or_one(args))
+    # end if
+    if is_annotated(annotated_type):
+        args = get_args(annotated_type)
+        if not args:
+            return None
+        # end if
+        if len(args) == 1:
+            return get_actual_type(args[0])
+        # end if
+        # If there are multiple arguments, we assume the first one is the type.
+        return get_actual_type(args[0])
+    if isinstance(annotated_type, FieldInfo):
+        return get_actual_type(annotated_type.annotation)
+    # end if
+    return annotated_type
+# end def
+
+
 def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker]) -> Marker | None:
     """Check if the annotated type is a valid primary key."""
     if is_optional(annotated_type):
