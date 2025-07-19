@@ -12,6 +12,8 @@ echo '# Tests' >> ${RESULT_FILE}
 
 export PYTHONPATH="$(realpath "."):($realpath './tests')" PYTHONUNBUFFERED=1
 cd tests/ || exit
+$(pyenv which python) python -m unittest discover --pattern="*_tests.py" --start-directory tests --locals
+
 $(pyenv which python) run_tests.py | tee --append ../${RESULT_FILE}
 cd ..
 
