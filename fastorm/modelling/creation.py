@@ -44,7 +44,9 @@ def pydantic_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str =
                     break
                 # end if
             except TypeError as e:
-                pass
+                raise TypeError(
+                    f"Error processing field {name} in {fastorm_model.__name__}: {e}"
+                ) from e
         else:
             raise TypeError(
                 f"Unsupported field type {field_type} for {name} in {fastorm_model.__name__}. "
