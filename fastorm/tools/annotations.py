@@ -1,7 +1,7 @@
 from typing import get_origin, Annotated, Type, Any, get_args, TypedDict
 
 from pydantic.fields import FieldInfo
-from sqlalchemy.util.typing import is_optional_union
+from .sqlalchemy_typing import is_optional_union
 
 from .iterators import must_be_none_or_one
 from ..types.marker import Marker
