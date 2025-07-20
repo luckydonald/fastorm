@@ -1,4 +1,4 @@
-from typing import get_origin, Annotated, Type, Any, get_args, TypedDict
+from typing import get_origin, Annotated, Type, Any, get_args, TypedDict, get_type_hints
 
 from pydantic.fields import FieldInfo
 from .sqlalchemy_typing import is_optional_union
@@ -84,5 +84,6 @@ def merge_typeddict_definition(name: str, *classes: type[TypedDict], total: bool
     merged: dict[str, type] = {}
     for cls in classes:
         merged.update(get_type_hints(cls))
-    return typing.TypedDict(name, merged, total=total)
+    # end for
+    return TypedDict(name, merged, total=total)
 # end def
