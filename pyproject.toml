@@ -39,9 +39,11 @@ asyncpg = "*"
 luckydonald-utils = ">=0.83"
 typeguard = "*"
 pydantic = "^2.0.0"
+sqlalchemy = "^2.0.41"
 
 [tool.poetry.extras]
 test = []
+asyncio = ["sqlalchemy[asyncio]"]
 
 [tool.poetry.urls]
 Documentation = "https://github.com/luckydonald/fastorm"
