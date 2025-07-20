@@ -2,6 +2,8 @@ from typing import TypedDict
 
 from pydantic import ConfigDict as PydanticConfigDict, TypeAdapter
 
+from ..tools.annotations import merge_typeddict_definition
+
 
 class ConfigDict(TypedDict, total=False):
     """A TypedDict for configuring FastORM Model behavior."""
