@@ -12,7 +12,7 @@ from .marker import PKMarker, DefaultMarker
 from .fields import AutoIncrement, PrimaryKeyDataType
 from .basics import PrimaryKeyDataTypeArgType, Namespace as _Namespace
 from .default import UseDefault
-
+from .config import CombinedConfigDict, PydanticConfigDict, ConfigDictAdapter
 
 __all__ = (
     'FastOrmModelTypehints',
@@ -71,6 +71,7 @@ class FastOrmMeta(type(BaseModel)):
         name: str,  # Name of the class being created
         bases: tuple[type, ...],  # Base classes of the new class
         namespace: _Namespace, # Class attributes/methods
+        **kwargs: Any,
     ) -> type['FastORM']:
         # TODO: figure out way to not hardcode that string:
         if name == 'FastORM' and bases in (
@@ -100,7 +101,6 @@ class FastOrmMeta(type(BaseModel)):
                 key='id',
                 annotation=AutoIncrement,
             )
-
         # end if
 
         # set `default = None` for all AutoMarker
@@ -130,6 +130,22 @@ class FastOrmMeta(type(BaseModel)):
         # Create the class
         return super().__new__(mcs, name, bases, namespace)
     # end def
+
+    @staticmethod
+    def parse_kwargs(cls, kwargs: dict[str, Any]) -> CombinedConfigDict:
+        """
+        Parses the keyword arguments for the model.
+        This is used to ensure that the primary key fields are set correctly.
+        """
+        config: CombinedConfigDict | PydanticConfigDict | None = kwargs.get('config', None)
+        if config is None:
+            config = {}
+        # end if
+
+        ConfigDictAdapter(config).validate_python()
+        return config
+    # end def
+
 
     @property
     def __primary_keys_info_dict__(cls: BaseModel) -> dict[str, FieldInfo]:
