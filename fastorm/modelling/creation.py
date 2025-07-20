@@ -1,4 +1,4 @@
-^from typing import Type, TypeVar
+from typing import Type
 from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, BigInteger, Float, Boolean, DateTime, Date, Time, Text, LargeBinary, Interval, String
 import datetime
