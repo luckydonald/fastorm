@@ -32,6 +32,8 @@ def pydantic_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str =
     """
     Create a SQLAlchemy model class from a Pydantic BaseModel, using the largest reasonable datatypes.
     """
+    # implementation details:
+    # - Sets primary_key=True for fields listed in __primary_keys_names__.
     attrs = {}
     pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
     for name, info in fastorm_model.__primary_keys_info_dict__.items():
@@ -54,9 +56,8 @@ def pydantic_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str =
             )
         # end try
         attrs[name] = Column(column_type, primary_key=(name in pk_names))
-    # Optionally set __tablename__
+    # end for
     attrs['__tablename__'] = table_name or fastorm_model.__name__.lower()
-    # Create the model class
     return type(
         f"{fastorm_model.__name__}SQLA",
         (Base,),
