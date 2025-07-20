@@ -1,5 +1,5 @@
-from typing import Type
-from sqlalchemy.ext.declarative import declarative_base
+^from typing import Type, TypeVar
+from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, BigInteger, Float, Boolean, DateTime, Date, Time, Text, LargeBinary, Interval, String
 import datetime
 import uuid
@@ -13,7 +13,8 @@ try:
 except ImportError:
     HAS_PG_UUID = False
 
-Base = declarative_base()
+Base: DeclarativeMeta = declarative_base()
+BaseType = type(Base)
 
 PYDANTIC_TYPE_MAP = {
     int: BigInteger,
@@ -29,7 +30,7 @@ PYDANTIC_TYPE_MAP = {
 }
 
 
-def fastorm_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str = None):
+def fastorm_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str = None) -> type[BaseType]:
     """
     Create a SQLAlchemy model class from a Pydantic BaseModel, using the largest reasonable datatypes.
     """

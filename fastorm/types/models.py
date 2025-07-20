@@ -1,9 +1,10 @@
 from abc import ABC
-from typing import TypeVar, Generic, ClassVar, Any
+from typing import Generic, ClassVar, Any
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
+from ..modelling.creation import BaseType
 from ..property import Property
 from ..tools.annotations import has_marker, AnnotationType, get_marker
 
@@ -25,6 +26,7 @@ class FastOrmModelTypehints(ABC):
     __primary_keys_info_dict__: ClassVar[dict[str, FieldInfo]]
     __primary_keys_names__: ClassVar[tuple[str,]]
     __primary_keys_type__: ClassVar[tuple[str]]
+    __sqlalchemy_model__: ClassVar[type[BaseType]]
 # end class
 
 
@@ -166,6 +168,12 @@ class FastOrmMeta(type(BaseModel)):
         infos = cls.__primary_keys_names__
         print(f"Getting primary key type for {cls.__name__}: {infos=!r}")
         return tuple(infos)
+    # end def
+
+    @property
+    def __sqlalchemy_model__(cls) -> type[BaseType]:
+        from ..modelling.creation import fastorm_to_sqlalchemy_model
+        return fastorm_to_sqlalchemy_model(cls, table_name=None)
     # end def
 # end class
 
