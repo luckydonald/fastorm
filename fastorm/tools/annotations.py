@@ -1,6 +1,8 @@
+import sys
 from typing import get_origin, Annotated, Type, Any, get_args, TypedDict, get_type_hints
 
 from pydantic.fields import FieldInfo
+
 from .sqlalchemy_typing import is_optional_union
 
 from .iterators import must_be_none_or_one
@@ -83,7 +85,7 @@ def merge_typeddict_definition(name: str, *classes: type[TypedDict], total: bool
     """Dynamically create a new TypedDict merging all fields from given TypedDict classes."""
     merged: dict[str, type] = {}
     for cls in classes:
-        merged.update(get_type_hints(cls))
+        merged.update(get_type_hints(cls, globalns={**sys.modules[cls.__module__].__dict__, "FieldInfo": FieldInfo}))
     # end for
     return TypedDict(name, merged, total=total)
 # end def
