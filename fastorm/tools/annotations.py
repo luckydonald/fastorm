@@ -13,6 +13,7 @@ def is_annotated(annotated_type: AnnotationType) -> bool:
     return get_origin(annotated_type) is Annotated
 # end def
 
+
 def is_optional(annotated_type: AnnotationType) -> bool:
     """Check if the annotated type is Optional."""
     return is_optional_union(annotated_type)
