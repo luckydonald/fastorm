@@ -28,7 +28,8 @@ PYDANTIC_TYPE_MAP = {
     uuid.UUID: PG_UUID if HAS_PG_UUID else String(36),
 }
 
-def pydantic_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str = None):
+
+def fastorm_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str = None):
     """
     Create a SQLAlchemy model class from a Pydantic BaseModel, using the largest reasonable datatypes.
     """

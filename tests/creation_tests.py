@@ -2,7 +2,7 @@ from uuid import UUID
 import unittest
 
 from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey
-from fastorm.modelling.creation import pydantic_to_sqlalchemy_model
+from fastorm.modelling.creation import fastorm_to_sqlalchemy_model
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -237,7 +237,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
             ExampleTableWithFK,
         ]:
             with self.subTest(model.__name__):
-                sqla_model = pydantic_to_sqlalchemy_model(model)
+                sqla_model = fastorm_to_sqlalchemy_model(model)
                 sqla_model.metadata.create_all(self.engine)
                 # Create an instance and add to session
                 obj = sqla_model(name="SQLA Name", description="SQLAlchemy test row")
