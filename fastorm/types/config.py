@@ -11,14 +11,15 @@ class ConfigDict(TypedDict, total=False):
     If omitted or None, the table name will be derived from the model's name (in snake_case).
     If provided, make sure it is a valid table name for SQLAlchemy and your database dialect.
     """
+# end class
 
-class CombinedConfigDict(ConfigDict, PydanticConfigDict, total=False):
+
+CombinedConfigDict = merge_typeddict_definition("CombinedConfigDict", ConfigDict, PydanticConfigDict, total=False)
+CombinedConfigDict.__doc__ = (
     """
     Custom ConfigDict for FastORM models combined with the data for Pydantic models.
     """
-    pass
-# end class
-
+)
 
 ConfigDictAdapter = TypeAdapter[ConfigDict](ConfigDict)
 CombinedConfigDictAdapter = TypeAdapter[CombinedConfigDict](CombinedConfigDict)

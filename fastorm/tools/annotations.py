@@ -1,4 +1,4 @@
-from typing import get_origin, Annotated, Type, Any, get_args, Union
+from typing import get_origin, Annotated, Type, Any, get_args, TypedDict
 
 from pydantic.fields import FieldInfo
 from sqlalchemy.util.typing import is_optional_union
@@ -75,4 +75,13 @@ def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker])
     # end if
     markers = [meta for meta in metadata if isinstance(meta, marker)]
     return must_be_none_or_one(markers)
+# end def
+
+
+def merge_typeddict_definition(name: str, *classes: type[TypedDict], total: bool = False) -> type[TypedDict]:
+    """Dynamically create a new TypedDict merging all fields from given TypedDict classes."""
+    merged: dict[str, type] = {}
+    for cls in classes:
+        merged.update(get_type_hints(cls))
+    return typing.TypedDict(name, merged, total=total)
 # end def
