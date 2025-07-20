@@ -1,12 +1,14 @@
 from abc import ABC
-from typing import Generic, ClassVar, Any
+from typing import Generic, ClassVar, Any, TYPE_CHECKING
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from ..modelling.creation import BaseType
 from ..property import Property
 from ..tools.annotations import has_marker, AnnotationType, get_marker
+if TYPE_CHECKING:
+    from ..modelling.creation import BaseType
+# end if
 
 from .marker import PKMarker, DefaultMarker
 from .fields import AutoIncrement, PrimaryKeyDataType
