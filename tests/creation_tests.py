@@ -242,7 +242,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
                 # Create an instance and add to session
                 obj = sqla_model(name="SQLA Name", description="SQLAlchemy test row")
                 self.session.add(obj)
-                self.session.commit()
+                try:
+                    self.session.commit()
+                except Exception as e:
+                    self.session.rollback()
+                    raise e
                 # Query back
                 result = self.session.query(sqla_model).filter_by(name="SQLA Name").first()
                 self.assertIsNotNone(result)
