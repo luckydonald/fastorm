@@ -56,13 +56,6 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     # - Sets primary_key=True for fields listed in __primary_keys_names__.
     attrs = {}
     pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
-    if not pk_names:
-        # If no primary keys are defined, we create an AutoIncrement primary key field.
-        # Django does this by default, so we follow the same convention.
-        # TODO: this should happen in fastorm_model.__primary_keys_names__ or similar
-        #       or the Meta class, so that typing is preserved.
-        attrs['id'] = Column(BigInteger, primary_key=True, autoincrement=True)
-    # end if
     for name, info in fastorm_model.model_fields.items():
         field_type = get_actual_type(info)
         # Map to SQLAlchemy type, as a loop as we want to support subclasses
