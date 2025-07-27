@@ -47,6 +47,8 @@ def get_tuple_type_tuple(annotated_type: AnnotationType, *, pure: bool = False) 
     if pure and Ellipsis in args:
         return None
     # end if
+    assert isinstance(args, tuple)
+    return args
 # end def
 
 
