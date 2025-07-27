@@ -7,7 +7,6 @@ __all__ = (
     'Marker',
     'MarkerClass',
     'MarkerInfo',
-    'NotRequiredMarker',
     'ForeignKeyMarker',
     'PKMarker',
     'DefaultMarker',
@@ -34,13 +33,6 @@ if version_info >= (3, 10):
 else:
     MarkerInfo: TypeAlias = MarkerClass | tuple[MarkerClass] | tuple['MarkerInfo', ...]
 # end if
-
-
-# Marker classes for Annotated metadata
-class NotRequiredMarker(Marker):
-    """Marker for Not Required fields."""
-    pass
-# end class
 
 
 class ForeignKeyMarker(Marker):

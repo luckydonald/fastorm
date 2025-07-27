@@ -2,7 +2,7 @@ from abc import ABC
 from uuid import UUID
 from typing import Annotated, Optional, Union, TypeVar, TYPE_CHECKING
 
-from .marker import NotRequiredMarker, AutoMarker, ForeignKeyMarker, PKMarker
+from .marker import AutoMarker, ForeignKeyMarker, PKMarker
 from .basics import AnnotatedType, PrimaryKeyDataType, PrimaryKeyDataTypeArg
 
 if TYPE_CHECKING:
@@ -69,7 +69,7 @@ class ForeignKey(ABC):
 # end class
 
 
-AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker(), NotRequiredMarker()]]
+AutoPK = Optional[Annotated[PK[PrimaryKeyDataType], AutoMarker()]]
 
 AutoIncrement = AutoPK[int]
 AutoUUID = AutoPK[UUID]
