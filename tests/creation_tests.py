@@ -1,9 +1,12 @@
 from operator import index
 from unittest import TestCase
-from uuid import UUID
+# noinspection PyPep8Naming
+from uuid import UUID as PythonUUID
 import unittest
 
 from sqlalchemy.util.compat import inspect_getfullargspec, FullArgSpec
+# noinspection PyPep8Naming
+from sqlalchemy import Text, BigInteger, UUID as SqlAlchemyUUID
 
 from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey, Undefined, AutoUUID
 from fastorm.modelling.creation import fastorm_to_sqlalchemy_model, _fastorm_to_sqlalchemy_model_metadata
@@ -104,7 +107,7 @@ class TestInstanceCreation(unittest.TestCase):
     # end def
 
     def test_uuid_pk_set(self):
-        uuid_val = UUID("12345678-1234-5678-1234-567812345678")
+        uuid_val = PythonUUID("12345678-1234-5678-1234-567812345678")
         uuid_set = ExampleTableWithUUIDPK(
             uid=uuid_val,
             name="Example Name",
@@ -277,8 +280,6 @@ class TestSqlalchemyCreation(unittest.TestCase):
         # Create all tables for all test models
         sqlalchemy_models = {}
         # Pick one model to test
-        from sqlalchemy import Column
-        from sqlalchemy import Text, BigInteger, UUID
 
         # The `Column` type has the attributes:
         # type_, key, primary_key, nullable, index, unique, system, doc, autoincrement, constraints, foreign_keys,
@@ -398,7 +399,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     foreign_keys=set(),
                 ),
                 'uid': dict(
-                    type=UUID(),  # UUID is stored as a string in SQLite
+                    type=SqlAlchemyUUID(),  # UUID is stored as a string in SQLite
                     primary_key=True,
                     nullable=False,
                     autoincrement=False,
@@ -554,7 +555,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     foreign_keys={'yes'},  # ExampleTableWithStrPK.__tablename__
                 ),
                 'foreign_key_uuid': dict(
-                    type=UUID(),  # ForeignKey to ExampleTableWithUUIDPK
+                    type=SqlAlchemyUUID(),  # ForeignKey to ExampleTableWithUUIDPK
                     primary_key=False,
                     nullable=False,
                     autoincrement=False,
