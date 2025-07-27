@@ -34,7 +34,7 @@ def get_tuple_type_tuple(annotated_type: AnnotationType, *, pure: bool = False) 
 
     """
     origin = get_origin(annotated_type)
-    if origin is None or not issubclass(origin, tuple):
+    if origin is None or not isinstance(origin, type) or not issubclass(origin, tuple):
         return None
     # end if
     args = get_args(annotated_type)
