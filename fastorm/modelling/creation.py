@@ -19,6 +19,7 @@ import uuid
 from .mixins import TimestampMixin
 from .. import DefaultMarker, ForeignKeyMarker, Undefined
 from ..tools.annotations import get_actual_type, get_marker, is_optional
+from ..tools.fully_qualified_class_name import fqn
 from ..types.models import FastORM
 from ..types.sqlalchemy import BaseType
 
@@ -81,23 +82,13 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
         # end if
 
         # Map to SQLAlchemy type, as a loop as we want to support subclasses
-        for base_type in COLUMN_TYPE_MAP:
-            try:
-                if issubclass(field_type, base_type):
-                    column_type = COLUMN_TYPE_MAP[base_type]
-                    break
-                # end if
-            except TypeError as e:
-                raise TypeError(
-                    f"Error processing field {name} (type {field_type}, from {info!r}) in {fastorm_model.__name__}: {e}"
-                ) from e
-            # end try
-        else:
+        try:
+            column_type = deduct_sqlalchemy_type(field_type)
+        except TypeError as e:
             raise TypeError(
-                f"Unsupported field type {field_type} for {name} in {fastorm_model.__name__}. "
-                "Please define a custom mapping for this type."  # TODO: Implement custom mapping
-            )
-        # end for
+                f"Error processing field {fqn(fastorm_model)}.{name} (type {field_type}, as deducted from {info!r}). Original exception: {e}"
+            ) from e
+        # end try
 
         extra_args = []
 
@@ -144,6 +135,27 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     # noinspection SpellCheckingInspection
     attrs['__tablename__'] = table_name or fastorm_model.__name__.lower()
     return attrs
+
+
+def deduct_sqlalchemy_type(field_type):
+    for base_type in COLUMN_TYPE_MAP:
+        try:
+            if issubclass(field_type, base_type):
+                column_type = COLUMN_TYPE_MAP[base_type]
+                break
+            # end if
+        except TypeError as e:
+            raise e
+        # end try
+    else:
+        raise TypeError(
+            f"Unsupported field type {field_type}. "
+            "Please define a custom mapping for this type."  # TODO: Implement custom mapping
+        )
+    # end for
+    return column_type
+
+
 # end def
 
 
