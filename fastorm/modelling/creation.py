@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy.sql.base import NO_ARG
-from sqlalchemy.sql.schema import Column
+from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import (
     BigInteger, Float, Boolean, Text,
     String, DateTime, Date, Time, Interval,
@@ -17,7 +17,7 @@ import uuid
 
 
 from .mixins import TimestampMixin
-from .. import DefaultMarker
+from .. import DefaultMarker, ForeignKeyMarker, Undefined
 from ..tools.annotations import get_actual_type, get_marker, is_optional
 from ..types.models import FastORM
 from ..types.sqlalchemy import BaseType
@@ -70,7 +70,16 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     # due to the way FastORM models are defined in the metaclass,
     # we can assume that we have at least the generated id primary key.
     for name, info in fastorm_model.model_fields.items():
-        field_type = get_actual_type(info)
+        fk_marker = get_marker(info, ForeignKeyMarker)
+        if fk_marker is not None:
+            # Get referenced table and PK type
+            fk_info = fk_marker.pk_type
+            assert fk_info is not Undefined
+            field_type = get_actual_type(fk_info)
+        else:
+            field_type = get_actual_type(info)
+        # end if
+
         # Map to SQLAlchemy type, as a loop as we want to support subclasses
         for base_type in COLUMN_TYPE_MAP:
             try:
@@ -90,6 +99,8 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
             )
         # end for
 
+        extra_args = []
+
         # Check if the field has an AutoMarker
         is_auto = has_marker(info, AutoMarker)
         is_autoincrement = is_auto and issubclass(column_type, COLUMN_TYPE_MAP[int])
@@ -108,9 +119,22 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
         # end if
         is_nullable = default_value is None
 
+        if fk_marker is not None:
+            # Create a ForeignKey constraint
+            ref_table = fk_marker.table
+            # noinspection SpellCheckingInspection
+            ref_table_name = getattr(ref_table, "__tablename__", ref_table.__name__.lower())
+            ref_pk_name = getattr(ref_table, "__primary_keys_names__", ["id"])[0]
+            # Map to SQLAlchemy type
+            extra_args.append(
+                ForeignKey(f"{ref_table_name}.{ref_pk_name}"),
+            )
+        # end if
+
         # Create the column with the appropriate autoincrement setting for AutoMarker fields
         attrs[name] = Column(
-            column_type, 
+            column_type,
+            *extra_args,
             primary_key=(name in pk_names),
             autoincrement=is_autoincrement,
             default=default_value,
