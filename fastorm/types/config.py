@@ -1,12 +1,11 @@
-from typing import TypedDict
+from typing_extensions import TypedDict
 
 from pydantic import ConfigDict as PydanticConfigDict, TypeAdapter
 
 from ..tools.annotations import merge_typeddict_definition
-
+#
 
 class ConfigDict(TypedDict, total=False):
-    """A TypedDict for configuring FastORM Model behavior."""
     table_name: str | None
     """
     The title for the database title.
@@ -16,12 +15,13 @@ class ConfigDict(TypedDict, total=False):
 # end class
 
 
-CombinedConfigDict = merge_typeddict_definition("CombinedConfigDict", ConfigDict, PydanticConfigDict, total=False)
-CombinedConfigDict.__doc__ = (
+class CombinedConfigDict(PydanticConfigDict, ConfigDict, total=False):
+    pass
     """
     Custom ConfigDict for FastORM models combined with the data for Pydantic models.
     """
-)
+# end class
+
 
 ConfigDictAdapter = TypeAdapter[ConfigDict](ConfigDict)
 CombinedConfigDictAdapter = TypeAdapter[CombinedConfigDict](CombinedConfigDict)
