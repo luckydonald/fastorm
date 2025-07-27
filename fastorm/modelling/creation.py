@@ -56,6 +56,8 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     # - Sets primary_key=True for fields listed in __primary_keys_names__.
     attrs = {}
     pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
+    # due to the way FastORM models are defined in the metaclass,
+    # we can assume that we have at least the generated id primary key.
     for name, info in fastorm_model.model_fields.items():
         field_type = get_actual_type(info)
         # Map to SQLAlchemy type, as a loop as we want to support subclasses
