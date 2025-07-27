@@ -15,6 +15,6 @@ type MaybeTypeType[T] = MaybeTuple[type[T]]
 AnnotationType = type[Any] | None
 AnnotatedType = type(Annotated[str, "some metadata"])
 
-PrimaryKeyDataType = TypeVar("PrimaryKeyDataType")
+PrimaryKeyDataType = TypeVar("PrimaryKeyDataType", bound=type)
 PrimaryKeyDataTypeArg = Union[PrimaryKeyDataType, tuple[PrimaryKeyDataType, ...]]
 PrimaryKeyDataTypeArgType = type[PrimaryKeyDataType] | tuple[type[PrimaryKeyDataType], ...]
