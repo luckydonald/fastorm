@@ -38,7 +38,7 @@ def fastorm_to_sqlalchemy_model(fastorm_model: Type[FastORM], table_name: str = 
     # - Sets primary_key=True for fields listed in __primary_keys_names__.
     attrs = {}
     pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
-    for name, info in fastorm_model.__primary_keys_info_dict__.items():
+    for name, info in fastorm_model.model_fields.items():
         field_type = get_actual_type(info)
         # Map to SQLAlchemy type, default to Text if unknown
         for base_type in PYDANTIC_TYPE_MAP:
