@@ -13,8 +13,9 @@
 # Copyright (C) 2025, luckydonald, FastORM authors and FastORM contributors.
 #
 # mypy: allow-untyped-defs, allow-untyped-calls
-
-from typing import Any, TypeGuard, Optional, Tuple, Protocol, ForwardRef, Union, NewType, TypeAliasType, Type, TypeVar
+from types import NoneType
+from typing import Any, TypeGuard, Optional, Tuple, Protocol, ForwardRef, Union, NewType, TypeAliasType, Type, TypeVar, \
+    get_args
 from typing import get_origin as typing_get_origin
 from sys import version_info
 
@@ -99,4 +100,4 @@ def is_optional(type_: Any) -> TypeGuard[ArgsTypeProcotol]:
 
 
 def is_optional_union(type_: Any) -> bool:
-    return is_optional(type_) and NoneType in typing_get_args(type_)
+    return is_optional(type_) and NoneType in get_args(type_)

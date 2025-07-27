@@ -6,15 +6,13 @@ from pydantic.fields import FieldInfo
 
 from ..property import Property
 from ..tools.annotations import has_marker, AnnotationType, get_marker
-if TYPE_CHECKING:
-    from ..modelling.creation import BaseType
-# end if
 
 from .marker import PKMarker, DefaultMarker
 from .fields import AutoIncrement, PrimaryKeyDataType
 from .basics import PrimaryKeyDataTypeArgType, Namespace as _Namespace
 from .default import UseDefault
 from .config import CombinedConfigDict, PydanticConfigDict, ConfigDictAdapter
+from .sqlalchemy import BaseType
 
 __all__ = (
     'FastOrmModelTypehints',
