@@ -1,4 +1,5 @@
 import sys
+from types import EllipsisType
 from typing import get_origin, Annotated, Type, Any, get_args, TypedDict, get_type_hints, TypeVar
 
 from pydantic.fields import FieldInfo
@@ -22,13 +23,50 @@ def is_optional(annotated_type: AnnotationType) -> bool:
 # end if
 
 
+def get_tuple_type_tuple(annotated_type: AnnotationType, *, pure: bool = False) -> tuple[AnnotationType | EllipsisType, ...] | None:
+    """
+    Check if the annotated type is a tuple, i.e. `tuple[str, int]`.
+    It returns a tuple of the types, e.g. `(str, int)` for above.
+    If the type is not a tuple-typing, or has no specified parameters (plain `tuple` or `tuple[]`), it returns None.
+
+    Note, Ellipsis could also be as the second (or later) parameter (e.g. `tuple[str, ...]` -> `(str, Ellipsis)`), unless
+     `pure` is `True`, then it returns `None` for such cases.
+
+    """
+    origin = get_origin(annotated_type)
+    if origin is None or not issubclass(origin, tuple):
+        return None
+    # end if
+    args = get_args(annotated_type)
+    if not args:
+        return None
+    # end if
+    if len(args) == 1 and args[0] is Ellipsis:
+        return None
+    # end if
+    if pure and Ellipsis in args:
+        return None
+    # end if
+# end def
+
+
+def is_tuple_type(annotated_type: AnnotationType, *, pure: bool = True) -> bool:
+    """Check if the annotated type is a tuple, i.e. `tuple[str, int]`."""
+    return get_tuple_type_tuple(annotated_type, pure=pure) is not None
+# end def
+
+
 def has_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker]) -> bool:
     return get_marker(annotated_type, marker) is not None
 # end def
 
 
-def get_actual_type(annotated_type: AnnotationType | FieldInfo) -> AnnotationType:
+def get_actual_type(annotated_type: AnnotationType | FieldInfo) -> AnnotationType | tuple[AnnotationType, ...]:
     """Get the actual type from an annotated type."""
+    detupled = get_tuple_type_tuple(annotated_type, pure=False)
+    if detupled is not None:
+        return tuple(get_actual_type(t) if t is not Ellipsis else t for t in detupled)
+    # end if
     if is_optional(annotated_type):
         args = get_args(annotated_type)
         if len(args) == 2 and args[1] is type(None):
