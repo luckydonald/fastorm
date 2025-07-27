@@ -1,5 +1,5 @@
 import sys
-from typing import get_origin, Annotated, Type, Any, get_args, TypedDict, get_type_hints
+from typing import get_origin, Annotated, Type, Any, get_args, TypedDict, get_type_hints, TypeVar
 
 from pydantic.fields import FieldInfo
 
@@ -53,7 +53,10 @@ def get_actual_type(annotated_type: AnnotationType | FieldInfo) -> AnnotationTyp
 # end def
 
 
-def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[Marker]) -> Marker | None:
+SomeMarker = TypeVar("SomeMarker", bound=Marker)
+
+
+def get_marker(annotated_type: AnnotationType | FieldInfo, marker: Type[SomeMarker]) -> SomeMarker | None:
     """Check if the annotated type is a valid primary key."""
     if is_optional(annotated_type):
         markers = [get_marker(sub, marker) for sub in get_args(annotated_type)]
