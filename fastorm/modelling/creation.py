@@ -2,22 +2,25 @@ from typing import Type, TypeVar, TypedDict
 
 from pydantic import JsonValue
 from pydantic_core import PydanticUndefined
-from sqlalchemy.orm import declarative_base, DeclarativeMeta
-from sqlalchemy import Column, BigInteger, Float, Boolean, DateTime, Date, Time, Text, LargeBinary, Interval, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm import declarative_base, DeclarativeMeta
+from sqlalchemy.sql.base import NO_ARG
+from sqlalchemy.sql.schema import Column
+from sqlalchemy.sql.sqltypes import (
+    BigInteger, Float, Boolean, Text,
+    String, DateTime, Date, Time, Interval,
+    LargeBinary,
+)
 import datetime
 import uuid
 
-from sqlalchemy.sql.base import NO_ARG
 
 from .mixins import TimestampMixin
 from .. import DefaultMarker
 from ..tools.annotations import get_actual_type, get_marker, is_optional
 from ..types.models import FastORM
 from ..types.sqlalchemy import BaseType
-
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.dialects.postgresql import JSON
 
 Base: DeclarativeMeta = declarative_base()
 
