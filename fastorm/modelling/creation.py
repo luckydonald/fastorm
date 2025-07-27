@@ -82,19 +82,33 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
         # end if
 
         # Map to SQLAlchemy type, as a loop as we want to support subclasses
-        try:
-            column_type = deduct_sqlalchemy_type(field_type)
-        except TypeError as e:
+        is_multiple_pk = isinstance(field_type, tuple)
+        field_types = field_type if is_multiple_pk else (field_type,)
+        column_types = []
+        for field_type in field_types:
+            try:
+                column_type = deduct_sqlalchemy_type(field_type)
+                column_types.append(column_type)
+            except TypeError as e:
+                raise TypeError(
+                    f"Error processing field {fqn(fastorm_model)}.{name} (type {field_type!r}, "
+                    f"as deducted from {info!r}). Original exception: {e}"
+                ) from e
+            # end try
+        # end for
+        if not len(column_types) > 0:
             raise TypeError(
-                f"Error processing field {fqn(fastorm_model)}.{name} (type {field_type}, as deducted from {info!r}). Original exception: {e}"
-            ) from e
-        # end try
+                f"Field {fqn(fastorm_model)}.{name} has no type defined resulting in an empty tuple "
+                f"(type {field_type!r}, resulting in {column_types!r}, as deducted from {info!r})"
+            )
+        # end if
+        column_type = column_types[0] if not is_multiple_pk else tuple(column_types)
 
         extra_args = []
 
         # Check if the field has an AutoMarker
-        is_auto = has_marker(info, AutoMarker)
-        is_autoincrement = is_auto and issubclass(column_type, COLUMN_TYPE_MAP[int])
+        is_auto = has_marker(info, AutoMarker) and fk_marker is None
+        is_autoincrement = is_auto and not is_multiple_pk and issubclass(column_type, COLUMN_TYPE_MAP[int])
 
         default_marker = get_marker(info, DefaultMarker)
         default_value = default_marker.default if default_marker is not None else NO_ARG
@@ -108,7 +122,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
             # end if
             default_value = info.default
         # end if
-        is_nullable = default_value is None
+        is_nullable = default_value is None and not is_auto
 
         if fk_marker is not None:
             # Create a ForeignKey constraint
