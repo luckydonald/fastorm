@@ -24,4 +24,4 @@ class CombinedConfigDict(PydanticConfigDict, ConfigDict, total=False):
 
 
 ConfigDictAdapter = TypeAdapter[ConfigDict](ConfigDict)
-CombinedConfigDictAdapter = TypeAdapter[CombinedConfigDict](CombinedConfigDict)
+# CombinedConfigDictAdapter = TypeAdapter[CombinedConfigDict](CombinedConfigDict)
