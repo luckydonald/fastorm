@@ -6,9 +6,9 @@ from .marker import AutoMarker, ForeignKeyMarker, PKMarker
 from .basics import AnnotatedType, PrimaryKeyDataType, PrimaryKeyDataTypeArg
 
 if TYPE_CHECKING:
-    from .models import FastORM as FastORMT
+    from .models import FastORM as FastOrmTable
 else:
-    type FastORMT = 'FastORM'
+    type FastOrmTable = 'FastORM'
 # end if
 
 
@@ -36,7 +36,7 @@ class PK(ABC):
 
 
 class ForeignKey(ABC):
-    def __class_getitem__(cls, table: type[FastORMT]) -> AnnotatedType:
+    def __class_getitem__(cls, table: type[FastOrmTable]) -> AnnotatedType:
         from . import FastORM
         """Allows PK to be used as a generic type."""
         if not isinstance(table, type):
@@ -63,7 +63,7 @@ class ForeignKey(ABC):
         return Annotated[Union[table, pk_type], ForeignKeyMarker()]
     # end def
 
-    def __new__(cls, table: type[FastORMT]) -> AnnotatedType:
+    def __new__(cls, table: type[FastOrmTable]) -> AnnotatedType:
         return cls.__class_getitem__(table)
     # end def
 # end class

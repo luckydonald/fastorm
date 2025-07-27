@@ -30,7 +30,7 @@ class FastOrmModelTypehints(ABC):
 # end class
 
 
-type FastORMT = 'FastORM'
+type FastORMTable = 'FastORM'
 
 
 # noinspection PyMethodParameters
@@ -217,4 +217,4 @@ class FastORM(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehints, met
 # end class
 
 
-type FastORMT = FastORM
+type FastORMTable = FastORM
