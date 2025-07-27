@@ -1,14 +1,18 @@
 from typing import Type, TypeVar, TypedDict
 
 from pydantic import JsonValue
+from pydantic_core import PydanticUndefined
 from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, BigInteger, Float, Boolean, DateTime, Date, Time, Text, LargeBinary, Interval, String
 from sqlalchemy.dialects.postgresql import JSON
 import datetime
 import uuid
 
+from sqlalchemy.sql.base import NO_ARG
+
 from .mixins import TimestampMixin
-from ..tools.annotations import get_actual_type
+from .. import DefaultMarker
+from ..tools.annotations import get_actual_type, get_marker, is_optional
 from ..types.models import FastORM
 from ..types.sqlalchemy import BaseType
 
@@ -54,6 +58,10 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     """
     # implementation details:
     # - Sets primary_key=True for fields listed in __primary_keys_names__.
+    # - Configures auto-increment for fields with AutoMarker.
+    from ..types.marker import AutoMarker
+    from ..tools.annotations import has_marker
+
     attrs = {}
     pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
     # due to the way FastORM models are defined in the metaclass,
@@ -78,7 +86,33 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
                 "Please define a custom mapping for this type."  # TODO: Implement custom mapping
             )
         # end for
-        attrs[name] = Column(column_type, primary_key=(name in pk_names))
+
+        # Check if the field has an AutoMarker
+        is_auto = has_marker(info, AutoMarker)
+        is_autoincrement = is_auto and issubclass(column_type, COLUMN_TYPE_MAP[int])
+
+        default_marker = get_marker(info, DefaultMarker)
+        default_value = default_marker.default if default_marker is not None else NO_ARG
+        if is_optional(info) and info.default is not PydanticUndefined:
+            # TODO: can it have a default value and NOT be Optional?
+            if default_value != NO_ARG:
+                raise TypeError(
+                    f"Field {name} in {fastorm_model.__name__} cannot"
+                    f" both be `Optional` with a default value and also have a `DefaultMarker`."
+                )
+            # end if
+            default_value = info.default
+        # end if
+        is_nullable = default_value is None
+
+        # Create the column with the appropriate autoincrement setting for AutoMarker fields
+        attrs[name] = Column(
+            column_type, 
+            primary_key=(name in pk_names),
+            autoincrement=is_autoincrement,
+            default=default_value,
+            nullable=is_nullable,
+        )
     # end for
     # noinspection SpellCheckingInspection
     attrs['__tablename__'] = table_name or fastorm_model.__name__.lower()
