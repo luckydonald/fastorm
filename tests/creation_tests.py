@@ -5,7 +5,7 @@ import unittest
 
 from sqlalchemy.util.compat import inspect_getfullargspec, FullArgSpec
 
-from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey, Undefined
+from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey, Undefined, AutoUUID
 from fastorm.modelling.creation import fastorm_to_sqlalchemy_model, _fastorm_to_sqlalchemy_model_metadata
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -27,7 +27,7 @@ class ExampleTableWithStrPK(FastORM):
     description: str
 
 class ExampleTableWithUUIDPK(FastORM):
-    id: AutoPK[UUID]
+    uid: AutoUUID
     name: str
     description: str
 
