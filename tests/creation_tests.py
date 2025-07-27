@@ -284,7 +284,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
         # type_, key, primary_key, nullable, index, unique, system, doc, autoincrement, constraints, foreign_keys,
         # comment, computed, identity, default, onupdate, server_default, insert_default, server_onupdate, info,
         # quote, insert_sentinel
-        # we wanna check the following ones:
+        # we want to check the following ones:
         INTERESTING_COLUMN_ATTRIBUTES = (
             "type",
             "primary_key",
@@ -294,6 +294,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
             "index",
             "foreign_keys",
         )
+        # noinspection SpellCheckingInspection
         for model, expected_column_meta in {
             ExampleTableWithAutoincrement: {
                 '__tablename__': 'exampletablewithautoincrement',
