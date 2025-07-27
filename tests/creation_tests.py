@@ -1,8 +1,12 @@
+from operator import index
+from unittest import TestCase
 from uuid import UUID
 import unittest
 
-from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey
-from fastorm.modelling.creation import fastorm_to_sqlalchemy_model
+from sqlalchemy.util.compat import inspect_getfullargspec, FullArgSpec
+
+from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey, Undefined
+from fastorm.modelling.creation import fastorm_to_sqlalchemy_model, _fastorm_to_sqlalchemy_model_metadata
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -205,11 +209,56 @@ class TestInstanceCreation(unittest.TestCase):
 # end class
 
 
+def constructor_based_equality_check(self: TestCase, a, b):
+    """Check if two objects are equal based on their constructor arguments."""
+    type_a = type(a)
+    type_b = type(b)
+    if type_a is not type_b:
+        self.fail(f"Objects are of different types: {type_a} and {type_b}")
+    # end if
+
+    try:
+        spec_a: FullArgSpec = inspect_getfullargspec(a.__init__)
+    except TypeError as e:
+        spec_a = e
+    # end try
+    try:
+        spec_b: FullArgSpec = inspect_getfullargspec(b.__init__)
+    except TypeError as e:
+        spec_b = e
+    # end try
+
+    if isinstance(spec_a, TypeError) ^ isinstance(spec_b, TypeError):  # only one is TypeError
+        self.fail(
+            f"One of the objects has a TypeError when loading the constructor spec, the other not:\n"
+            f"{type_a} ({a=!r}, {spec_a=!r}) vs. {type_b} ({b=!r}, {spec_b=!r})"
+        )
+    # end if
+    if isinstance(spec_a, TypeError) and isinstance(spec_b, TypeError):
+        # type error usually is because the __init__ method is not defined or not callable - i.e. no extra arguments needed.
+        # E.g. `TypeError: <method-wrapper '__init__' of BigInteger object at 0x107a010d0> is not a Python function`
+        self.assertEqual(str(a), str(b), msg=f"TypeError for both objects, but they are not even str() equal. {str(a)=!r}, {str(b)=!r}")
+        self.assertEqual(repr(a), repr(b), msg=f"TypeError for both objects, but they are not even repr() equal. {repr(a)=!s}, {repr(b)=!s}")
+        return  # we survived the TypeError, good enough, so we can return early.
+    # end if
+
+    self.assertEqual(spec_a, spec_b, msg=f"Constructor arguments do not match for {type_a} ({a=!r}, {b=!r})")
+    fields = spec_a.args + spec_a.kwonlyargs
+    for field in fields:
+        value_a = getattr(a, field, Undefined)
+        value_b = getattr(b, field, Undefined)
+        if value_a != value_b:
+            self.fail(f"Field '{field}' of type {type_a} does not match: {value_a!r} != {value_b!r} ({a=!r}, {b=!r})")
+        # end if
+    # end for
+# end def
+
+
 class TestSqlalchemyCreation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Setup in-memory SQLite DB and session
-        cls.engine = create_engine("sqlite:///:memory:")
+        cls.engine = create_engine("sqlite:///tests.sqlite", echo="debug")
         cls.Session = sessionmaker(bind=cls.engine)
     # end def
 
@@ -220,6 +269,120 @@ class TestSqlalchemyCreation(unittest.TestCase):
     def tearDown(self):
         self.session.close()
     # end def
+
+    constructor_based_equality_check = constructor_based_equality_check
+
+    # Example: override one test to check SQLAlchemy model creation
+    def test_sqlalchemy_meta_generation(self):
+        # Create all tables for all test models
+        sqlalchemy_models = {}
+        # Pick one model to test
+        from sqlalchemy import Column
+        from sqlalchemy import Text, BigInteger
+
+        # The `Column` type has the attributes:
+        # type_, key, primary_key, nullable, index, unique, system, doc, autoincrement, constraints, foreign_keys,
+        # comment, computed, identity, default, onupdate, server_default, insert_default, server_onupdate, info,
+        # quote, insert_sentinel
+        # we wanna check the following ones:
+        INTERESTING_COLUMN_ATTRIBUTES = (
+            "type",
+            "primary_key",
+            "nullable",
+            "autoincrement",
+            "unique",
+            "index",
+            "foreign_keys",
+        )
+        for model, expected_column_meta in {
+            ExampleTableWithAutoincrement: {
+                '__tablename__': 'exampletablewithautoincrement',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                 'id': dict(
+                     type=BigInteger(),
+                     primary_key=True,
+                     nullable=False,
+                     autoincrement=True,
+                     unique=None,
+                     index=None,
+                     foreign_keys=set(),
+                 ),
+                 'name': dict(
+                     type=Text(),
+                     primary_key=False,
+                     nullable=False,
+                     autoincrement=False,
+                     unique=None,
+                     index=None,
+                     foreign_keys=set(),
+                 ),
+            },
+        }.items():
+            with self.subTest(model.__name__):
+                got_meta = _fastorm_to_sqlalchemy_model_metadata(model)
+                print(got_meta)
+
+                self.assertEqual(
+                    set(expected_column_meta.keys()),
+                    set(got_meta.keys()),
+                    msg=f"The returned metadata dictionary for {model.__name__} in the test does not contain all expected keys.",
+                )
+
+                for column, expected_column_definition in expected_column_meta.items():
+                    if column == '__tablename__':
+                        self.assertEqual(expected_column_definition, got_meta[column], msg=f"Expected table name for {model.__name__} does not match.")
+                        continue
+                    # end if
+                    with self.subTest(f"{model.__name__} > {column}"):
+                        self.assertEqual(
+                            set(INTERESTING_COLUMN_ATTRIBUTES),
+                            set(expected_column_definition.keys()),
+                            msg=f"The expected metadata defined for {model.__name__}.{column} in the test does not contain all required attributes.",
+                        )
+
+                        got_column_definition = got_meta[column]
+                        for attr, expected_value in expected_column_definition.items():
+                            with self.subTest(f"{model.__name__} > {column} > {attr}"):
+                                got_value = getattr(got_column_definition, attr)
+                                if attr == "type":
+                                    # Those things don't implement __eq__, so we need to compare their string representations.
+                                    self.constructor_based_equality_check(expected_value, got_value)
+                                    continue
+                                # end if
+                                self.assertEqual(
+                                    expected_value,
+                                    got_value,
+                                    msg=f"Column definition mismatch for {model.__name__}.{column}.{attr}: expected {expected_value}, got {got_value}",
+                                )
+                            # end with
+                        # end for
+                    # end with
+                # end for
+
+                got_keys = set(got_meta.keys())
+                expected_keys = set(expected_meta.keys())
+                self.assertEqual(got_keys, expected_keys, f"Model keys mismatch for {model.__name__}")
+                for column in expected_keys:
+                    if column not in got_meta:
+                        self.fail(f"Column {column} not found in metadata for {model.__name__}")
+                    # end if
+                    expected_column_meta = expected_meta[column]
+                    got_column_definition = got_meta[column]
+                    for attr, value in expected_column_meta.items():
+                        if getattr(got_column_definition, attr) != value:
+                            self.fail(f"Metadata mismatch for {column}.{attr} in {model.__name__}")
+                        # end if
+                    # end for
+                self.assertEqual(got_meta, f"Metadata mismatch for {model.__name__}")
+
 
     # Example: override one test to check SQLAlchemy model creation
     def test_sqlalchemy_model_creation(self):
