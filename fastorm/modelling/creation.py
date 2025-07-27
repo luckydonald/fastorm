@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import JSON
 import datetime
 import uuid
 
+from .mixins import TimestampMixin
 from ..tools.annotations import get_actual_type
 from ..types.models import FastORM
 from ..types.sqlalchemy import BaseType
@@ -82,12 +83,12 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
 # end def
 
 
-def fastorm_to_sqlalchemy_model(fastorm_model: FastORMClass, table_name: str = None) -> type[BaseType] | FastORMClass:
+def fastorm_to_sqlalchemy_model(fastorm_model: FastORMClass, table_name: str = None) -> type[BaseType] | type[TimestampMixin] | FastORMClass:
     attrs = _fastorm_to_sqlalchemy_model_metadata(fastorm_model, table_name)
     # Create a new SQLAlchemy model class with the attributes from the FastORM model
     return type(
         f"{fastorm_model.__name__}SQLA",
-        (Base,),
+        (TimestampMixin, Base,),
         attrs
     )
 # end def
