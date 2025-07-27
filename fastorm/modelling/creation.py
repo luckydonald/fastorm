@@ -1,4 +1,6 @@
 from typing import Type, TypeVar, TypedDict
+
+from pydantic import JsonValue
 from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, BigInteger, Float, Boolean, DateTime, Date, Time, Text, LargeBinary, Interval, String
 import datetime
@@ -10,13 +12,14 @@ from ..types.sqlalchemy import BaseType
 
 try:
     from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-    HAS_PG_UUID = True
+    from sqlalchemy.dialects.postgresql import JSON as PG_JSON
+    HAS_PG_STUFF = True
 except ImportError:
-    HAS_PG_UUID = False
+    HAS_PG_STUFF = False
 
 Base: DeclarativeMeta = declarative_base()
 
-PYDANTIC_TYPE_MAP = {
+COLUMN_TYPE_MAP = {
     int: BigInteger,
     float: Float,
     bool: Boolean,
@@ -26,7 +29,8 @@ PYDANTIC_TYPE_MAP = {
     datetime.date: Date,
     datetime.time: Time,
     datetime.timedelta: Interval,
-    uuid.UUID: PG_UUID if HAS_PG_UUID else String(36),
+    uuid.UUID: PG_UUID if PG_JSON else String(36),
+    JsonValue: PG_JSON if PG_JSON else Text,
 }
 
 
@@ -51,10 +55,10 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     for name, info in fastorm_model.model_fields.items():
         field_type = get_actual_type(info)
         # Map to SQLAlchemy type, default to Text if unknown
-        for base_type in PYDANTIC_TYPE_MAP:
+        for base_type in COLUMN_TYPE_MAP:
             try:
                 if issubclass(field_type, base_type):
-                    column_type = PYDANTIC_TYPE_MAP[base_type]
+                    column_type = COLUMN_TYPE_MAP[base_type]
                     break
                 # end if
             except TypeError as e:
