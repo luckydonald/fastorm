@@ -58,7 +58,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
     for name, info in fastorm_model.model_fields.items():
         field_type = get_actual_type(info)
-        # Map to SQLAlchemy type, default to Text if unknown
+        # Map to SQLAlchemy type, as a loop as we want to support subclasses
         for base_type in COLUMN_TYPE_MAP:
             try:
                 if issubclass(field_type, base_type):
@@ -69,12 +69,13 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
                 raise TypeError(
                     f"Error processing field {name} in {fastorm_model.__name__}: {e}"
                 ) from e
+            # end try
         else:
             raise TypeError(
                 f"Unsupported field type {field_type} for {name} in {fastorm_model.__name__}. "
-                "Please define a custom mapping for this type."
+                "Please define a custom mapping for this type."  # TODO: Implement custom mapping
             )
-        # end try
+        # end for
         attrs[name] = Column(column_type, primary_key=(name in pk_names))
     # end for
     # noinspection SpellCheckingInspection
