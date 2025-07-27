@@ -457,6 +457,15 @@ class TestSqlalchemyCreation(unittest.TestCase):
             },
             ExampleTableWithImplicitPK: {
                 '__tablename__': 'exampletablewithimplicitpk',
+                'id': dict(  # implicit primary key
+                    type=BigInteger(),
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
                 'description': dict(
                     type=Text(),
                     primary_key=False,
@@ -478,6 +487,15 @@ class TestSqlalchemyCreation(unittest.TestCase):
             },
             ExampleTableWithOneFK: {
                 '__tablename__': 'exampletablewithonefk',
+                'id': dict(  # implicit primary key
+                    type=BigInteger(),
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
                 'description': dict(
                     type=Text(),
                     primary_key=False,
