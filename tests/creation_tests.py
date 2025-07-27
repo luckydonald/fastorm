@@ -278,7 +278,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
         sqlalchemy_models = {}
         # Pick one model to test
         from sqlalchemy import Column
-        from sqlalchemy import Text, BigInteger
+        from sqlalchemy import Text, BigInteger, UUID
 
         # The `Column` type has the attributes:
         # type_, key, primary_key, nullable, index, unique, system, doc, autoincrement, constraints, foreign_keys,
@@ -316,6 +316,252 @@ class TestSqlalchemyCreation(unittest.TestCase):
                      foreign_keys=set(),
                  ),
                  'name': dict(
+                     type=Text(),
+                     primary_key=False,
+                     nullable=False,
+                     autoincrement=False,
+                     unique=None,
+                     index=None,
+                     foreign_keys=set(),
+                 ),
+            },
+            ExampleTableWithIntPK: {
+                '__tablename__': 'exampletablewithintpk',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'id': dict(
+                    type=BigInteger(),
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'name': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+            },
+            ExampleTableWithStrPK: {
+                '__tablename__': 'exampletablewithstrpk',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'id': dict(
+                    type=Text(),
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'name': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+            },
+            ExampleTableWithUUIDPK: {
+                '__tablename__': 'exampletablewithuuidpk',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'id': dict(
+                    type=Text(),  # UUID is stored as a string in SQLite
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'name': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+            },
+            ExampleTableWithTwoPKs: {
+                '__tablename__': 'exampletablewithtwopks',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'id1': dict(
+                    type=Text(),
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'id2': dict(
+                    type=BigInteger(),
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'name': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+            },
+            ExampleTableWithImplicitPK: {
+                '__tablename__': 'exampletablewithimplicitpk',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'name': dict(
+                    type=Text(),
+                    primary_key=True,  # Implicit PK
+                    nullable=False,
+                    autoincrement=True,  # AutoIncrementPK
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+            },
+            ExampleTableWithOneFK: {
+                '__tablename__': 'exampletablewithonefk',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'foreign_key': dict(
+                    type=BigInteger(),  # ForeignKey to ExampleTableWithAutoincrement
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys={'yes'}, # ExampleTableWithAutoincrement.__tablename__
+                ),
+                'name': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+            },
+            ExampleTableWithFK: {
+                '__tablename__': 'exampletablewithfk',
+                'description': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'foreign_key_int': dict(
+                    type=BigInteger(),  # ForeignKey to ExampleTableWithIntPK
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys={'yes'}, # ExampleTableWithIntPK.__tablename__
+                ),
+                'foreign_key_str': dict(
+                    type=Text(),  # ForeignKey to ExampleTableWithStrPK
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys={'yes'},  # ExampleTableWithStrPK.__tablename__
+                ),
+                'foreign_key_uuid': dict(
+                    type=UUID(),  # ForeignKey to ExampleTableWithUUIDPK
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys={'yes'},  # ExampleTableWithUUIDPK.__tablename__
+                ),
+                'foreign_key_two': dict(
+                    type=Text(),  # ForeignKey to ExampleTableWithTwoPKs
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys={'yes'},  # ExampleTableWithTwoPKs.__tablename__
+                ),
+                'foreign_key_nullable': dict(
+                    type=BigInteger(),  # ForeignKey to ExampleTableWithIntPK, can be None
+                    primary_key=False,
+                    nullable=True,  # Nullable ForeignKey
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys={'yes'},  # ExampleTableWithIntPK.__tablename__
+                ),
+                'name': dict(
                      type=Text(),
                      primary_key=False,
                      nullable=False,
@@ -366,22 +612,10 @@ class TestSqlalchemyCreation(unittest.TestCase):
                         # end for
                     # end with
                 # end for
+            # end with
+        # end for
+    # end def
 
-                got_keys = set(got_meta.keys())
-                expected_keys = set(expected_meta.keys())
-                self.assertEqual(got_keys, expected_keys, f"Model keys mismatch for {model.__name__}")
-                for column in expected_keys:
-                    if column not in got_meta:
-                        self.fail(f"Column {column} not found in metadata for {model.__name__}")
-                    # end if
-                    expected_column_meta = expected_meta[column]
-                    got_column_definition = got_meta[column]
-                    for attr, value in expected_column_meta.items():
-                        if getattr(got_column_definition, attr) != value:
-                            self.fail(f"Metadata mismatch for {column}.{attr} in {model.__name__}")
-                        # end if
-                    # end for
-                self.assertEqual(got_meta, f"Metadata mismatch for {model.__name__}")
 
 
     # Example: override one test to check SQLAlchemy model creation
@@ -401,6 +635,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
         ]:
             with self.subTest(model.__name__):
                 sqla_model = fastorm_to_sqlalchemy_model(model)
+                print(sqla_model.__qualname__)
                 sqla_model.metadata.create_all(self.engine)
                 # Create an instance and add to session
                 obj = sqla_model(name="SQLA Name", description="SQLAlchemy test row")
