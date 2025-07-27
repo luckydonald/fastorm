@@ -3,6 +3,7 @@ from typing import Type, TypeVar, TypedDict
 from pydantic import JsonValue
 from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, BigInteger, Float, Boolean, DateTime, Date, Time, Text, LargeBinary, Interval, String
+from sqlalchemy.dialects.postgresql import JSON
 import datetime
 import uuid
 
@@ -10,12 +11,8 @@ from ..tools.annotations import get_actual_type
 from ..types.models import FastORM
 from ..types.sqlalchemy import BaseType
 
-try:
-    from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-    from sqlalchemy.dialects.postgresql import JSON as PG_JSON
-    HAS_PG_STUFF = True
-except ImportError:
-    HAS_PG_STUFF = False
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSON
 
 Base: DeclarativeMeta = declarative_base()
 
@@ -29,8 +26,14 @@ COLUMN_TYPE_MAP = {
     datetime.date: Date,
     datetime.time: Time,
     datetime.timedelta: Interval,
-    uuid.UUID: PG_UUID if PG_JSON else String(36),
-    JsonValue: PG_JSON if PG_JSON else Text,
+    uuid.UUID: UUID,
+    JsonValue: JSON,
+}
+
+# these are used when the type is not supported by the database dialect
+COLUMN_TYPE_FALLBACKS = {
+    JSON: Text,
+    UUID: String(36),
 }
 
 
