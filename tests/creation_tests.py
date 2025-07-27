@@ -467,9 +467,9 @@ class TestSqlalchemyCreation(unittest.TestCase):
                 ),
                 'name': dict(
                     type=Text(),
-                    primary_key=True,  # Implicit PK
+                    primary_key=False,
                     nullable=False,
-                    autoincrement=True,  # AutoIncrementPK
+                    autoincrement=False,
                     unique=None,
                     index=None,
                     foreign_keys=set(),
