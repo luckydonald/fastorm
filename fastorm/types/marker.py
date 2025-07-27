@@ -63,6 +63,17 @@ class ForeignKeyMarker(Marker):
         self.table = table
         self.pk_type = pk_type
     # end def
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(table={self.table.__name__!s}, pk_type={self.pk_type!r})"
+    # end def
+
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__} with table={self.table.__name__!r}"
+            + ("" if self.pk_type is Undefined else f" and pk_type={self.pk_type!r}")
+        )
+    # end def
 # end class
 
 
