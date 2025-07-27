@@ -111,3 +111,7 @@ await user.delete()
 ```bash
 python -m unittest discover --pattern="*_tests.py" --start-directory tests --locals
 ```
+
+# Supported versions
+- MySQL 5.6.5+
+  - https://stackoverflow.com/questions/13978554/is-possible-to-create-column-in-sqlalchemy-which-is-going-to-be-automatically-po#comment72559319_13979333
