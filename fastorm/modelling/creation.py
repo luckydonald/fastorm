@@ -80,7 +80,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
                 # end if
             except TypeError as e:
                 raise TypeError(
-                    f"Error processing field {name} in {fastorm_model.__name__}: {e}"
+                    f"Error processing field {name} (type {field_type}, from {info!r}) in {fastorm_model.__name__}: {e}"
                 ) from e
             # end try
         else:

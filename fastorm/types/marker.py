@@ -49,6 +49,8 @@ class PKMarker(Generic[PrimaryKeyDataType], Marker):
 
 
 class DefaultMarker(Generic[AType], Marker):
+    default: AType
+
     def __init__(self, default: AType):
         self.default = default
     # end def
