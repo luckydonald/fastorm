@@ -106,11 +106,11 @@ class TestInstanceCreation(unittest.TestCase):
     def test_uuid_pk_set(self):
         uuid_val = UUID("12345678-1234-5678-1234-567812345678")
         uuid_set = ExampleTableWithUUIDPK(
-            id=uuid_val,
+            uid=uuid_val,
             name="Example Name",
             description="This is an example description."
         )
-        self.assertEqual(uuid_set.id, uuid_val)
+        self.assertEqual(uuid_set.uid, uuid_val)
     # end def
 
     def test_two_pk_set(self):
@@ -396,8 +396,8 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
-                'id': dict(
-                    type=Text(),  # UUID is stored as a string in SQLite
+                'uid': dict(
+                    type=UUID(),  # UUID is stored as a string in SQLite
                     primary_key=True,
                     nullable=False,
                     autoincrement=False,
