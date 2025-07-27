@@ -1,7 +1,15 @@
 from sys import version_info
-from typing import TypeAlias, Generic
+from typing import TypeAlias, Generic, TYPE_CHECKING
 
 from .basics import AutoSupportingType, PrimaryKeyDataType, AType
+from .undefined import Undefined, UndefinedType
+
+if TYPE_CHECKING:
+    from .models import FastORM as FastOrmTable
+else:
+    type FastOrmTable = 'FastORM'
+# end if
+
 
 __all__ = (
     'Marker',
@@ -36,8 +44,25 @@ else:
 
 
 class ForeignKeyMarker(Marker):
-    """Marker for Foreign Key."""
-    pass
+    """Marker for Foreign KeyForeignKeyMarker."""
+    table: type[FastOrmTable]
+    """
+    The orm object, i.e. the referenced table
+    """
+
+    pk_type: PrimaryKeyDataType | UndefinedType
+    """
+    primary key type stays `Undefined` if it's used in a non-generic way.
+    """
+
+    def __init__(
+        self,
+        table: type[FastOrmTable],
+        pk_type: PrimaryKeyDataType | UndefinedType = Undefined,
+    ):
+        self.table = table
+        self.pk_type = pk_type
+    # end def
 # end class
 
 

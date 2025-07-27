@@ -41,7 +41,7 @@ class ForeignKey(ABC):
         """Allows PK to be used as a generic type."""
         if not isinstance(table, type):
             if isinstance(table, TypeVar):
-                return Annotated[table, ForeignKeyMarker()]
+                return Annotated[table, ForeignKeyMarker(table)]
             # end if
             raise TypeError(f"Expected a type, got {table!r}")
         # end if
@@ -60,7 +60,7 @@ class ForeignKey(ABC):
         # end if
         pk_type: PrimaryKeyDataTypeArg = pk_type
         print(f"1. Got foreign key type for {table.__name__}: {pk_type=!r}, {table=!r}")
-        return Annotated[Union[table, pk_type], ForeignKeyMarker()]
+        return Annotated[Union[pk_type, table], ForeignKeyMarker(table, pk_type=pk_type)]
     # end def
 
     def __new__(cls, table: type[FastOrmTable]) -> AnnotatedType:
