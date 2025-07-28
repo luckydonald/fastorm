@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Generic, ClassVar, Any, TYPE_CHECKING
+from typing import Generic, ClassVar, Any, TYPE_CHECKING, Union
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -191,29 +191,44 @@ class FastOrmMeta(type(BaseModel)):
         from ..modelling.creation import fastorm_to_sqlalchemy_model
         return fastorm_to_sqlalchemy_model(cls, table_name=None)
     # end def
+
+    @Property
+    def pk(cls_or_self: Union[type['FastORM'], 'FastORM']) -> tuple[PrimaryKeyDataType, ...] | PrimaryKeyDataType:
+        """Returns the primary key of the model."""
+        # if it's called statically on the class itself, not an instance
+        cls: type[FastORM] = cls_or_self.__class__ if isinstance(cls_or_self, FastORM) else cls_or_self
+        # end if
+        values = tuple(
+            getattr(cls_or_self, field_name)
+            for field_name in
+            cls.__primary_keys_names__
+        )
+        if len(values) == 1:
+            # single primary key, return it directly
+            return values[0]
+        # end if
+        return values
+    # end def
+
+    @pk.annotater
+    def pk(cls: Union[type['FastORM'], 'FastORM']) -> PrimaryKeyDataTypeArgType:
+        if isinstance(cls, FastORM):  # if it's called statically on the class itself, not an instance
+            # noinspection PyMethodFirstArgAssignment
+            cls = cls.__class__
+        # end if
+        types = cls.__primary_keys_type__
+        if len(types) == 1:
+            # single primary key, return it directly
+            return types[0]
+            # end if
+        return types
+    # end def
 # end class
 
 
 class FastORM(BaseModel, Generic[PrimaryKeyDataType], FastOrmModelTypehints, metaclass=FastOrmMeta):
     """Base model class with a primary key."""
-
-    @Property
-    def pk(self) -> tuple[PrimaryKeyDataType, ...]:
-        """Returns the primary key of the model."""
-        return tuple(
-            getattr(self, field_name)
-            for field_name in
-            self.__class__.__primary_keys_names__
-        )
-    # end def
-
-    @pk.annotater
-    def pk(self) -> PrimaryKeyDataTypeArgType:
-        if not isinstance(self.pk, FastORM):  # if it's called statically on the class itself, not an instance
-            return self.__primary_keys_type__
-        # end if
-        return self.__class__.__primary_keys_type__
-    # end def
+    pass
 # end class
 
 
