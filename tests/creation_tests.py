@@ -603,11 +603,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
                 )
 
                 for column, expected_column_definition in expected_column_meta.items():
-                    if column == '__tablename__':
-                        self.assertEqual(expected_column_definition, got_meta[column], msg=f"Expected table name for {model.__name__} does not match.")
-                        continue
-                    # end if
                     with self.subTest(f"{model.__name__} > {column}"):
+                        if column == '__tablename__':
+                            self.assertEqual(expected_column_definition, got_meta[column], msg=f"Expected table name for {model.__name__} does not match.")
+                            continue
+                        # end if
                         self.assertEqual(
                             set(INTERESTING_COLUMN_ATTRIBUTES),
                             set(expected_column_definition.keys()),
