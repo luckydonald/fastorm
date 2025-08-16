@@ -1,10 +1,10 @@
-from typing import Type, TypeVar, TypedDict
+from typing import Type, TypeVar, TypedDict, Optional, Union, Any
 
 from pydantic import JsonValue
 from pydantic_core import PydanticUndefined
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.orm import declarative_base, DeclarativeMeta
+from sqlalchemy.orm import declarative_base, DeclarativeMeta, relationship, Mapped, mapped_column
 from sqlalchemy.sql.base import NO_ARG
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import (
@@ -14,7 +14,6 @@ from sqlalchemy.sql.sqltypes import (
 )
 import datetime
 import uuid
-
 
 from .mixins import TimestampMixin
 from .. import DefaultMarker, ForeignKeyMarker, Undefined
@@ -53,12 +52,12 @@ class TableMeta(TypedDict):
     __tablename__: str
 # end class
 
-TableDict = dict[str, Column] | TableMeta
+TableDict = dict[str, Union[Mapped[Any], Any]] | TableMeta
 
 
 def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_name: str = None) -> TableDict:
     """
-    Create a SQLAlchemy model class from a Pydantic BaseModel, using the largest reasonable datatypes.
+    Create a SQLAlchemy model class from a Pydantic BaseModel, using modern Mapped types with mapped_column.
     """
     # implementation details:
     # - Sets primary_key=True for fields listed in __primary_keys_names__.
@@ -67,6 +66,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
     from ..tools.annotations import has_marker
 
     attrs = {}
+    annotations = {}
     pk_names = set(getattr(fastorm_model, "__primary_keys_names__", ()))
     # due to the way FastORM models are defined in the metaclass,
     # we can assume that we have at least the generated id primary key.
@@ -103,6 +103,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
             )
         # end if
         column_type = column_types[0] if not is_multiple_pk else tuple(column_types)
+        column_typehint = column_types[0] if not is_multiple_pk else tuple[*column_types]
 
         extra_args = []
 
@@ -125,7 +126,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
         is_nullable = default_value is None and not is_auto
 
         if fk_marker is not None:
-            # Create a ForeignKey constraint
+            # Create a ForeignKey constraint for foreign key fields
             ref_table = fk_marker.table
             # noinspection SpellCheckingInspection
             ref_table_name = getattr(ref_table, "__tablename__", ref_table.__name__.lower())
@@ -136,8 +137,12 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
             )
         # end if
 
+        if default_value != NO_ARG:
+            extra_args['default'] = default_value
+        # end if
+
         # Create the column with the appropriate autoincrement setting for AutoMarker fields
-        attrs[name] = Column(
+        column_data = mapped_column(
             column_type,
             *extra_args,
             primary_key=(name in pk_names),
@@ -145,7 +150,17 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
             default=default_value,
             nullable=is_nullable,
         )
+        attrs[name] = column_data
+        # Set up the type annotations
+        if is_nullable:
+            annotations[name] = Mapped[Optional[column_typehint]]
+        else:
+            annotations[name] = Mapped[column_typehint]
+        # end if
     # end for
+
+    # Add annotations to attrs for proper type hinting
+    attrs['__annotations__'] = annotations
     # noinspection SpellCheckingInspection
     attrs['__tablename__'] = table_name or fastorm_model.__name__.lower()
     return attrs
