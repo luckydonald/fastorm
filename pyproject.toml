@@ -33,7 +33,7 @@ classifiers = [
 #    "Topic :: Internet :: WWW/HTTP",
 ]
 
-[tool.poetry.dependencies]
+[project.dependencies]
 python = ">=3.10.0"
 asyncpg = "*"
 luckydonald-utils = ">=0.83"
@@ -41,11 +41,11 @@ typeguard = "*"
 pydantic = "^2.0.0"
 sqlalchemy = "^2.0.41"
 
-[tool.poetry.extras]
+[project.optional-dependencies]
 test = []
 asyncio = ["sqlalchemy[asyncio]"]
 
-[tool.poetry.urls]
+[project.urls]
 Documentation = "https://github.com/luckydonald/fastorm"
 
 [tool.poetry.group.dev.dependencies]
