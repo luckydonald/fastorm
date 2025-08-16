@@ -4,14 +4,19 @@ from unittest import TestCase
 from uuid import UUID as PythonUUID
 import unittest
 
+from sqlalchemy.orm.attributes import Mapped
+from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.util.compat import inspect_getfullargspec, FullArgSpec
 # noinspection PyPep8Naming
-from sqlalchemy import Text, BigInteger, UUID as SqlAlchemyUUID
+from sqlalchemy import Text, BigInteger, UUID as SqlAlchemyUUID, ForeignKey as SqlAlchemyForeignKey
+from typing import get_args, get_origin
 
 from fastorm import FastORM, AutoIncrement, PK, AutoPK, ForeignKey, Undefined, AutoUUID
 from fastorm.modelling.creation import fastorm_to_sqlalchemy_model, _fastorm_to_sqlalchemy_model_metadata
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from fastorm.tools.fully_qualified_class_name import fqn
 
 
 class ExampleTableWithAutoincrement(FastORM):
@@ -326,6 +331,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
                      index=None,
                      foreign_keys=set(),
                 ),
+                '__annotations__': {
+                    "description": (str,),
+                    "id": (int,),
+                    "name": (str,),
+                },
             },
             ExampleTableWithIntPK: {
                 '__tablename__': 'exampletablewithintpk',
@@ -356,6 +366,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
+                '__annotations__': {
+                    "description": (str,),
+                    "id": (int,),
+                    "name": (str,),
+                },
             },
             ExampleTableWithStrPK: {
                 '__tablename__': 'exampletablewithstrpk',
@@ -386,6 +401,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
+                '__annotations__': {
+                    "description": (str,),
+                    "id": (str,),
+                    "name": (str,),
+                }
             },
             ExampleTableWithUUIDPK: {
                 '__tablename__': 'exampletablewithuuidpk',
@@ -416,6 +436,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
+                '__annotations__': {
+                    "description": (str,),
+                    "uid": (PythonUUID,),
+                    "name": (str,),
+                },
             },
             ExampleTableWithTwoPKs: {
                 '__tablename__': 'exampletablewithtwopks',
@@ -455,6 +480,12 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
+                '__annotations__': {
+                    "description": (str,),
+                    "id1": (str,),
+                    "id2": (int,),
+                    "name": (str,),
+                },
             },
             ExampleTableWithImplicitPK: {
                 '__tablename__': 'exampletablewithimplicitpk',
@@ -485,6 +516,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
+                '__annotations__': {
+                    "id": (int,),
+                    "description": (str,),
+                    "name": (str,),
+                },
             },
             ExampleTableWithOneFK: {
                 '__tablename__': 'exampletablewithonefk',
@@ -507,13 +543,13 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     foreign_keys=set(),
                 ),
                 'foreign_key': dict(
-                    type=BigInteger(),  # ForeignKey to ExampleTableWithAutoincrement
+                    type=NullType(),  # ForeignKey to ExampleTableWithAutoincrement
                     primary_key=False,
                     nullable=False,
                     autoincrement=False,
                     unique=None,
                     index=None,
-                    foreign_keys={'yes'}, # ExampleTableWithAutoincrement.__tablename__
+                    foreign_keys={SqlAlchemyForeignKey('exampletablewithautoincrement.id')}, # ExampleTableWithAutoincrement.__tablename__
                 ),
                 'name': dict(
                     type=Text(),
@@ -524,9 +560,33 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
+                '__annotations__': {
+                    "id": (int,),
+                    "description": (str,),
+                    "foreign_key": (int,),
+                    "name": (str,),
+                },
             },
             ExampleTableWithFK: {
                 '__tablename__': 'exampletablewithfk',
+                'id': dict(  # implicit primary key
+                    type=BigInteger(),
+                    primary_key=True,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
+                'name': dict(
+                    type=Text(),
+                    primary_key=False,
+                    nullable=False,
+                    autoincrement=False,
+                    unique=None,
+                    index=None,
+                    foreign_keys=set(),
+                ),
                 'description': dict(
                     type=Text(),
                     primary_key=False,
@@ -537,59 +597,60 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     foreign_keys=set(),
                 ),
                 'foreign_key_int': dict(
-                    type=BigInteger(),  # ForeignKey to ExampleTableWithIntPK
+                    type=NullType(),  # ForeignKey to ExampleTableWithIntPK
                     primary_key=False,
                     nullable=False,
                     autoincrement=False,
                     unique=None,
                     index=None,
-                    foreign_keys={'yes'}, # ExampleTableWithIntPK.__tablename__
+                    foreign_keys={SqlAlchemyForeignKey('exampletablewithstrpk.id')}, # ExampleTableWithIntPK.__tablename__
                 ),
                 'foreign_key_str': dict(
-                    type=Text(),  # ForeignKey to ExampleTableWithStrPK
+                    type=NullType(),  # ForeignKey to ExampleTableWithStrPK
                     primary_key=False,
                     nullable=False,
                     autoincrement=False,
                     unique=None,
                     index=None,
-                    foreign_keys={'yes'},  # ExampleTableWithStrPK.__tablename__
+                    foreign_keys={SqlAlchemyForeignKey('exampletablewithstrpk.id')},  # ExampleTableWithStrPK.__tablename__
                 ),
                 'foreign_key_uuid': dict(
-                    type=SqlAlchemyUUID(),  # ForeignKey to ExampleTableWithUUIDPK
+                    type=NullType(),  # ForeignKey to ExampleTableWithUUIDPK
                     primary_key=False,
                     nullable=False,
                     autoincrement=False,
                     unique=None,
                     index=None,
-                    foreign_keys={'yes'},  # ExampleTableWithUUIDPK.__tablename__
+                    foreign_keys={SqlAlchemyForeignKey('exampletablewithuuidpk.id')},  # ExampleTableWithUUIDPK.__tablename__
                 ),
                 'foreign_key_two': dict(
-                    type=Text(),  # ForeignKey to ExampleTableWithTwoPKs
+                    type=NullType(),  # ForeignKey to ExampleTableWithTwoPKs
                     primary_key=False,
                     nullable=False,
                     autoincrement=False,
                     unique=None,
                     index=None,
-                    foreign_keys={'yes'},  # ExampleTableWithTwoPKs.__tablename__
+                    foreign_keys={SqlAlchemyForeignKey('exampletablewithtwopks.id')},  # ExampleTableWithTwoPKs.__tablename__
                 ),
                 'foreign_key_nullable': dict(
-                    type=BigInteger(),  # ForeignKey to ExampleTableWithIntPK, can be None
+                    type=NullType(),  # ForeignKey to ExampleTableWithIntPK, can be None
                     primary_key=False,
                     nullable=True,  # Nullable ForeignKey
                     autoincrement=False,
                     unique=None,
                     index=None,
-                    foreign_keys={'yes'},  # ExampleTableWithIntPK.__tablename__
+                    foreign_keys={SqlAlchemyForeignKey('exampletablewithintpk.id')},
                 ),
-                'name': dict(
-                     type=Text(),
-                     primary_key=False,
-                     nullable=False,
-                     autoincrement=False,
-                     unique=None,
-                     index=None,
-                     foreign_keys=set(),
-                 ),
+                '__annotations__': {
+                    "id": (int,),
+                    "name": (str,),
+                    "description": (str,),
+                    "foreign_key_int": (int,),
+                    "foreign_key_str": (str,),
+                    "foreign_key_uuid": (PythonUUID,),
+                    "foreign_key_two": (tuple[str, int],),
+                    "foreign_key_nullable": (int,),
+                },
             },
         }.items():
             with self.subTest(model.__name__):
@@ -608,16 +669,59 @@ class TestSqlalchemyCreation(unittest.TestCase):
                             self.assertEqual(expected_column_definition, got_meta[column], msg=f"Expected table name for {model.__name__} does not match.")
                             continue
                         # end if
+                        if column == '__annotations__':
+                            got_annotations = got_meta[column]
+                            expected_annotations: dict[str, str] = expected_column_definition
+                            self.assertIsInstance(
+                                expected_annotations,
+                                dict,
+                                msg=f"[Test data check] Expected annotations for {model.__name__} should be a dict, got {type(got_annotations)}"
+                            )
+                            self.assertIsInstance(
+                                got_annotations,
+                                dict,
+                                msg=f"Returned annotations for {model.__name__} should be a dict, got {type(expected_annotations)}"
+                            )
+                            self.assertEqual(
+                                set(expected_annotations.keys()),
+                                set(expected_column_meta.keys()) - {'__annotations__', '__tablename__'},
+                                msg=f"[Test data check] The expected __annotations__ defined for {model.__name__} in the test does not contain all required columns.",
+                            )
+                            self.assertEqual(
+                                set(got_annotations.keys()),
+                                set(expected_annotations.keys()),
+                                msg=f"The returned __annotations__ for {model.__name__} in the test does not contain all required columns.",
+                            )
+                            for attr, expected_type in expected_annotations.items():
+                                with self.subTest(f"{model.__name__} > {column} > {attr}"):
+                                    got_type = got_annotations.get(attr, Undefined)
+                                    if got_type is Undefined:
+                                        self.fail(f"Expected annotation {attr} for {model.__name__}.{column} not found in the metadata.")
+                                    # end if
+                                    self.assertEqual(
+                                        Mapped,
+                                        get_origin(got_type),
+                                        msg=f"Annotation type mismatch for {model.__name__}.{column}.{attr}: expected {fqn(Mapped)}[…], got {fqn(get_origin(got_type))}[…]",
+                                    )
+                                    self.assertEqual(
+                                        expected_type,
+                                        get_args(got_type),
+                                        msg=f"Annotation type mismatch for {model.__name__}.{column}.{attr}: expected Mapped[{expected_value}], got Mapped[{got_value}]",
+                                    )
+                                # end with
+                            # end for
+                            continue
+                        # end if
                         self.assertEqual(
                             set(INTERESTING_COLUMN_ATTRIBUTES),
                             set(expected_column_definition.keys()),
-                            msg=f"The expected metadata defined for {model.__name__}.{column} in the test does not contain all required attributes.",
+                            msg=f"[Test data check] The expected metadata defined for {model.__name__}.{column} in the test does not contain all required attributes.",
                         )
 
                         got_column_definition = got_meta[column]
                         for attr, expected_value in expected_column_definition.items():
                             with self.subTest(f"{model.__name__} > {column} > {attr}"):
-                                got_value = getattr(got_column_definition, attr)
+                                got_value = getattr(got_column_definition.column, attr)
                                 if attr == "type":
                                     # Those things don't implement __eq__, so we need to compare their string representations.
                                     self.constructor_based_equality_check(expected_value, got_value)
