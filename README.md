@@ -108,10 +108,19 @@ await user.delete()
 
 # Tests
 
-```bash
+```shell
 python -m unittest discover --pattern="*_tests.py" --start-directory tests --locals
+```
+Or:
+```shell
+./run_tests.sh
 ```
 
 # Supported versions
 - MySQL 5.6.5+
   - https://stackoverflow.com/questions/13978554/is-possible-to-create-column-in-sqlalchemy-which-is-going-to-be-automatically-po#comment72559319_13979333
+
+# Local Development
+```shell
+poetry install --no-root --extras=asyncio --with dev
+```
