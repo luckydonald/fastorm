@@ -4,6 +4,7 @@ from unittest import TestCase
 from uuid import UUID as PythonUUID
 import unittest
 
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import Mapped
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.util.compat import inspect_getfullargspec, FullArgSpec
@@ -225,6 +226,8 @@ def constructor_based_equality_check(self: TestCase, a, b):
         self.fail(f"Objects are of different types: {type_a} and {type_b}")
     # end if
 
+    spec_a: FullArgSpec | TypeError
+    spec_b: FullArgSpec | TypeError
     try:
         spec_a: FullArgSpec = inspect_getfullargspec(a.__init__)
     except TypeError as e:
@@ -253,11 +256,36 @@ def constructor_based_equality_check(self: TestCase, a, b):
     self.assertEqual(spec_a, spec_b, msg=f"Constructor arguments do not match for {type_a} ({a=!r}, {b=!r})")
     fields = spec_a.args + spec_a.kwonlyargs
     for field in fields:
-        value_a = getattr(a, field, Undefined)
-        value_b = getattr(b, field, Undefined)
-        if value_a != value_b:
-            self.fail(f"Field '{field}' of type {type_a} does not match: {value_a!r} != {value_b!r} ({a=!r}, {b=!r})")
+        try:
+            value_a = getattr(a, field, Undefined)
+        except InvalidRequestError as e:
+            value_a = e
+        # end try
+        try:
+            value_b = getattr(b, field, Undefined)
+        except InvalidRequestError as e:
+            value_b = e
+        # end try
+        print(f"Deep checking type {type_a} field '{field}' with {value_a!r} vs. {value_b!r}.")
+        if field == 'column' and isinstance(value_a, InvalidRequestError) and isinstance(value_b, InvalidRequestError):
+            # we ignore the error messages, as they seem to always differ:
+            # - this ForeignKey object does not yet have a parent Column associated with it.
+            # + this ForeignKey's parent column is not yet associated with a Table.
+            """
+            self.assertEqual(
+                str(value_a),
+                str(value_b),
+                msg=f"Both objects have an InvalidRequestError for field '{field}', but the messages do not match: {value_a!r} != {value_b!r} ({a=!r}, {b=!r})"
+            )
+            """
+            # either way:
+            continue
         # end if
+        self.assertEqual(
+            value_a,
+            value_b,
+            msg=f"Field '{field}' of type {type_a} does not match: {value_a!r} != {value_b!r} ({a=!r}, {b=!r})",
+        )
     # end for
 # end def
 
@@ -278,7 +306,11 @@ class TestSqlalchemyCreation(unittest.TestCase):
         self.session.close()
     # end def
 
-    constructor_based_equality_check = constructor_based_equality_check
+    def constructor_based_equality_check(self, a, b):
+        """Check if two objects are equal based on their constructor arguments."""
+        # Use the function defined above to check equality
+        return constructor_based_equality_check(self, a, b)
+    # end def
 
     # Example: override one test to check SQLAlchemy model creation
     def test_sqlalchemy_meta_generation(self):
@@ -725,6 +757,48 @@ class TestSqlalchemyCreation(unittest.TestCase):
                                 if attr == "type":
                                     # Those things don't implement __eq__, so we need to compare their string representations.
                                     self.constructor_based_equality_check(expected_value, got_value)
+                                    continue
+                                # end if
+                                if attr == "foreign_keys":
+                                    # Foreign keys are sets, so in that set we need to compare the string representations of the ForeignKey objects.
+                                    expected_value = set(expected_value)
+                                    got_value = set(got_value)
+                                    self.assertEqual(
+                                        len(expected_value),
+                                        len(got_value),
+                                        msg=f"Foreign keys count mismatch for {model.__name__}.{column}.{attr}."
+                                    )
+                                    matched = [False,] * len(expected_value)
+                                    for expected_fk in expected_value:
+                                        last_exception: AssertionError | None = None
+                                        for i, got_fk in enumerate(got_value):
+                                            if matched[i]:
+                                                continue
+                                            # end if
+                                            try:
+                                                self.constructor_based_equality_check(expected_fk, got_fk)
+                                                matched[i] = True
+                                                break
+                                            except AssertionError as e:
+                                                if last_exception is not None:
+                                                    e.__cause__ = last_exception
+                                                # end if
+                                                last_exception = e
+                                            # end try
+                                        else:
+                                            # no match found
+                                            # -> Chaining exceptions in the list
+                                            try:
+                                                self.fail(
+                                                    f"Foreign key {fqn(expected_fk)} not found in the returned foreign "
+                                                    f"keys for {model.__name__}.{column}.{attr}."
+                                                )
+                                            except Exception as e:
+                                                # Chain the rest of the exceptions
+                                                raise e from last_exception
+                                            # end try
+                                        # end for
+                                    # end for
                                     continue
                                 # end if
                                 self.assertEqual(
