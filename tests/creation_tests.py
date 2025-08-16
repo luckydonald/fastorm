@@ -575,7 +575,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     foreign_keys=set(),
                 ),
                 'foreign_key': dict(
-                    type=NullType(),  # ForeignKey to ExampleTableWithAutoincrement
+                    type=BigInteger(),  # ForeignKey to ExampleTableWithAutoincrement
                     primary_key=False,
                     nullable=False,
                     autoincrement=False,
