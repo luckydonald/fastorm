@@ -148,10 +148,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
                 annotations[name] = Mapped[Optional[field_type]]
             else:
                 annotations[name] = Mapped[field_type]
-
-            # Create relationship field (typically named differently, but following the same pattern)
-            # Note: This might need adjustment based on how FastORM handles relationship naming
-            # attrs[f"{name}_rel"] = relationship(ref_table.__name__)
+            # end if
         else:
             # Regular field - create mapped_column
             mapped_col_kwargs = {
@@ -179,6 +176,8 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
                 annotations[name] = Mapped[Optional[field_type]]
             else:
                 annotations[name] = Mapped[field_type]
+            # end if
+        # end if
     # end for
 
     # Add annotations to attrs for proper type hinting
