@@ -103,7 +103,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
             )
         # end if
         column_type = column_types[0] if not is_multiple_pk else tuple(column_types)
-        column_typehint = column_types[0] if not is_multiple_pk else tuple[*column_types]
+        column_typehint = field_type if not is_multiple_pk else tuple[*field_types]
 
         extra_args: list[Any] = []
 
