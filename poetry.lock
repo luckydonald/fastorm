@@ -544,9 +544,8 @@ typing-extensions = ">=4.12.0"
 
 [extras]
 asyncio = ["sqlalchemy"]
-test = []
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10.0"
-content-hash = "cd347071b3429a112f2a66345fa8a50e42557baba8068c0b6abf310149029d04"
+content-hash = "acfe2a5936c01d5c5b1207e4a1bf8f9c19ce8c3c0a3d52dfc09cccb6a535e66f"

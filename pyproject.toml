@@ -54,7 +54,6 @@ pydantic = "2.*"
 sqlalchemy = "2.*"
 
 [project.optional-dependencies]
-test = []
 asyncio = ["sqlalchemy[asyncio]"]
 
 [project.urls]
