@@ -1,11 +1,20 @@
-[tool.poetry]
+[project]
 name = "fastorm"
 version = "0.1.0"
 description = ""  # Optionally fill from README.md
-authors = ["luckydonald <fastorm+code@luckydonald.de>"]
+authors = [
+    { name = "luckydonald", email = "fastorm._.code@luckydonald.de" },
+]
+maintainers = [
+    { name = "luckydonald", email = "fastorm._.code@luckydonald.de" },
+]
 license = "MIT"
 homepage = "https://github.com/luckydonald/fastorm"
 readme = "README.md"
+keywords = [ "fastorm", "orm", "fast", "pydantic", "model-based", "typing", "fastapi" ]
+dynamic = [ "classifiers" ]
+
+[tool.poetry]
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
@@ -29,6 +38,9 @@ classifiers = [
 #    "Programming Language :: Python :: 3.8",
 #    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 #    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
 #    "Topic :: Internet :: WWW/HTTP",
 ]
@@ -38,8 +50,8 @@ python = ">=3.10.0"
 asyncpg = "*"
 luckydonald-utils = ">=0.83"
 typeguard = "*"
-pydantic = "^2.0.0"
-sqlalchemy = "^2.0.41"
+pydantic = "2.*"
+sqlalchemy = "^2.*"
 
 [project.optional-dependencies]
 test = []
@@ -49,7 +61,7 @@ asyncio = ["sqlalchemy[asyncio]"]
 Documentation = "https://github.com/luckydonald/fastorm"
 
 [tool.poetry.group.dev.dependencies]
-hypothesis = "^6.135.26"
+hypothesis = "*"
 
 [build-system]
 requires = ["poetry-core"]
