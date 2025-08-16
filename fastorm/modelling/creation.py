@@ -105,7 +105,7 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
         column_type = column_types[0] if not is_multiple_pk else tuple(column_types)
         column_typehint = column_types[0] if not is_multiple_pk else tuple[*column_types]
 
-        extra_args = []
+        extra_args: list[Any] = []
 
         # Check if the field has an AutoMarker
         is_auto = has_marker(info, AutoMarker) and fk_marker is None
@@ -135,10 +135,6 @@ def _fastorm_to_sqlalchemy_model_metadata(fastorm_model: FastORMClass, table_nam
             extra_args.append(
                 ForeignKey(f"{ref_table_name}.{ref_pk_name}"),
             )
-        # end if
-
-        if default_value != NO_ARG:
-            extra_args['default'] = default_value
         # end if
 
         # Create the column with the appropriate autoincrement setting for AutoMarker fields
