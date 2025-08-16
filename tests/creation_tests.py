@@ -308,7 +308,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
                     index=None,
                     foreign_keys=set(),
                 ),
-                 'id': dict(
+                'id': dict(
                      type=BigInteger(),
                      primary_key=True,
                      nullable=False,
@@ -316,8 +316,8 @@ class TestSqlalchemyCreation(unittest.TestCase):
                      unique=None,
                      index=None,
                      foreign_keys=set(),
-                 ),
-                 'name': dict(
+                ),
+                'name': dict(
                      type=Text(),
                      primary_key=False,
                      nullable=False,
@@ -325,7 +325,7 @@ class TestSqlalchemyCreation(unittest.TestCase):
                      unique=None,
                      index=None,
                      foreign_keys=set(),
-                 ),
+                ),
             },
             ExampleTableWithIntPK: {
                 '__tablename__': 'exampletablewithintpk',
